@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./docker/php
+    container_name: map_my_faith_app
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:alpine
+    container_name: map_my_faith_app_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    container_name: map_my_faith_app_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+volumes:
+  mysql-data:
