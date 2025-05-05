@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\MapsController;
 use App\Http\Controllers\PinController;
+use App\Http\Middleware\IsAdmin;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -34,15 +35,23 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pins', [PinController::class, 'index']);
         Route::get('/pins/campaign/{campaignId}', [PinController::class, 'indexByCampaign']);
         Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
-        Route::apiResource('campaigns', CampaignController::class);
-        Route::get('/users', [UserController::class, 'index']);
-        Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
+
+        Route::middleware([IsAdmin::class])->group(function () {
+            Route::apiResource('campaigns', CampaignController::class);
+            Route::get('/users', [UserController::class, 'index']);
+            Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
+        });
+
     });
-    //Admin // will resolve issue with middleware for admin
-    Route::get('/admin/dashboard', [DashboardController::class, 'index']);
-    Route::get('/admin/leaderboard', [LeanerBoardController::class, 'index']);
-    Route::get('admin/campaigns', [CampaignController::class, 'manage'])->name('admin.campaigns.index');
-    Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
+
+    //Admin routes
+    Route::middleware([IsAdmin::class])->group(function () {
+        Route::get('/admin/dashboard', [DashboardController::class, 'index']);
+        Route::get('/admin/leaderboard', [LeanerBoardController::class, 'index']);
+        Route::get('admin/campaigns', [CampaignController::class, 'manage'])->name('admin.campaigns.index');
+        Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
+    });
+
 });
 
 ////Admin
