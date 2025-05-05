@@ -8,17 +8,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class IsAdmin
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next)
     {
         if (auth()->check() && auth()->user()->is_admin) {
             return $next($request);
         }
 
-        abort(403, 'Unauthorized');
+        return redirect('/')->with('error', 'You are not authorized to access this page.');
     }
 }
