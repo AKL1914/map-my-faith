@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/laravel-app/node_modules
+/laravel-app/vendor
+/reactjs-app/node_modules
+/reactjs-app/dist
+.env
+.DS_Store
