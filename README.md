@@ -133,6 +133,22 @@ npm run build
 npm run dev 
 
 
+🔐 How to Use This in a Vue SPA (Summary)
+POST /api/v1/auth/google
+→ Get url from JSON.
+
+Redirect to that URL (use window.location.href = url).
+
+After Google login, user is redirected back to your callback URL (e.g., /api/v1/auth/google/callback).
+
+That response gives { token, user }.
+
+Store the token in localStorage or cookie.
+
+Attach token to API requests:
+
+axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
 
 ## License
 

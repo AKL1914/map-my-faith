@@ -33,10 +33,10 @@ Route::middleware(['auth'])->group(function () {
     Route::group(['prefix' => 'api'], function () {
         Route::post('/pin', [PinController::class, 'store']);
         Route::get('/pins', [PinController::class, 'index']);
-        Route::get('/pins/campaign/{campaignId}', [PinController::class, 'indexByCampaign']);
         Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
 
         Route::middleware([IsAdmin::class])->group(function () {
+            Route::get('/pins/campaign/{campaignId}', [PinController::class, 'indexByCampaign']);
             Route::apiResource('campaigns', CampaignController::class);
             Route::get('/users', [UserController::class, 'index']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
