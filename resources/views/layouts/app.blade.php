@@ -27,7 +27,10 @@
 </head>
 <body>
 @include('partials.navigation')
-@yield('content')
+<div id="app">
+    @yield('content')
+</div>
+
 @include('partials.footer')
 </body>
 </html>

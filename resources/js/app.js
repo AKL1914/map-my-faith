@@ -1,14 +1,15 @@
 import './bootstrap';
 import { createApp } from 'vue';
+
 import AdminDashboard from './components/AdminDashboard.vue';
-import Map from './components/Map.vue';
-import axios from 'axios';
+import CampaignManager from './components/CampaignManager.vue';
+import MapManager from './components/MapManager.vue';
+import UserManager from './components/UserManager.vue';
 
-axios.defaults.withCredentials = true;
-axios.defaults.headers.common['X-CSRF-TOKEN'] =
-    document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-const app = createApp(Map); // no App.vue
+const app = createApp({});
 app.component('admin-dashboard', AdminDashboard);
-app.component('map', Map);
+app.component('campaign-manager', CampaignManager);
+app.component('map-manager', MapManager);
+app.component('user-manager', UserManager);
+
 app.mount('#app');

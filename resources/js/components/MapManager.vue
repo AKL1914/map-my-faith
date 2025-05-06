@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted} from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import axios from 'axios'
@@ -72,15 +72,15 @@ onMounted(async () => {
         map.setView([lat, lng], 12) // zoomed out a bit
 
         // Your location marker
-        currentPinMarker = L.marker([lat, lng], { icon: blueIcon })
+        currentPinMarker = L.marker([lat, lng], {icon: blueIcon})
             .addTo(map)
             .bindPopup('You are here')
 
         // Load all pins
-        const { data } = await axios.get('/api/pins')
+        const {data} = await axios.get('/api/pins')
         data.forEach(pin => {
             const icon = pin.is_accepted === 1 ? greenIcon : redIcon
-            L.marker([pin.latitude, pin.longitude], { icon })
+            L.marker([pin.latitude, pin.longitude], {icon})
                 .addTo(map)
                 .bindPopup(pin.notes || '')
         })
@@ -96,7 +96,7 @@ onMounted(async () => {
             currentPinMarker.setLatLng([lat, lng])
         } else {
             // Otherwise, create a new marker at the clicked location
-            currentPinMarker = L.marker([lat, lng], { icon: blueIcon }).addTo(map)
+            currentPinMarker = L.marker([lat, lng], {icon: blueIcon}).addTo(map)
         }
 
         currentPinMarker.bindPopup('New location').openPopup()
@@ -121,7 +121,7 @@ async function pinMyLocation(status) {
 
     // Show the new marker with appropriate color
     const icon = isAccepted === 1 ? greenIcon : redIcon
-    L.marker([lat, lng], { icon })
+    L.marker([lat, lng], {icon})
         .addTo(map)
         .bindPopup(status === 'accepted' ? 'Accepted Pin' : 'Refused Pin')
 
