@@ -24,14 +24,26 @@ services:
     container_name: map_my_faith_app_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: laravel
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql-data:/var/lib/mysql
     ports:
       - "3306:3306"
+
+  reactnative:
+    build:
+      context: ./docker/reactnative
+      dockerfile: Dockerfile
+    container_name: map_my_faith_reactnative
+    ports:
+      - "19000:19000"  # Metro Bundler
+      - "19001:19001"  # Expo dev tools (optional)
+    volumes:
+      - ./reactnative-app:/app
+    command: npx expo start --tunnel
 
 volumes:
   mysql-data:
