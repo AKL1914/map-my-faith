@@ -107,12 +107,8 @@ export default {
                 if (pin.latitude && pin.longitude) {
                     const icon = pin.is_accepted === 1 ? greenIcon : redIcon;
                     const popupContent = `
-                        <strong>${pin.address || 'No address'}</strong><br>
-                        ${pin.campaign?.name || ''}<br>
-                        <span class="badge ${pin.is_accepted ? 'bg-success' : 'bg-danger'}">
-                            ${pin.is_accepted ? 'Accepted' : 'Not Accepted'}
-                        </span><br>
-                        <small>${pin.notes || ''}</small>
+        <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
+        ${pin.notes ?? ''}
                     `;
 
                     const marker = L.marker([pin.latitude, pin.longitude], {icon})

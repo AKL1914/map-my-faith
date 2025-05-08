@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         // DatabaseSeeder.php
         $this->call(CampaignSeeder::class);
         $this->call(UsersSeeder::class);
-        $this->call(StaticPinSeeder::class);
+//        $this->call(StaticPinSeeder::class);
+        $this->call(PinFromCsvSeeder::class);
     }
 }

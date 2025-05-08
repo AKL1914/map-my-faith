@@ -17,9 +17,15 @@ class Pin extends Model
         'notes',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function campaign()
     {
         return $this->belongsTo(Campaign::class);
     }
+
 
 }

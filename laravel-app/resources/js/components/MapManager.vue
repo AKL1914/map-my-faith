@@ -77,12 +77,16 @@ onMounted(async () => {
             .bindPopup('You are here')
 
         // Load all pins
-        const {data} = await axios.get('/api/pins')
+        const { data } = await axios.get('/api/pins')
         data.forEach(pin => {
             const icon = pin.is_accepted === 1 ? greenIcon : redIcon
-            L.marker([pin.latitude, pin.longitude], {icon})
+            const popupContent = `
+        <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
+        ${pin.notes ?? ''}
+    `
+            L.marker([pin.latitude, pin.longitude], { icon })
                 .addTo(map)
-                .bindPopup(pin.notes || '')
+                .bindPopup(popupContent)
         })
     })
 

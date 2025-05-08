@@ -32,7 +32,10 @@ class PinController extends Controller
     //get all pins
     public function index()
     {
-        $pins = Pin::all();
+//        $pins = Pin::all();
+//        return response()->json($pins);
+
+        $pins = Pin::with('user:id,name')->get(); // Load only the user ID and name
         return response()->json($pins);
 
     }
