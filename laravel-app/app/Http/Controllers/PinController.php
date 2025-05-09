@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Campaign;
 use Illuminate\Http\Request;
 use App\Models\Pin;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class PinController extends Controller
 {
@@ -41,17 +43,26 @@ class PinController extends Controller
     //get all pins by campaign
     public function indexByCampaign($campaignId)
     {
-        $pins = Pin::where('campaign_id', $campaignId)->get();
+        $cacheKey = "pins_campaign_{$campaignId}";
+
+        $pins = Cache::remember($cacheKey, 60, function () use ($campaignId) {
+            return Pin::where('campaign_id', $campaignId)->get();
+        });
+
         return response()->json($pins);
     }
 
     //get all pins by user
     public function indexByUser($userId)
     {
-        $pins = Pin::where('user_id', $userId)->get();
+        $cacheKey = "pins_user_{$userId}";
+
+        $pins = Cache::remember($cacheKey, 60, function () use ($userId) {
+            return Pin::where('user_id', $userId)->get();
+        });
+
         return response()->json($pins);
     }
-
     public function indexByBounds(Request $request)
     {
         $request->validate([
@@ -61,10 +72,20 @@ class PinController extends Controller
             'west' => 'required|numeric',
         ]);
 
-        $pins = Pin::with('user:id,name')
-            ->whereBetween('latitude', [$request->south, $request->north])
-            ->whereBetween('longitude', [$request->west, $request->east])
-            ->get();
+        $cacheKey = 'pins_bounds_' . md5(json_encode([
+                $request->north,
+                $request->south,
+                $request->east,
+                $request->west,
+            ]));
+
+
+        $pins = Cache::remember($cacheKey, 10, function () use ($request) {
+            return Pin::with('user:id,name')
+                ->whereBetween('latitude', [$request->south, $request->north])
+                ->whereBetween('longitude', [$request->west, $request->east])
+                ->get();
+        });
 
         return response()->json($pins);
     }
