@@ -5,9 +5,20 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Users</h5>
-                <div class="mb-3">
-                    <button class="btn btn-success me-2" @click="activateAll">Activate All</button>
-                    <button class="btn btn-danger" @click="deactivateAll">Deactivate All</button>
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <button class="btn btn-success me-2" @click="activateAll">Activate All</button>
+                        <button class="btn btn-danger" @click="deactivateAll">Deactivate All</button>
+                    </div>
+                    <div class="input-group w-50">
+                        <input
+                            type="text"
+                            v-model="searchQuery"
+                            class="form-control"
+                            placeholder="Search by name or email..."
+                            @input="debouncedFetchUsers"
+                        />
+                    </div>
                 </div>
                 <table class="table table-striped">
                     <thead>
@@ -57,6 +68,39 @@
                     </tr>
                     </tbody>
                 </table>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <label for="itemsPerPage" class="me-2">Items per page:</label>
+                        <select
+                            id="itemsPerPage"
+                            v-model.number="perPage"
+                            @change="fetchUsers"
+                            class="form-select d-inline-block w-auto"
+                        >
+                            <option :value="5">5</option>
+                            <option :value="10">10</option>
+                            <option :value="20">20</option>
+                        </select>
+                    </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination mb-0">
+                            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                                <button class="page-link" @click="currentPage--; fetchUsers()">Previous</button>
+                            </li>
+                            <li
+                                class="page-item"
+                                v-for="page in totalPages"
+                                :key="page"
+                                :class="{ active: currentPage === page }"
+                            >
+                                <button class="page-link" @click="currentPage = page; fetchUsers()">{{ page }}</button>
+                            </li>
+                            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                                <button class="page-link" @click="currentPage++; fetchUsers()">Next</button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
@@ -64,42 +108,76 @@
 
 <script>
 import axios from 'axios';
+import debounce from 'lodash/debounce';
 
 export default {
     name: 'UserManager',
     data() {
         return {
             users: [],
+            searchQuery: '',
+            currentPage: 1,
+            perPage: 10,
+            totalPages: 1,
         };
+    },
+    created() {
+        // Create debounced version of fetchUsers
+        this.debouncedFetchUsers = debounce(this.fetchUsers, 300);
     },
     mounted() {
         this.fetchUsers();
     },
     methods: {
         fetchUsers() {
-            axios.get('/api/users')
+            const params = {
+                page: this.currentPage,
+                per_page: this.perPage,
+                search: this.searchQuery || undefined,
+            };
+            axios.get('/api/users', { params })
                 .then(response => {
-                    this.users = response.data;
+                    this.users = response.data.data;
+                    this.currentPage = response.data.current_page;
+                    this.perPage = response.data.per_page;
+                    this.totalPages = response.data.last_page;
+                })
+                .catch(error => {
+                    console.error('Error fetching users:', error);
+                    this.users = [];
+                    this.totalPages = 1;
                 });
         },
         toggleAdmin(user) {
             const newStatus = !user.is_admin;
             axios.put(`/api/users/${user.id}/admin`, { is_admin: newStatus })
-                .then(() => this.fetchUsers());
+                .then(() => this.fetchUsers())
+                .catch(error => {
+                    console.error('Error updating admin status:', error);
+                });
         },
         toggleActivation(user) {
             const newStatus = !user.is_activated;
             axios.put(`/api/users/${user.id}/activation`, { is_activated: newStatus })
-                .then(() => this.fetchUsers());
+                .then(() => this.fetchUsers())
+                .catch(error => {
+                    console.error('Error updating activation status:', error);
+                });
         },
         activateAll() {
             axios.post('/api/users/activate-all')
-                .then(() => this.fetchUsers());
+                .then(() => this.fetchUsers())
+                .catch(error => {
+                    console.error('Error activating all users:', error);
+                });
         },
         deactivateAll() {
             axios.post('/api/users/deactivate-all')
-                .then(() => this.fetchUsers());
-        }
-    }
+                .then(() => this.fetchUsers())
+                .catch(error => {
+                    console.error('Error deactivating all users:', error);
+                });
+        },
+    },
 };
 </script>

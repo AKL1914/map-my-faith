@@ -5,12 +5,34 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return User::select('id', 'name', 'email', 'is_admin', 'is_activated')->get();
+        $perPage = $request->input('per_page', 10); // Default to 10 items per page
+        $page = $request->input('page', 1); // Default to page 1
+        $search = $request->input('search');
+
+        // Generate a unique cache key based on page, per_page, and search
+        $cacheKey = "users_paginated_page_{$page}_perpage_{$perPage}_search_" . md5($search ?? '');
+
+        // Cache the results for 10 minutes
+        $users = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($perPage, $search) {
+            $query = User::select('id', 'name', 'email', 'is_admin', 'is_activated');
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            }
+
+            return $query->paginate($perPage);
+        });
+
+        return response()->json($users);
     }
 
     public function manage()
