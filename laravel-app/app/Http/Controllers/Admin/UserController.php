@@ -59,14 +59,14 @@ class UserController extends Controller
 
     public function activateAll()
     {
-        User::query()->update(['is_activated' => true]);
+        User::query()->where('is_admin',false)->update(['is_activated' => true]);
 
         return response()->json(['message' => 'All users activated.']);
     }
 
     public function deactivateAll()
     {
-        User::query()->update(['is_activated' => false]);
+        User::query()->where('is_admin',false)->update(['is_activated' => false]);
 
         return response()->json(['message' => 'All users deactivated.']);
     }

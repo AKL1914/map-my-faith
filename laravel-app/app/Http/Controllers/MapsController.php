@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Campaign;
 use Illuminate\Http\Request;
 
 class MapsController extends Controller
 {
     public function index()
     {
-        return view('maps.index');
+        $campaign = Campaign::where('is_active', true)->first();
+        return view('maps.index', compact('campaign'));
     }
 
     public function show($id)

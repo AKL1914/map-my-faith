@@ -168,12 +168,13 @@ async function pinMyLocation(status) {
     const lng = currentPinMarker.getLatLng().lng
     const isAccepted = status === 'accepted' ? 1 : 0
 
+    let activeCampaign = window.campaign.id;
     await axios.post('/api/pin', {
         latitude: lat,
         longitude: lng,
         notes: notes.value || '',
         is_accepted: isAccepted,
-        campaign_id: 1
+        campaign_id: activeCampaign
     })
 
     lastSubmitTime = now

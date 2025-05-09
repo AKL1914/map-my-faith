@@ -9,6 +9,10 @@ class AdminLoginController extends Controller
 {
     public function showLoginForm()
     {
+        if(Auth::check() && Auth::user()->is_admin) {
+            // If the user is already logged in, redirect to the admin dashboard
+            return redirect('/admin/dashboard');
+        }
         return view('auth.admin-login');
     }
 

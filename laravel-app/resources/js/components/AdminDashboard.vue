@@ -10,7 +10,6 @@
                     v-model="selectedCampaignId"
                     @change="fetchPins"
                 >
-                    <option value="">All Campaigns</option>
                     <option
                         v-for="campaign in campaigns"
                         :key="campaign.id"
@@ -61,7 +60,7 @@ export default {
         return {
             campaigns: [],
             pins: [],
-            selectedCampaignId: '',
+            selectedCampaignId: '', // Default value
             map: null,
             markers: [],
         };
@@ -69,7 +68,6 @@ export default {
     mounted() {
         this.initMap();
         this.fetchCampaigns();
-        this.fetchPins();
     },
     methods: {
         initMap() {
@@ -83,6 +81,13 @@ export default {
             axios.get('/api/campaigns')
                 .then(response => {
                     this.campaigns = response.data;
+
+                    // Set default to active campaign
+                    const activeCampaign = this.campaigns.find(campaign => campaign.is_active);
+                    if (activeCampaign) {
+                        this.selectedCampaignId = activeCampaign.id;
+                        this.fetchPins(); // Fetch pins for the active campaign
+                    }
                 });
         },
         fetchPins() {

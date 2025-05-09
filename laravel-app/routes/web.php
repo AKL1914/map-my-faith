@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\LeanerBoardController;
+use App\Http\Controllers\Admin\LeaderBoardController;
 use App\Http\Controllers\Auth\LoginController;
 
 Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('login.google');
@@ -55,7 +55,7 @@ Route::middleware(['auth'])->group(function () {
     //Admin routes
     Route::middleware([IsAdmin::class])->group(function () {
         Route::get('/admin/dashboard', [DashboardController::class, 'index']);
-        Route::get('/admin/leaderboard', [LeanerBoardController::class, 'index']);
+        Route::get('/admin/leaderboard', [LeaderBoardController::class, 'index']);
         Route::get('admin/campaigns', [CampaignController::class, 'manage'])->name('admin.campaigns.index');
         Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
         Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');

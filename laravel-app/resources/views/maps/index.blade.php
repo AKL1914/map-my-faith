@@ -5,5 +5,8 @@
 @section('content')
     <!-- Main Content -->
     <map-manager></map-manager>
+    <script>
+        window.campaign = @json($campaign);
+    </script>
 @endsection
 

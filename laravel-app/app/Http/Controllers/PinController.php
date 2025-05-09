@@ -46,7 +46,7 @@ class PinController extends Controller
         $cacheKey = 'pins_' . md5($search . '_page_' . $page . '_per_' . $perPage);
 
         // Cache the results for 10 minutes
-        $pins = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search, $perPage) {
+        $pins = Cache::rememberForever($cacheKey, function () use ($search, $perPage) {
             $query = Pin::with([
                 'user:id,name,email',
                 'campaign:id,name'
@@ -66,12 +66,13 @@ class PinController extends Controller
         return response()->json($pins);
     }
 
+
     //get all pins by campaign
     public function indexByCampaign($campaignId)
     {
         $cacheKey = "pins_campaign_{$campaignId}";
 
-        $pins = Cache::remember($cacheKey, 60, function () use ($campaignId) {
+        $pins = Cache::rememberForever($cacheKey, function () use ($campaignId) {
             return Pin::where('campaign_id', $campaignId)->get();
         });
 
@@ -83,7 +84,7 @@ class PinController extends Controller
     {
         $cacheKey = "pins_user_{$userId}";
 
-        $pins = Cache::remember($cacheKey, 60, function () use ($userId) {
+        $pins = Cache::rememberForever($cacheKey, function () use ($userId) {
             return Pin::where('user_id', $userId)->get();
         });
 
@@ -105,8 +106,15 @@ class PinController extends Controller
                 $request->west,
             ]));
 
+        // Track the cache key
+        $allBoundsKeys = Cache::get('pins_bounds_keys', []);
+        if (!in_array($cacheKey, $allBoundsKeys)) {
+            $allBoundsKeys[] = $cacheKey;
+            Cache::forever('pins_bounds_keys', $allBoundsKeys);
+        }
 
-        $pins = Cache::remember($cacheKey, 10, function () use ($request) {
+
+        $pins = Cache::rememberForever($cacheKey, function () use ($request) {
             return Pin::with('user:id,name')
                 ->where('campaign_id', function ($query) {
                     $query->select('id')

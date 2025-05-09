@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Campaign;
+use App\Models\Pin;
+use App\Observers\CampaignObserver;
+use App\Observers\PinObserver;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -23,6 +27,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        parent::boot();
+        Pin::observe(PinObserver::class);
+        Campaign::observe(CampaignObserver::class);
     }
 }

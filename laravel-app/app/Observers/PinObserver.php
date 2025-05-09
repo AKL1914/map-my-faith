@@ -7,48 +7,48 @@ use Illuminate\Support\Facades\Cache;
 
 class PinObserver
 {
-    /**
-     * Handle the Pin "created" event.
-     */
     public function created(Pin $pin): void
     {
-        Cache::forget('all_pins'); // if you cache all pins elsewhere
-        Cache::flush(); // Clear all, or use a better scoped approach
+        $this->clearAllBoundsCache();
+        Cache::forget('all_pins');
     }
 
-    /**
-     * Handle the Pin "updated" event.
-     */
     public function updated(Pin $pin): void
     {
-        Cache::forget('all_pins');
-        Cache::flush();
+        $this->clearAllBoundsCache();
+        Cache::forget('pins_campaign_' . $pin->campaign_id);
+        Cache::forget('pins_user_' . $pin->user_id);
     }
 
-    /**
-     * Handle the Pin "deleted" event.
-     */
     public function deleted(Pin $pin): void
     {
-        Cache::forget('all_pins');
-        Cache::flush();
+        $this->clearAllBoundsCache();
+        Cache::forget('pins_campaign_' . $pin->campaign_id);
+        Cache::forget('pins_user_' . $pin->user_id);
     }
 
-    /**
-     * Handle the Pin "restored" event.
-     */
     public function restored(Pin $pin): void
     {
-        Cache::forget('all_pins');
-        Cache::flush();
+        $this->clearAllBoundsCache();
+        Cache::forget('pins_campaign_' . $pin->campaign_id);
+        Cache::forget('pins_user_' . $pin->user_id);
     }
 
-    /**
-     * Handle the Pin "force deleted" event.
-     */
     public function forceDeleted(Pin $pin): void
     {
-        Cache::forget('all_pins');
-        Cache::flush();
+        $this->clearAllBoundsCache();
+        Cache::forget('pins_campaign_' . $pin->campaign_id);
+        Cache::forget('pins_user_' . $pin->user_id);
+    }
+
+    protected function clearAllBoundsCache(): void
+    {
+        $keys = Cache::get('pins_bounds_keys', []);
+
+        foreach ($keys as $key) {
+            Cache::forget($key);
+        }
+
+        Cache::forget('pins_bounds_keys');
     }
 }
