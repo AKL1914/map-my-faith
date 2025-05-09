@@ -134,5 +134,9 @@ class PinController extends Controller
         return response()->json(['message' => 'Deleted']);
     }
 
+    public function show(Pin $pin)
+    {
+        return view('pins.show', compact('pin'));
+    }
 
 }

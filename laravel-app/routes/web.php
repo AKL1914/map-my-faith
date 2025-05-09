@@ -59,6 +59,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('admin/campaigns', [CampaignController::class, 'manage'])->name('admin.campaigns.index');
         Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
         Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');
+        Route::get('admin/pin/{pin}', [PinController::class, 'show'])->name('show');
 
     });
 

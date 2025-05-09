@@ -61,6 +61,13 @@
                                     </span>
                             </td>
                             <td>
+                                <a
+                                    class="btn btn-sm btn-info me-2"
+                                    :href="`/admin/pin/${pin.id}`"
+                                    target="_blank"
+                                >
+                                    View
+                                </a>
                                 <button
                                     class="btn btn-sm btn-warning me-2"
                                     @click="toggleAcceptance(pin)"
