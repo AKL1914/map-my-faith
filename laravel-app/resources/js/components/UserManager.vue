@@ -107,8 +107,7 @@
 </template>
 
 <script>
-import axios from 'axios';
-import debounce from 'lodash/debounce';
+
 
 export default {
     name: 'UserManager',
@@ -123,7 +122,7 @@ export default {
     },
     created() {
         // Create debounced version of fetchUsers
-        this.debouncedFetchUsers = debounce(this.fetchUsers, 300);
+        this.debouncedFetchUsers = window.debounce(this.fetchUsers, 300);
     },
     mounted() {
         this.fetchUsers();

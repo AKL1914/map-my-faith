@@ -138,9 +138,6 @@
 </template>
 
 <script>
-import axios from 'axios';
-import debounce from 'lodash/debounce';
-
 export default {
     name: 'PinManager',
     data() {

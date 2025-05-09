@@ -32,9 +32,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-import axios from 'axios'
 
 let map
 const notes = ref('')
@@ -97,7 +94,7 @@ async function fetchPinsWithinBounds() {
     })
 
     if (pinLayerGroup) pinLayerGroup.clearLayers()
-    pinLayerGroup = L.layerGroup().addTo(map)
+    pinLayerGroup = window.L.layerGroup().addTo(map)
 
     data.forEach(pin => {
         // Use orange icon for current user's pins, otherwise green/red based on status
@@ -127,12 +124,12 @@ async function fetchPinsWithinBounds() {
 }
 
 onMounted(() => {
-    map = L.map('map')
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    map = window.L.map('map')
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 20
     }).addTo(map)
 
-    pinLayerGroup = L.layerGroup().addTo(map)
+    pinLayerGroup = window.L.layerGroup().addTo(map)
 
     navigator.geolocation.getCurrentPosition(async position => {
         const lat = position.coords.latitude

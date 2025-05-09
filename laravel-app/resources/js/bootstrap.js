@@ -1,6 +1,11 @@
 import axios from 'axios';
+import debounce from 'lodash/debounce';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
+window.debounce = debounce;
 window.axios = axios;
+window.L = L;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 

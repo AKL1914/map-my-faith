@@ -35,9 +35,6 @@
 </template>
 
 <script>
-import axios from 'axios';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
 // Marker icons
 const redIcon = new L.Icon({
@@ -59,6 +56,7 @@ const greenIcon = new L.Icon({
 });
 
 export default {
+    name: 'AdminDashboard',
     data() {
         return {
             campaigns: [],
@@ -75,7 +73,7 @@ export default {
     },
     methods: {
         initMap() {
-            this.map = L.map('map').setView([-36.8485, 174.7633], 12); // Auckland
+            this.map = window.L.map('map').setView([-36.8485, 174.7633], 12); // Auckland
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
@@ -111,7 +109,7 @@ export default {
         ${pin.notes ?? ''}
                     `;
 
-                    const marker = L.marker([pin.latitude, pin.longitude], {icon})
+                    const marker = window.L.marker([pin.latitude, pin.longitude], {icon})
                         .addTo(this.map)
                         .bindPopup(popupContent);
 
@@ -120,7 +118,7 @@ export default {
             });
 
             if (this.markers.length) {
-                const group = new L.featureGroup(this.markers);
+                const group = new window.L.featureGroup(this.markers);
                 this.map.fitBounds(group.getBounds(), {padding: [30, 30]});
             }
         }
