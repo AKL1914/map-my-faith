@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import { ref, onMounted } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import axios from 'axios'
@@ -74,11 +74,20 @@ const blueIcon = new L.Icon({
     shadowSize: [41, 41]
 })
 
+const orangeIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+})
+
 async function fetchPinsWithinBounds() {
     if (!map) return
 
     const bounds = map.getBounds()
-    const {data} = await axios.get('/api/pins/bounds', {
+    const { data } = await axios.get('/api/pins/bounds', {
         params: {
             north: bounds.getNorth(),
             south: bounds.getSouth(),
@@ -91,15 +100,17 @@ async function fetchPinsWithinBounds() {
     pinLayerGroup = L.layerGroup().addTo(map)
 
     data.forEach(pin => {
-        const icon = pin.is_accepted === 1 ? greenIcon : redIcon
+        // Use orange icon for current user's pins, otherwise green/red based on status
+        const icon = pin.user_id === currentUserId ? orangeIcon : (pin.is_accepted === 1 ? greenIcon : redIcon)
         const popupContent = `
             <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
+            Status: ${pin.is_accepted === 1 ? 'Accepted ✅' : 'Refused ❌'}<br/>
             ${pin.notes ?? ''}
             ${pin.user_id === currentUserId
-            ? `<button class="btn btn-sm btn-outline-danger mt-2 delete-btn" data-id="${pin.id}">🗑 Delete</button>`
+            ? `<button class="btn btn-sm btn-outline-danger mt-2 delete-btn" data-id="${pin.id}">🗑</button>`
             : ''}
         `
-        const marker = L.marker([pin.latitude, pin.longitude], {icon})
+        const marker = L.marker([pin.latitude, pin.longitude], { icon })
             .addTo(pinLayerGroup)
             .bindPopup(popupContent)
 
@@ -128,7 +139,7 @@ onMounted(() => {
         const lng = position.coords.longitude
         map.setView([lat, lng], 12)
 
-        currentPinMarker = L.marker([lat, lng], {icon: blueIcon})
+        currentPinMarker = L.marker([lat, lng], { icon: blueIcon })
             .addTo(map)
             .bindPopup('You are here')
 
@@ -144,7 +155,7 @@ onMounted(() => {
         if (currentPinMarker) {
             currentPinMarker.setLatLng([lat, lng])
         } else {
-            currentPinMarker = L.marker([lat, lng], {icon: blueIcon}).addTo(map)
+            currentPinMarker = L.marker([lat, lng], { icon: blueIcon }).addTo(map)
         }
 
         currentPinMarker.bindPopup('New location').openPopup()

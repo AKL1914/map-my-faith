@@ -81,6 +81,7 @@ class PinController extends Controller
 
 
         $pins = Cache::remember($cacheKey, 10, function () use ($request) {
+            // we will also include only the active campaign pins
             return Pin::with('user:id,name')
                 ->whereBetween('latitude', [$request->south, $request->north])
                 ->whereBetween('longitude', [$request->west, $request->east])
