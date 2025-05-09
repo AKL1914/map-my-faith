@@ -44,6 +44,10 @@ Route::middleware(['auth'])->group(function () {
             Route::apiResource('campaigns', CampaignController::class);
             Route::get('/users', [UserController::class, 'index']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
+            Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
+            Route::put('/users/{user}/activation', [UserController::class, 'updateActivationStatus']);
+            Route::post('/users/activate-all', [UserController::class, 'activateAll']);
+            Route::post('/users/deactivate-all', [UserController::class, 'deactivateAll']);
         });
 
     });
@@ -55,11 +59,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('admin/campaigns', [CampaignController::class, 'manage'])->name('admin.campaigns.index');
         Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
         Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');
+
     });
 
 });
 
 ////Admin
+Route::get('/activate', [HomeController::class, 'activate'])->name('activate');
 Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
 Route::post('/admin/login', [AdminLoginController::class, 'login']);
 

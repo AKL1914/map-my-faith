@@ -5,6 +5,10 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Users</h5>
+                <div class="mb-3">
+                    <button class="btn btn-success me-2" @click="activateAll">Activate All</button>
+                    <button class="btn btn-danger" @click="deactivateAll">Deactivate All</button>
+                </div>
                 <table class="table table-striped">
                     <thead>
                     <tr>
@@ -12,7 +16,8 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Admin</th>
-                        <th style="width: 160px;">Actions</th>
+                        <th>Activated</th>
+                        <th style="width: 260px;">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -26,17 +31,29 @@
                             </span>
                         </td>
                         <td>
+                            <span class="badge" :class="user.is_activated ? 'bg-success' : 'bg-secondary'">
+                              {{ user.is_activated ? 'Yes' : 'No' }}
+                            </span>
+                        </td>
+                        <td>
                             <button
-                                class="btn btn-sm"
+                                class="btn btn-sm me-1"
                                 :class="user.is_admin ? 'btn-secondary' : 'btn-warning'"
                                 @click="toggleAdmin(user)"
                             >
                                 {{ user.is_admin ? 'Revoke Admin' : 'Make Admin' }}
                             </button>
+                            <button
+                                class="btn btn-sm"
+                                :class="user.is_activated ? 'btn-danger' : 'btn-success'"
+                                @click="toggleActivation(user)"
+                            >
+                                {{ user.is_activated ? 'Deactivate' : 'Activate' }}
+                            </button>
                         </td>
                     </tr>
                     <tr v-if="users.length === 0">
-                        <td colspan="5" class="text-center">No users found.</td>
+                        <td colspan="6" class="text-center">No users found.</td>
                     </tr>
                     </tbody>
                 </table>
@@ -67,8 +84,20 @@ export default {
         },
         toggleAdmin(user) {
             const newStatus = !user.is_admin;
-
             axios.put(`/api/users/${user.id}/admin`, { is_admin: newStatus })
+                .then(() => this.fetchUsers());
+        },
+        toggleActivation(user) {
+            const newStatus = !user.is_activated;
+            axios.put(`/api/users/${user.id}/activation`, { is_activated: newStatus })
+                .then(() => this.fetchUsers());
+        },
+        activateAll() {
+            axios.post('/api/users/activate-all')
+                .then(() => this.fetchUsers());
+        },
+        deactivateAll() {
+            axios.post('/api/users/deactivate-all')
                 .then(() => this.fetchUsers());
         }
     }

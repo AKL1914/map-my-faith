@@ -1,7 +1,6 @@
 <?php
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -10,9 +9,8 @@ class HomeController extends Controller
         return view('welcome');
     }
 
-    public function dashboard()
+    public function activate()
     {
-//        dd(\auth()->check());
-//        return view('dashboard');
+        return view('activate.index');
     }
 }

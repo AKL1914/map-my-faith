@@ -30,11 +30,23 @@ class LoginController extends Controller
     public function handleGoogleCallback()
     {
         $googleUser = Socialite::driver('google')->stateless()->user();
+        // Check if the user already exists in the database
+        if(User::where('email', $googleUser->getEmail())->exists()) {
+            $user = User::where('email', $googleUser->getEmail())->first();
+        } else {
+            // Create a new user if it doesn't exist
+            $user = User::create([
+                'name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
+                'is_activated' => false,
+            ]);
+        }
 
-        $user = User::firstOrCreate(
-            ['email' => $googleUser->getEmail()],
-            ['name' => $googleUser->getName()]
-        );
+        //if user is not activated, redirect to activation page
+        if (!$user->is_activated) {
+            return redirect('/activate')->with('message', 'Please activate your account.');
+        }
+
         \auth()->login($user); // Set the session auth
         return redirect('/maps'); // Redirect to the dashboard or any other route
     }

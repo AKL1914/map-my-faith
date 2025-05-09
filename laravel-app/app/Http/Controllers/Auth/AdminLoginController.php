@@ -9,7 +9,6 @@ class AdminLoginController extends Controller
 {
     public function showLoginForm()
     {
-//        dd('s');
         return view('auth.admin-login');
     }
 
@@ -19,17 +18,14 @@ class AdminLoginController extends Controller
 
 
         if (Auth::attempt($credentials)) {
-//            dd('ss1');
             // Check if user is admin
             if (Auth::user()->is_admin) {
-//                dd('sss');
                 return redirect('/admin/dashboard'); // or wherever you want
             } else {
                 Auth::logout();
                 return redirect()->back()->withErrors(['email' => 'You are not an admin.']);
             }
         }
-//        dd('ss');
 
         return redirect()->back()->withErrors(['email' => 'Invalid credentials.']);
     }
