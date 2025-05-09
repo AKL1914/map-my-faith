@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted} from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import axios from 'axios'
@@ -41,7 +41,10 @@ const notes = ref('')
 let currentPinMarker = null
 let lastSubmitTime = 0
 let pinLayerGroup = null
-const loading = ref(false) // New state for loading
+const loading = ref(false)
+
+// Get current user ID
+const currentUserId = window.authUser?.id || null
 
 // Marker icons
 const redIcon = new L.Icon({
@@ -75,7 +78,7 @@ async function fetchPinsWithinBounds() {
     if (!map) return
 
     const bounds = map.getBounds()
-    const { data } = await axios.get('/api/pins/bounds', {
+    const {data} = await axios.get('/api/pins/bounds', {
         params: {
             north: bounds.getNorth(),
             south: bounds.getSouth(),
@@ -92,10 +95,23 @@ async function fetchPinsWithinBounds() {
         const popupContent = `
             <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
             ${pin.notes ?? ''}
+            ${pin.user_id === currentUserId
+            ? `<button class="btn btn-sm btn-outline-danger mt-2 delete-btn" data-id="${pin.id}">🗑 Delete</button>`
+            : ''}
         `
-        L.marker([pin.latitude, pin.longitude], { icon })
+        const marker = L.marker([pin.latitude, pin.longitude], {icon})
             .addTo(pinLayerGroup)
             .bindPopup(popupContent)
+
+        // Attach event listener for the delete button after the popup is opened
+        marker.on('popupopen', () => {
+            const deleteButton = document.querySelector(`.delete-btn[data-id="${pin.id}"]`)
+            if (deleteButton) {
+                deleteButton.addEventListener('click', () => {
+                    deletePin(pin.id)
+                })
+            }
+        })
     })
 }
 
@@ -112,7 +128,7 @@ onMounted(() => {
         const lng = position.coords.longitude
         map.setView([lat, lng], 12)
 
-        currentPinMarker = L.marker([lat, lng], { icon: blueIcon })
+        currentPinMarker = L.marker([lat, lng], {icon: blueIcon})
             .addTo(map)
             .bindPopup('You are here')
 
@@ -128,7 +144,7 @@ onMounted(() => {
         if (currentPinMarker) {
             currentPinMarker.setLatLng([lat, lng])
         } else {
-            currentPinMarker = L.marker([lat, lng], { icon: blueIcon }).addTo(map)
+            currentPinMarker = L.marker([lat, lng], {icon: blueIcon}).addTo(map)
         }
 
         currentPinMarker.bindPopup('New location').openPopup()
@@ -165,6 +181,13 @@ async function pinMyLocation(status) {
 function confirmRefuse() {
     if (confirm('Are you sure you want to refuse?')) {
         pinMyLocation('refused')
+    }
+}
+
+async function deletePin(pinId) {
+    if (confirm('Are you sure you want to delete this pin?')) {
+        await axios.delete(`/api/pin/${pinId}`)
+        await fetchPinsWithinBounds()
     }
 }
 </script>
@@ -216,5 +239,10 @@ function confirmRefuse() {
     border-radius: 8px;
     border: 1px solid #ccc;
     resize: vertical;
+}
+
+.delete-btn {
+    margin-top: 8px;
+    font-size: 14px;
 }
 </style>

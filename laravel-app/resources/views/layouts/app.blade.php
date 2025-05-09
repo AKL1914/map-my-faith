@@ -27,6 +27,10 @@
     </style>
 
     @yield('head')
+    <script>
+        window.authUser = @json(auth()->user());
+    </script>
+
 </head>
 <body>
 @include('partials.navigation')

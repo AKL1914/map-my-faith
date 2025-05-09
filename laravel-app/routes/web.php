@@ -33,6 +33,8 @@ Route::middleware(['auth'])->group(function () {
     Route::group(['prefix' => 'api'], function () {
         Route::post('/pin', [PinController::class, 'store']);
         Route::get('/pins', [PinController::class, 'index']);
+        Route::delete('/pin/{id}', [PinController::class, 'destroy']);
+
         Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
         Route::get('/pins/bounds', [PinController::class, 'indexByBounds']);
 

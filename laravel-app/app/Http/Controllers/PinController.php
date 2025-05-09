@@ -90,5 +90,18 @@ class PinController extends Controller
         return response()->json($pins);
     }
 
+    public function destroy($id)
+    {
+        $pin = Pin::findOrFail($id);
+
+        if ($pin->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $pin->delete();
+
+        return response()->json(['message' => 'Deleted']);
+    }
+
 
 }
