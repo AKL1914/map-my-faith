@@ -8,6 +8,7 @@
             <a class="btn {{ request()->is('admin/dashboard') ? 'btn-light text-dark' : 'btn-outline-light' }}" href="{{ url('/admin/dashboard') }}">Dashboard</a>
             <a class="btn {{ request()->is('admin/leaderboard') ? 'btn-light text-dark' : 'btn-outline-light' }}" href="{{ url('/admin/leaderboard') }}">Leaderboard</a>
             <a class="btn {{ request()->is('admin/campaigns') ? 'btn-light text-dark' : 'btn-outline-light' }}" href="{{ url('/admin/campaigns') }}">Campaigns</a>
+            <a class="btn {{ request()->is('admin/pins') ? 'btn-light text-dark' : 'btn-outline-light' }}" href="{{ url('/admin/pins') }}">Pins</a>
             <a class="btn {{ request()->is('admin/users') ? 'btn-light text-dark' : 'btn-outline-light' }}" href="{{ url('/admin/users') }}">Users</a>
             @endadmin
 
