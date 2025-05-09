@@ -21,6 +21,9 @@
         main {
             flex: 1;
         }
+        .bg-gray {
+            background-color: #808080; /* Gray background */
+        }
     </style>
 
     @yield('head')

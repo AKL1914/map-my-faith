@@ -1,4 +1,4 @@
-<nav class="navbar navbar-dark bg-dark px-3">
+<nav class="navbar navbar-dark bg-gray px-3">
     <div class="d-flex w-100 align-items-center">
         {{-- Left-aligned nav links --}}
         <div class="d-flex gap-2 me-auto">

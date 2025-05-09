@@ -14,5 +14,6 @@ Route::prefix('v1')->group(function () {
         Route::post('/pin', [PinController::class, 'store']);
         Route::get('/pins', [PinController::class, 'index']);
         Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
+        Route::get('/pins/bounds', [PinController::class, 'indexByBounds']);
     });
 });

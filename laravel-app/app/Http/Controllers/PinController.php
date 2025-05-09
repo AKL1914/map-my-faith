@@ -32,8 +32,6 @@ class PinController extends Controller
     //get all pins
     public function index()
     {
-//        $pins = Pin::all();
-//        return response()->json($pins);
 
         $pins = Pin::with('user:id,name')->get(); // Load only the user ID and name
         return response()->json($pins);
@@ -51,6 +49,23 @@ class PinController extends Controller
     public function indexByUser($userId)
     {
         $pins = Pin::where('user_id', $userId)->get();
+        return response()->json($pins);
+    }
+
+    public function indexByBounds(Request $request)
+    {
+        $request->validate([
+            'north' => 'required|numeric',
+            'south' => 'required|numeric',
+            'east' => 'required|numeric',
+            'west' => 'required|numeric',
+        ]);
+
+        $pins = Pin::with('user:id,name')
+            ->whereBetween('latitude', [$request->south, $request->north])
+            ->whereBetween('longitude', [$request->west, $request->east])
+            ->get();
+
         return response()->json($pins);
     }
 

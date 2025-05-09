@@ -3,12 +3,20 @@
         <div class="map-container">
             <div id="map" class="map mb-3"></div>
 
-            <div class="button-group d-flex flex-column gap-3 mb-4">
-                <button @click="pinMyLocation('accepted')" class="btn btn-success">
-                    ✅ Accepted
+            <div class="button-group d-flex gap-3 mb-4">
+                <button
+                    :disabled="loading"
+                    @click="pinMyLocation('accepted')"
+                    class="btn btn-success">
+                    <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span v-else>✅ Accepted</span>
                 </button>
-                <button @click="confirmRefuse" class="btn btn-danger">
-                    ❌ Refused
+                <button
+                    :disabled="loading"
+                    @click="confirmRefuse"
+                    class="btn btn-danger">
+                    <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span v-else>❌ Refused</span>
                 </button>
             </div>
 
@@ -23,14 +31,17 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import { ref, onMounted } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import axios from 'axios'
 
 let map
 const notes = ref('')
-let currentPinMarker = null // Variable to store the current pin marker
+let currentPinMarker = null
+let lastSubmitTime = 0
+let pinLayerGroup = null
+const loading = ref(false) // New state for loading
 
 // Marker icons
 const redIcon = new L.Icon({
@@ -60,47 +71,64 @@ const blueIcon = new L.Icon({
     shadowSize: [41, 41]
 })
 
-onMounted(async () => {
+async function fetchPinsWithinBounds() {
+    if (!map) return
+
+    const bounds = map.getBounds()
+    const { data } = await axios.get('/api/pins/bounds', {
+        params: {
+            north: bounds.getNorth(),
+            south: bounds.getSouth(),
+            east: bounds.getEast(),
+            west: bounds.getWest(),
+        }
+    })
+
+    if (pinLayerGroup) pinLayerGroup.clearLayers()
+    pinLayerGroup = L.layerGroup().addTo(map)
+
+    data.forEach(pin => {
+        const icon = pin.is_accepted === 1 ? greenIcon : redIcon
+        const popupContent = `
+            <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
+            ${pin.notes ?? ''}
+        `
+        L.marker([pin.latitude, pin.longitude], { icon })
+            .addTo(pinLayerGroup)
+            .bindPopup(popupContent)
+    })
+}
+
+onMounted(() => {
     map = L.map('map')
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 20
     }).addTo(map)
 
+    pinLayerGroup = L.layerGroup().addTo(map)
+
     navigator.geolocation.getCurrentPosition(async position => {
         const lat = position.coords.latitude
         const lng = position.coords.longitude
-        map.setView([lat, lng], 12) // zoomed out a bit
+        map.setView([lat, lng], 12)
 
-        // Your location marker
-        currentPinMarker = L.marker([lat, lng], {icon: blueIcon})
+        currentPinMarker = L.marker([lat, lng], { icon: blueIcon })
             .addTo(map)
             .bindPopup('You are here')
 
-        // Load all pins
-        const { data } = await axios.get('/api/pins')
-        data.forEach(pin => {
-            const icon = pin.is_accepted === 1 ? greenIcon : redIcon
-            const popupContent = `
-        <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
-        ${pin.notes ?? ''}
-    `
-            L.marker([pin.latitude, pin.longitude], { icon })
-                .addTo(map)
-                .bindPopup(popupContent)
-        })
+        await fetchPinsWithinBounds()
     })
 
-    // Allow the user to click on the map to update the current pin
+    map.on('moveend', fetchPinsWithinBounds)
+
     map.on('click', function (e) {
         const lat = e.latlng.lat
         const lng = e.latlng.lng
 
-        // If there's already a marker, move it to the new location
         if (currentPinMarker) {
             currentPinMarker.setLatLng([lat, lng])
         } else {
-            // Otherwise, create a new marker at the clicked location
-            currentPinMarker = L.marker([lat, lng], {icon: blueIcon}).addTo(map)
+            currentPinMarker = L.marker([lat, lng], { icon: blueIcon }).addTo(map)
         }
 
         currentPinMarker.bindPopup('New location').openPopup()
@@ -108,30 +136,30 @@ onMounted(async () => {
 })
 
 async function pinMyLocation(status) {
-    if (!currentPinMarker) return // Prevent submission if no marker is set
+    const now = Date.now()
+    if (!currentPinMarker || now - lastSubmitTime < 4000 || loading.value) return // Prevent double submissions
 
+    loading.value = true // Start loading
     const lat = currentPinMarker.getLatLng().lat
     const lng = currentPinMarker.getLatLng().lng
-    const campaign = 1
     const isAccepted = status === 'accepted' ? 1 : 0
 
     await axios.post('/api/pin', {
         latitude: lat,
         longitude: lng,
-        campaign_id: campaign,
         notes: notes.value || '',
-        is_accepted: isAccepted
+        is_accepted: isAccepted,
+        campaign_id: 1
     })
 
-    // Show the new marker with appropriate color
-    const icon = isAccepted === 1 ? greenIcon : redIcon
-    L.marker([lat, lng], {icon})
-        .addTo(map)
-        .bindPopup(status === 'accepted' ? 'Accepted Pin' : 'Refused Pin')
-
-    // Reset the form and marker position
+    lastSubmitTime = now
     notes.value = ''
-    currentPinMarker.setLatLng([lat, lng]) // Update the current pin's position
+    currentPinMarker.setLatLng([lat, lng])
+    await fetchPinsWithinBounds()
+
+    setTimeout(() => {
+        loading.value = false // End loading after 5 seconds
+    }, 5000)
 }
 
 function confirmRefuse() {
@@ -148,7 +176,7 @@ function confirmRefuse() {
 }
 
 .map {
-    height: 70vh;
+    height: 60vh;
     width: 100%;
     margin-bottom: 20px;
     border-radius: 10px;
@@ -157,8 +185,8 @@ function confirmRefuse() {
 
 .button-group {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    gap: 16px; /* Changed to a row layout */
+    justify-content: space-between; /* Ensures space between buttons */
 }
 
 .btn {
@@ -168,7 +196,7 @@ function confirmRefuse() {
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    width: 100%;
+    flex: 1; /* Makes the buttons the same width */
 }
 
 .btn-success {

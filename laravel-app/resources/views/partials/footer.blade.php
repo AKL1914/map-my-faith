@@ -1,4 +1,4 @@
-<footer class="bg-dark text-white text-center py-3 mt-auto">
+<footer class="bg-gray text-white text-center py-3 mt-auto">
     &copy; {{ date('Y') }} Map My Faith
 </footer>
 
