@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Cache;
 
 class PinController extends Controller
 {
+    public function manage()
+    {
+        return  view('pins.index');
+    }
 
     public function store(Request $request)
     {
@@ -32,12 +36,34 @@ class PinController extends Controller
     }
 
     //get all pins
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = 10;
+        $search = $request->query('search');
+        $page = $request->query('page', 1);
 
-        $pins = Pin::with('user:id,name')->get(); // Load only the user ID and name
+        // Generate a unique cache key based on search term and page
+        $cacheKey = 'pins_' . md5($search . '_page_' . $page . '_per_' . $perPage);
+
+        // Cache the results for 10 minutes
+        $pins = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search, $perPage) {
+            $query = Pin::with([
+                'user:id,name,email',
+                'campaign:id,name'
+            ])->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('notes', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                });
+            });
+
+            return $query->paginate($perPage);
+        });
+
         return response()->json($pins);
-
     }
 
     //get all pins by campaign

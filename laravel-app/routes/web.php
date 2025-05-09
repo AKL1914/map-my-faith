@@ -40,6 +40,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware([IsAdmin::class])->group(function () {
             Route::get('/pins/campaign/{campaignId}', [PinController::class, 'indexByCampaign']);
+
             Route::apiResource('campaigns', CampaignController::class);
             Route::get('/users', [UserController::class, 'index']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
@@ -53,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/leaderboard', [LeanerBoardController::class, 'index']);
         Route::get('admin/campaigns', [CampaignController::class, 'manage'])->name('admin.campaigns.index');
         Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
+        Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');
     });
 
 });
