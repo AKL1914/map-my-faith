@@ -80,7 +80,7 @@
 <main class="container text-center flex-grow-1 d-flex flex-column justify-content-center align-items-center">
     <img src="{{ asset('images/logo.png') }}" alt="Logo" class="mb-4 rounded-3" style="max-width: 200px;">
 
-    <h1 class="mb-4 text-blue">Welcome to {{ config('app.name') }}</h1>
+    <h1 class="mb-4 text-secondary">Welcome to {{ config('app.name') }}</h1>
 
     @auth
         <div id="app" class="w-100"></div> <!-- Vue mounts here -->

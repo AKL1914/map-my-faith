@@ -7,7 +7,7 @@
                 <button
                     :disabled="loading"
                     @click="pinMyLocation('accepted')"
-                    class="btn btn-success">
+                    class="btn google-btn">
                     <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     <span v-else><i class="bi bi-geo-alt-fill"></i> Pin Location</span>
                 </button>
@@ -129,7 +129,8 @@ async function fetchPinsWithinBounds() {
 onMounted(() => {
     map = window.L.map('map')
     window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 20
+        maxZoom: 18,
+        minZoom: 10
     }).addTo(map)
 
     pinLayerGroup = window.L.layerGroup().addTo(map)
@@ -187,7 +188,7 @@ async function pinMyLocation(status) {
     const lng = currentPinMarker.getLatLng().lng
     const isAccepted = status === 'accepted' ? 1 : 0
 
-    let activeCampaign = window.campaign.id;
+    let activeCampaign = window.campaign?.id;
     await axios.post('/api/pin', {
         latitude: lat,
         longitude: lng,
@@ -272,5 +273,32 @@ async function deletePin(pinId) {
 .delete-btn {
     margin-top: 8px;
     font-size: 14px;
+}
+
+.google-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    font-weight: 500;
+    padding: 1rem 1.5rem;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 360px;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.google-btn:hover {
+    background-color: #357ae8;
+}
+
+.google-btn i {
+    font-size: 1.5rem;
 }
 </style>

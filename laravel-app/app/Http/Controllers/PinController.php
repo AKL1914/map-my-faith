@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PinStoreRequest;
 use App\Models\Campaign;
 use Illuminate\Http\Request;
 use App\Models\Pin;
@@ -15,13 +16,9 @@ class PinController extends Controller
         return  view('pins.index');
     }
 
-    public function store(Request $request)
+    public function store(PinStoreRequest $request)
     {
         $activeCampaign = Campaign::where('is_active', true)->first();
-        $request->validate([
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-        ]);
 
         $pin = Pin::create([
             'user_id' => Auth::id(),
