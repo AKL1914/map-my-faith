@@ -18,13 +18,12 @@ class PinController extends Controller
 
     public function store(PinStoreRequest $request)
     {
-        $activeCampaign = Campaign::where('is_active', true)->first();
 
         $pin = Pin::create([
             'user_id' => Auth::id(),
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
-            'campaign_id' => $activeCampaign->id,
+            'campaign_id' => $request->campaign_id,
             'is_accepted' => $request->is_accepted ?? false,
             'notes' => $request->notes,
         ]);
