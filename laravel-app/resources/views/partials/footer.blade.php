@@ -1,5 +1,8 @@
-<footer class="bg-gray text-white text-center py-3 mt-auto">
-    &copy; {{ date('Y') }} Map My Faith
+{{-- Footer --}}
+<footer class="bg-blue text-white text-center py-3 mt-auto">
+    <div class="container">
+        <small>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</small>
+    </div>
 </footer>
 
 <!-- Bootstrap JS Bundle -->

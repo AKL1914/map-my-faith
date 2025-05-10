@@ -12,17 +12,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
         // DatabaseSeeder.php
         $this->call(CampaignSeeder::class);
         $this->call(UsersSeeder::class);
-//        $this->call(StaticPinSeeder::class);
         $this->call(PinFromCsvSeeder::class);
     }
 }

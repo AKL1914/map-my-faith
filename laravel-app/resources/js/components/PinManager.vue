@@ -1,6 +1,6 @@
 <template>
     <div class="container my-4">
-        <h2>Pin Manager</h2>
+        <h2 class="mb-3">Pin Manager</h2>
 
         <!-- Search Input -->
         <div class="card mb-4">
@@ -24,77 +24,81 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Pins</h5>
-                <div v-if="isLoading" class="text-center">
+
+                <div v-if="isLoading" class="text-center my-3">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                 </div>
+
                 <div v-else-if="error" class="alert alert-danger">
                     {{ error }}
                 </div>
+
                 <div v-else>
-                    <table class="table table-striped">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>User</th>
-                            <th>Campaign</th>
-                            <th>Coordinates</th>
-                            <th>Notes</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr v-for="pin in pins.data" :key="pin.id">
-                            <td>{{ pin.id }}</td>
-                            <td>{{ pin.user?.name }} ({{ pin.user?.email }})</td>
-                            <td>{{ pin.campaign?.name }}</td>
-                            <td>{{ parseFloat(pin.latitude).toFixed(4) }}, {{ parseFloat(pin.longitude).toFixed(4) }}</td>
-                            <td>{{ pin.notes || '-' }}</td>
-                            <td>
-                                    <span
-                                        class="badge"
-                                        :class="pin.is_accepted ? 'bg-success' : 'bg-secondary'"
-                                    >
-                                        {{ pin.is_accepted ? 'Accepted' : 'Pending' }}
-                                    </span>
-                            </td>
-                            <td>
-                                <a
-                                    class="btn btn-sm btn-info me-2"
-                                    :href="`/admin/pin/${pin.id}`"
-                                    target="_blank"
-                                >
-                                    View
-                                </a>
-                                <button
-                                    class="btn btn-sm btn-warning me-2"
-                                    @click="toggleAcceptance(pin)"
-                                >
-                                    {{ pin.is_accepted ? 'Unaccept' : 'Accept' }}
-                                </button>
-                                <button
-                                    class="btn btn-sm btn-danger"
-                                    @click="deletePin(pin.id)"
-                                >
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                        <tr v-if="pins.data?.length === 0">
-                            <td colspan="7" class="text-center">No pins found.</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <!-- Responsive Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead class="d-none d-md-table-header-group">
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Campaign</th>
+                                <th>Coordinates</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr v-for="pin in pins.data" :key="pin.id" class="d-block d-md-table-row mb-3 mb-md-0 border rounded p-2 p-md-0">
+                                <td class="d-block d-md-table-cell"><strong>ID:</strong> {{ pin.id }}</td>
+                                <td class="d-block d-md-table-cell"><strong>User:</strong> {{ pin.user?.name }} ({{ pin.user?.email }})</td>
+                                <td class="d-block d-md-table-cell"><strong>Campaign:</strong> {{ pin.campaign?.name }}</td>
+                                <td class="d-block d-md-table-cell"><strong>Coordinates:</strong> {{ parseFloat(pin.latitude).toFixed(4) }}, {{ parseFloat(pin.longitude).toFixed(4) }}</td>
+                                <td class="d-block d-md-table-cell"><strong>Notes:</strong> {{ pin.notes || '-' }}</td>
+                                <td class="d-block d-md-table-cell">
+                                    <strong>Status:</strong>
+                                    <span class="badge" :class="pin.is_accepted ? 'bg-success' : 'bg-secondary'">
+                      {{ pin.is_accepted ? 'Accepted' : 'Pending' }}
+                    </span>
+                                </td>
+                                <td class="d-block d-md-table-cell">
+                                    <div class="d-grid gap-2 d-md-flex">
+                                        <a
+                                            class="btn btn-sm btn-info"
+                                            :href="`/admin/pin/${pin.id}`"
+                                            target="_blank"
+                                        >
+                                            View
+                                        </a>
+                                        <button
+                                            class="btn btn-sm btn-warning"
+                                            @click="toggleAcceptance(pin)"
+                                        >
+                                            {{ pin.is_accepted ? 'Unaccept' : 'Accept' }}
+                                        </button>
+                                        <button
+                                            class="btn btn-sm btn-danger"
+                                            @click="deletePin(pin.id)"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr v-if="pins.data?.length === 0">
+                                <td colspan="7" class="text-center">No pins found.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <!-- Pagination -->
                     <nav v-if="pins.total > pins.per_page">
                         <ul class="pagination justify-content-center">
-                            <li
-                                class="page-item"
-                                :class="{ disabled: pins.current_page === 1 }"
-                            >
+                            <li class="page-item" :class="{ disabled: pins.current_page === 1 }">
                                 <a
                                     class="page-link"
                                     href="#"
@@ -109,18 +113,11 @@
                                 :key="page"
                                 :class="{ active: page === pins.current_page }"
                             >
-                                <a
-                                    class="page-link"
-                                    href="#"
-                                    @click.prevent="fetchPins(page)"
-                                >
+                                <a class="page-link" href="#" @click.prevent="fetchPins(page)">
                                     {{ page }}
                                 </a>
                             </li>
-                            <li
-                                class="page-item"
-                                :class="{ disabled: pins.current_page === pins.last_page }"
-                            >
+                            <li class="page-item" :class="{ disabled: pins.current_page === pins.last_page }">
                                 <a
                                     class="page-link"
                                     href="#"
@@ -136,6 +133,7 @@
         </div>
     </div>
 </template>
+
 
 <script>
 export default {
@@ -237,4 +235,15 @@ export default {
 .pagination {
     margin-top: 1rem;
 }
+
+@media (max-width: 768px) {
+    table tr {
+        margin-bottom: 1rem;
+    }
+
+    td {
+        border-top: none !important;
+    }
+}
 </style>
+

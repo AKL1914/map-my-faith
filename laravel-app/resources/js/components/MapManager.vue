@@ -9,9 +9,10 @@
                     @click="pinMyLocation('accepted')"
                     class="btn btn-success">
                     <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span v-else>✅ Accepted</span>
+                    <span v-else><i class="bi bi-geo-alt-fill"></i> Pin Location</span>
                 </button>
-                <button
+                <!--                will use this in the future-->
+                <button v-if="false"
                     :disabled="loading"
                     @click="confirmRefuse"
                     class="btn btn-danger">
@@ -31,7 +32,9 @@
 </template>
 
 <script setup>
+import 'leaflet-control-geocoder';
 import { ref, onMounted } from 'vue'
+
 
 let map
 const notes = ref('')
@@ -131,10 +134,26 @@ onMounted(() => {
 
     pinLayerGroup = window.L.layerGroup().addTo(map)
 
+    // Add geocoder control
+    window.L.Control.geocoder({
+        defaultMarkGeocode: false
+    })
+        .on('markgeocode', function(e) {
+            const bbox = e.geocode.bbox;
+            const poly = window.L.polygon([
+                bbox.getSouthEast(),
+                bbox.getNorthEast(),
+                bbox.getNorthWest(),
+                bbox.getSouthWest()
+            ]).addTo(map);
+            map.fitBounds(poly.getBounds());
+        })
+        .addTo(map);
+
     navigator.geolocation.getCurrentPosition(async position => {
         const lat = position.coords.latitude
         const lng = position.coords.longitude
-        map.setView([lat, lng], 12)
+        map.setView([lat, lng], 18)
 
         currentPinMarker = L.marker([lat, lng], { icon: blueIcon })
             .addTo(map)

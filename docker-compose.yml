@@ -33,17 +33,19 @@ services:
     ports:
       - "3306:3306"
 
-  reactnative:
-    build:
-      context: ./docker/reactnative
-      dockerfile: Dockerfile
-    container_name: map_my_faith_reactnative
-    ports:
-      - "19000:19000"  # Metro Bundler
-      - "19001:19001"  # Expo dev tools (optional)
-    volumes:
-      - ./reactnative-app:/app
-    command: npx expo start --tunnel
+# Commenting out this block for now as it's not needed for the current setup
+#  will keep this for reference if needed in the future
+#  reactnative:
+#    build:
+#      context: ./docker/reactnative
+#      dockerfile: Dockerfile
+#    container_name: map_my_faith_reactnative
+#    ports:
+#      - "19000:19000"  # Metro Bundler
+#      - "19001:19001"  # Expo dev tools (optional)
+#    volumes:
+#      - ./reactnative-app:/app
+#    command: npx expo start --tunnel
 
 volumes:
   mysql-data:

@@ -13,8 +13,6 @@ class CampaignSeeder extends Seeder
      */
     public function run(): void
     {
-        Campaign::create(['name' => 'EVM 2024' , 'description' => 'Old Data From Old Map' , 'is_active' => true]);
-        Campaign::create(['name' => 'EVM 2025' , 'description' => 'Description' , 'is_active' => false]);
-        Campaign::create(['name' => 'JUNE EVM 2025' , 'description' => 'Description' , 'is_active' => false]);
+        Campaign::create(['name' => 'AUCKLAND PROPAGATION' , 'description' => 'Auckland Propagation' , 'is_active' => true]);
     }
 }
