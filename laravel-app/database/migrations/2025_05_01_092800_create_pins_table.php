@@ -17,6 +17,7 @@ return new class extends Migration
             $table->decimal('longitude', 10, 7);
             $table->string('notes', 50)->nullable();
             $table->boolean('is_accepted')->default(true);
+            $table->string('suburb')->nullable();
             $table->timestamps();
 //            $table->foreignId('campaign_id')->constrained()->onDelete('cascade');
             $table->integer('campaign_id')->nullable();

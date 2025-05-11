@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Jobs\FetchSuburbFromCoordinates;
 use App\Models\Pin;
 use Illuminate\Support\Facades\Cache;
 
@@ -9,6 +10,7 @@ class PinObserver
 {
     public function created(Pin $pin): void
     {
+        FetchSuburbFromCoordinates::dispatch($pin->id);
         $this->clearAllBoundsCache();
         Cache::forget('all_pins');
     }

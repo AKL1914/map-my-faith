@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Jobs\FetchSuburbFromCoordinates;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -38,7 +39,7 @@ class PinFromCsvSeeder extends Seeder
             } else {
                 continue; // Skip invalid points
             }
-            DB::table('pins')->insert([
+            $pinId = DB::table('pins')->insertGetId([
                 'user_id' => $userId,
                 'latitude' => $latitude,
                 'longitude' => $longitude,
@@ -48,6 +49,8 @@ class PinFromCsvSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            FetchSuburbFromCoordinates::dispatch($pinId);
 
             $rowsInserted++;
         }
