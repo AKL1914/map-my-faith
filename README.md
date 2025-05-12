@@ -116,9 +116,33 @@ php artisan serve
 
 The back-end will be accessible at `http://localhost:8080`.
 
-## running this with 
+## building/rebuilding the container
+## this build the necessary dependencies and installs the packages
 
+docker compose down
 docker compose up --build
+
+## Queue
+When runnig it for the first time supervisord may fail
+it needs to have the tables on the db
+run the following command to create the tables
+
+php artisan migrate
+php artisan db:seed
+
+## Check if the queue is running
+docker exec -it map_my_faith_app bash
+supervisorctl status
+
+## Queue Worker log
+
+tail -f /var/www/html/storage/logs/laravel-queue.log
+
+## Restarting the container
+docker compose down
+docker compose up -d
+
+
 ## Get in the container for the app setup
 docker exec -it map_my_faith_app  bash
 php artisan migrate
