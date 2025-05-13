@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PinStoreRequest;
-use App\Models\Campaign;
 use Illuminate\Http\Request;
 use App\Models\Pin;
 use Illuminate\Support\Facades\Auth;
@@ -37,30 +36,46 @@ class PinController extends Controller
         $perPage = 10;
         $search = $request->query('search');
         $page = $request->query('page', 1);
+        $dateFrom = $request->query('from_date');
+        $dateTo = $request->query('to_date');
 
-        // Generate a unique cache key based on search term and page
-        $cacheKey = 'pins_' . md5($search . '_page_' . $page . '_per_' . $perPage);
+        //remove caching for this endpoint
 
-        // Cache the results for 10 minutes
-        $pins = Cache::rememberForever($cacheKey, function () use ($search, $perPage) {
-            $query = Pin::with([
-                'user:id,name,email',
-                'campaign:id,name'
-            ])->when($search, function ($query, $search) {
-                return $query->where(function ($q) use ($search) {
+//        $cacheKey = 'pins_' . md5(json_encode([
+//                'search' => $search,
+//                'page' => $page,
+//                'perPage' => $perPage,
+//                'dateFrom' => $dateFrom,
+//                'dateTo' => $dateTo,
+//            ]));
+//
+//        $pins = Cache::remember($cacheKey, 600, function () use ($search, $perPage, $dateFrom, $dateTo) {
+            $query = Pin::with(['user:id,name,email', 'campaign:id,name']);
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('notes', 'like', "%{$search}%")
                         ->orWhereHas('user', function ($q) use ($search) {
                             $q->where('name', 'like', "%{$search}%")
                                 ->orWhere('email', 'like', "%{$search}%");
                         });
                 });
-            });
+            }
 
-            return $query->paginate($perPage);
-        });
+            if ($dateFrom) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+
+            if ($dateTo) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+
+            return $query->orderByDesc('created_at')->paginate($perPage);
+//        });
 
         return response()->json($pins);
     }
+
 
 
     //get all pins by campaign
@@ -140,6 +155,7 @@ class PinController extends Controller
 
     public function show(Pin $pin)
     {
+        $pin->load('user');
         return view('pins.show', compact('pin'));
     }
 

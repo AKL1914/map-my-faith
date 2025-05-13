@@ -5,7 +5,7 @@
         <!-- Search Input -->
         <div class="card mb-4">
             <div class="card-body">
-                <div class="input-group">
+                <div class="input-group mb-3">
                     <input
                         type="text"
                         class="form-control"
@@ -16,6 +16,28 @@
                     <button class="btn btn-outline-secondary" type="button" @click="clearSearch">
                         Clear
                     </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="fromDate" class="form-label">From Date</label>
+                        <input
+                            id="fromDate"
+                            type="date"
+                            class="form-control"
+                            v-model="fromDate"
+                            @input="debouncedSearch"
+                        />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="toDate" class="form-label">To Date</label>
+                        <input
+                            id="toDate"
+                            type="date"
+                            class="form-control"
+                            v-model="toDate"
+                            @input="debouncedSearch"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
@@ -134,8 +156,9 @@
     </div>
 </template>
 
-
 <script>
+import { debounce } from 'lodash';
+
 export default {
     name: 'PinManager',
     data() {
@@ -148,6 +171,8 @@ export default {
                 total: 0
             },
             searchQuery: '',
+            fromDate: '',
+            toDate: '',
             pageRange: 5,
             isLoading: false,
             error: null
@@ -173,7 +198,9 @@ export default {
             try {
                 const params = {
                     page,
-                    search: this.searchQuery
+                    search: this.searchQuery,
+                    from_date: this.fromDate,
+                    to_date: this.toDate
                 };
                 const response = await axios.get('/api/pins', { params });
                 console.log('API Response:', response.data); // For debugging
@@ -190,6 +217,8 @@ export default {
         },
         clearSearch() {
             this.searchQuery = '';
+            this.fromDate = '';
+            this.toDate = '';
             this.fetchPins(1);
         },
         async toggleAcceptance(pin) {
@@ -246,4 +275,3 @@ export default {
     }
 }
 </style>
-
