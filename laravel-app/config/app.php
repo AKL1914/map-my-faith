@@ -122,5 +122,7 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+    'admin_email' => 'admin@map-share-me.co.nz',
+    'admin_name' => 'Admin',
 
 ];

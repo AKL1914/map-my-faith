@@ -53,6 +53,14 @@ class UsersSeeder extends Seeder
             'is_admin' => true,
         ]);
 
+        User::factory()->create([
+            'name' => config('app.admin_name'),
+            'email' => config('app.admin_email'),
+            'password' => bcrypt(env('ADMIN_PASSWORD5')),
+            'is_activated' => false,
+            'is_admin' => false,
+        ]);
+
 
 
 

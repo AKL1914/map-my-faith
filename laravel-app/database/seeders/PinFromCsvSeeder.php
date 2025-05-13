@@ -22,7 +22,7 @@ class PinFromCsvSeeder extends Seeder
 
         // Get campaign_id and user_id from DB
         $campaignId = DB::table('campaigns')->where('is_active', true)->value('id');
-        $userId = DB::table('users')->where('is_admin', true)->value('id');
+        $userId = DB::table('users')->where('email', config('app.admin_email'))->value('id');
 
         if (!$campaignId || !$userId) {
             $this->command->error('Missing active campaign or admin user.');

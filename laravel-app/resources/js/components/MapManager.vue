@@ -10,7 +10,7 @@
                 <button
                     :disabled="loading"
                     @click="pinMyLocation('accepted')"
-                    class="btn google-btn">
+                    class="btn google-btn-pin">
                     <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     <span v-else><i class="bi bi-geo-alt-fill"></i> Pin Location</span>
                 </button>
@@ -266,7 +266,7 @@ async function deletePin(pinId) {
     flex: 1;
 }
 
-.google-btn {
+.google-btn-pin {
     background-color: #4285f4;
     color: white;
     border: none;
@@ -278,7 +278,6 @@ async function deletePin(pinId) {
     justify-content: center;
     gap: 0.75rem;
     width: 100%;
-    max-width: 360px;
     border-radius: 0.5rem;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     text-decoration: none;
