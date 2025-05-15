@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PinStoreRequest;
+use App\Jobs\FetchSuburbFromCoordinates;
 use Illuminate\Http\Request;
 use App\Models\Pin;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +27,8 @@ class PinController extends Controller
             'is_accepted' => $request->is_accepted ?? false,
             'notes' => $request->notes,
         ]);
+
+        FetchSuburbFromCoordinates::dispatch($pin->id);
 
         return response()->json($pin, 201);
     }

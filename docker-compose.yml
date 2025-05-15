@@ -7,6 +7,7 @@ services:
       - ./laravel-app:/var/www/html
     depends_on:
       - mysql
+      - redis
 
   nginx:
     image: nginx:alpine
@@ -33,6 +34,15 @@ services:
     ports:
       - "3306:3306"
 
+  redis:
+    image: redis:alpine
+    container_name: map_my_faith_app_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
 # Commenting out this block for now as it's not needed for the current setup
 #  will keep this for reference if needed in the future
 #  reactnative:
@@ -49,3 +59,4 @@ services:
 
 volumes:
   mysql-data:
+  redis-data:
