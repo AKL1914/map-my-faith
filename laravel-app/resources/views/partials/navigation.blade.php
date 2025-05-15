@@ -55,7 +55,11 @@
             </ul>
 
 
-        @auth
+            @auth
+                <a href="{{ route('profile.edit') }}" class="btn btn-outline-light btn-sm me-2" title="Edit Profile">
+                    <i class="fas fa-user"></i>
+                </a>
+
                 <form action="{{ route('logout') }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-outline-light btn-sm" title="Logout">
@@ -63,6 +67,7 @@
                     </button>
                 </form>
             @endauth
+
 
         </div>
     </div>

@@ -12,6 +12,7 @@ import PinViewer from "./components/PinViewer.vue";
 // Import Vue Toastification
 import Toast, { POSITION } from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
+import ProfileViewer from "./components/ProfileViewer.vue";
 
 const app = createApp({});
 
@@ -28,6 +29,7 @@ app.component('map-manager', MapManager);
 app.component('user-manager', UserManager);
 app.component('pin-manager', PinManager);
 app.component('pin-viewer', PinViewer);
+app.component('profile-viewer', ProfileViewer);
 
 // Mount the app
 app.mount('#app');

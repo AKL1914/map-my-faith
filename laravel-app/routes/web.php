@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\MapsController;
 use App\Http\Controllers\PinController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Middleware\EnsureUserHasAreaAndGroup;
 use App\Http\Middleware\IsAdmin;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -28,7 +30,11 @@ Route::get('/login', function () {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/maps', [MapsController::class, 'index'])->name('maps.index');
+    Route::get('/maps', [MapsController::class, 'index'])->name('maps.index')->middleware(EnsureUserHasAreaAndGroup::class);
+
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+
    // will transfer this bit of route when its needed to restful use
     Route::group(['prefix' => 'api'], function () {
         Route::post('/pin', [PinController::class, 'store']);

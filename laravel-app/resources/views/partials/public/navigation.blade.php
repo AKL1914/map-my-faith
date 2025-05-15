@@ -8,7 +8,9 @@
             @auth
                 <form action="{{ route('logout') }}" method="POST" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-outline-light">Logout</button>
+                    <button type="submit" class="btn btn-outline-light btn-sm" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </form>
             @endauth
         </div>
