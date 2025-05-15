@@ -54,6 +54,8 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/users/{user}/activation', [UserController::class, 'updateActivationStatus']);
             Route::post('/users/activate-all', [UserController::class, 'activateAll']);
             Route::post('/users/deactivate-all', [UserController::class, 'deactivateAll']);
+            Route::put('/users/{user}/area-group', [UserController::class, 'updateAreaGroup']);
+
         });
 
     });

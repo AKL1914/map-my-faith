@@ -12,14 +12,14 @@ class LeaderBoardController extends Controller
         // Top 10 users based on pin count
         $leaderboardData = DB::table('pins')
             ->join('users', 'pins.user_id', '=', 'users.id')
-            ->select('users.name', DB::raw('count(pins.id) as pinCount'))
-            ->where('users.email', '!=', config('app.admin_email')) // Exclude admin user
-            ->groupBy('users.id')
+            ->select('users.id', 'users.name', 'users.area', DB::raw('count(pins.id) as pinCount'))
+            ->where('users.email', '!=', config('app.admin_email')) // Exclude admin
+            ->groupBy('users.id', 'users.name', 'users.area')
             ->orderByDesc('pinCount')
             ->limit(10)
             ->get();
 
-        // Top 10 suburbs based on how many times they've been pinned
+        // Top 10 suburbs
         $topSuburbs = DB::table('pins')
             ->select('suburb', DB::raw('count(*) as pinCount'))
             ->groupBy('suburb')
@@ -27,7 +27,16 @@ class LeaderBoardController extends Controller
             ->limit(10)
             ->get();
 
-        return view('admin.leaderboard.index', compact('leaderboardData', 'topSuburbs'));
+        // NEW: Top 10 areas based on pin counts (grouped by user's area)
+        $topAreas = DB::table('pins')
+            ->join('users', 'pins.user_id', '=', 'users.id')
+            ->select('users.area', DB::raw('count(pins.id) as pinCount'))
+            ->groupBy('users.area')
+            ->orderByDesc('pinCount')
+            ->limit(10)
+            ->get();
+
+        return view('admin.leaderboard.index', compact('leaderboardData', 'topSuburbs', 'topAreas'));
     }
 
     public function show($id)

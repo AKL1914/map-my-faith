@@ -16,6 +16,7 @@
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col">Name</th>
+                            <th scope="col">Area</th>
                             <th scope="col">Pins</th>
                         </tr>
                         </thead>
@@ -27,6 +28,9 @@
                                 </th>
                                 <td>
                                     <i class="fas fa-user"></i> {{ $entry->name }}
+                                </td>
+                                <td>
+                                    <i class="fas fa-map"></i> {{ $entry->area ?? 'N/A' }}
                                 </td>
                                 <td>
                                     <i class="fas fa-map-pin"></i> {{ $entry->pinCount }}
@@ -66,6 +70,41 @@
                                 </th>
                                 <td>{{ $suburb->suburb }}</td>
                                 <td>{{ $suburb->pinCount }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spacer -->
+        <div class="my-5"></div>
+
+        <!-- Top Areas (Based on User Area) -->
+        <h2 class="text-center mb-4">
+            <i class="fas fa-map"></i> Top Areas (By User)
+        </h2>
+
+        <div class="table-responsive">
+            <div class="card shadow-sm bg-white">
+                <div class="card-body">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead class="bg-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Area</th>
+                            <th scope="col">Pins</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($topAreas as $index => $area)
+                            <tr>
+                                <th scope="row">
+                                    <i class="fas fa-map"></i> {{ $index + 1 }}
+                                </th>
+                                <td>{{ $area->area ?? 'N/A' }}</td>
+                                <td>{{ $area->pinCount }}</td>
                             </tr>
                         @endforeach
                         </tbody>

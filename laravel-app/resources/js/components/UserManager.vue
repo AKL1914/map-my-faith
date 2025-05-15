@@ -36,7 +36,9 @@
                             <th>Email</th>
                             <th>Admin</th>
                             <th>Activated</th>
-                            <th style="min-width: 240px;">Actions</th>
+                            <th>Area</th>
+                            <th>Group</th>
+                            <th style="min-width: 260px;">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -45,17 +47,33 @@
                             <td>{{ user.name }}</td>
                             <td>{{ user.email }}</td>
                             <td>
-                                    <span class="badge" :class="user.is_admin ? 'bg-success' : 'bg-secondary'">
-                                        {{ user.is_admin ? 'Yes' : 'No' }}
-                                    </span>
+                  <span class="badge" :class="user.is_admin ? 'bg-success' : 'bg-secondary'">
+                    {{ user.is_admin ? 'Yes' : 'No' }}
+                  </span>
                             </td>
                             <td>
-                                    <span class="badge" :class="user.is_activated ? 'bg-success' : 'bg-secondary'">
-                                        {{ user.is_activated ? 'Yes' : 'No' }}
-                                    </span>
+                  <span class="badge" :class="user.is_activated ? 'bg-success' : 'bg-secondary'">
+                    {{ user.is_activated ? 'Yes' : 'No' }}
+                  </span>
                             </td>
                             <td>
-                                <div class="d-flex flex-wrap gap-1">
+                                <input
+                                    type="text"
+                                    v-model="user.area"
+                                    class="form-control form-control-sm"
+                                    placeholder="Area"
+                                />
+                            </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    v-model="user.group"
+                                    class="form-control form-control-sm"
+                                    placeholder="Group"
+                                />
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1 align-items-center">
                                     <button
                                         class="btn btn-sm"
                                         :class="user.is_admin ? 'btn-secondary' : 'btn-warning'"
@@ -70,11 +88,17 @@
                                     >
                                         {{ user.is_activated ? 'Deactivate' : 'Activate' }}
                                     </button>
+                                    <button
+                                        class="btn btn-primary btn-sm"
+                                        @click="updateAreaGroup(user)"
+                                    >
+                                        Save Area/Group
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                         <tr v-if="users.length === 0">
-                            <td colspan="6" class="text-center">No users found.</td>
+                            <td colspan="8" class="text-center">No users found.</td>
                         </tr>
                         </tbody>
                     </table>
@@ -99,7 +123,7 @@
                         <nav aria-label="Page navigation">
                             <ul class="pagination justify-content-end mb-0 flex-wrap">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                    <button class="page-link" @click="currentPage--; fetchUsers()">Previous</button>
+                                    <button class="page-link" @click="prevPage">Previous</button>
                                 </li>
                                 <li
                                     class="page-item"
@@ -107,25 +131,21 @@
                                     :key="page"
                                     :class="{ active: currentPage === page }"
                                 >
-                                    <button class="page-link" @click="currentPage = page; fetchUsers()">{{ page }}</button>
+                                    <button class="page-link" @click="goToPage(page)">{{ page }}</button>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <button class="page-link" @click="currentPage++; fetchUsers()">Next</button>
+                                    <button class="page-link" @click="nextPage">Next</button>
                                 </li>
                             </ul>
                         </nav>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 </template>
 
-
 <script>
-
-
 export default {
     name: 'UserManager',
     data() {
@@ -138,7 +158,7 @@ export default {
         };
     },
     created() {
-        // Create debounced version of fetchUsers
+        // Create debounced version of fetchUsers (make sure you have a debounce function globally or import one)
         this.debouncedFetchUsers = window.debounce(this.fetchUsers, 300);
     },
     mounted() {
@@ -151,14 +171,21 @@ export default {
                 per_page: this.perPage,
                 search: this.searchQuery || undefined,
             };
-            axios.get('/api/users', { params })
-                .then(response => {
+            axios
+                .get('/api/users', { params })
+                .then((response) => {
                     this.users = response.data.data;
                     this.currentPage = response.data.current_page;
                     this.perPage = response.data.per_page;
                     this.totalPages = response.data.last_page;
+
+                    // Ensure area and group have values (in case API returns null)
+                    this.users.forEach((user) => {
+                        if (!user.area) user.area = '';
+                        if (!user.group) user.group = '';
+                    });
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error fetching users:', error);
                     this.users = [];
                     this.totalPages = 1;
@@ -166,33 +193,69 @@ export default {
         },
         toggleAdmin(user) {
             const newStatus = !user.is_admin;
-            axios.put(`/api/users/${user.id}/admin`, { is_admin: newStatus })
+            axios
+                .put(`/api/users/${user.id}/admin`, { is_admin: newStatus })
                 .then(() => this.fetchUsers())
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error updating admin status:', error);
                 });
         },
         toggleActivation(user) {
             const newStatus = !user.is_activated;
-            axios.put(`/api/users/${user.id}/activation`, { is_activated: newStatus })
+            axios
+                .put(`/api/users/${user.id}/activation`, { is_activated: newStatus })
                 .then(() => this.fetchUsers())
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error updating activation status:', error);
                 });
         },
         activateAll() {
-            axios.post('/api/users/activate-all')
+            axios
+                .post('/api/users/activate-all')
                 .then(() => this.fetchUsers())
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error activating all users:', error);
                 });
         },
         deactivateAll() {
-            axios.post('/api/users/deactivate-all')
+            axios
+                .post('/api/users/deactivate-all')
                 .then(() => this.fetchUsers())
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error deactivating all users:', error);
                 });
+        },
+        updateAreaGroup(user) {
+            axios
+                .put(`/api/users/${user.id}/area-group`, {
+                    area: user.area,
+                    group: user.group,
+                })
+                .then(() => {
+                    alert('User area and group updated.');
+                    this.fetchUsers();
+                })
+                .catch((error) => {
+                    console.error('Error updating area/group:', error);
+                });
+        },
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+                this.fetchUsers();
+            }
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+                this.fetchUsers();
+            }
+        },
+        goToPage(page) {
+            if (page !== this.currentPage) {
+                this.currentPage = page;
+                this.fetchUsers();
+            }
         },
     },
 };
