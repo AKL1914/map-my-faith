@@ -68,6 +68,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
         Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');
         Route::get('admin/pin/{pin}', [PinController::class, 'show'])->name('show');
+        Route::get('/admin/active-users-count', [DashboardController::class, 'getActiveUsersCount']);
+
 
     });
 
