@@ -1,5 +1,7 @@
 <template>
     <div class="container my-4">
+        <!-- Toast notification -->
+        <Toast />
         <h2 class="mb-3">User Manager</h2>
 
         <div class="card">
@@ -106,22 +108,9 @@
 
                 <!-- Pagination & Per Page -->
                 <div class="row align-items-center mt-3 gy-2">
-                    <div class="col-12 col-md-auto">
-                        <label for="itemsPerPage" class="me-2">Items per page:</label>
-                        <select
-                            id="itemsPerPage"
-                            v-model.number="perPage"
-                            @change="fetchUsers"
-                            class="form-select d-inline-block w-auto"
-                        >
-                            <option :value="5">5</option>
-                            <option :value="10">10</option>
-                            <option :value="20">20</option>
-                        </select>
-                    </div>
                     <div class="col">
                         <nav aria-label="Page navigation">
-                            <ul class="pagination justify-content-end mb-0 flex-wrap">
+                            <ul class="pagination justify-content-center">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                                     <button class="page-link" @click="prevPage">Previous</button>
                                 </li>
@@ -146,6 +135,10 @@
 </template>
 
 <script>
+import { useToast, POSITION } from 'vue-toastification'; // Import Toast and POSITION
+import 'vue-toastification/dist/index.css'; // Import Toast CSS
+// Initialize toast
+const toast = useToast()
 export default {
     name: 'UserManager',
     data() {
@@ -186,7 +179,10 @@ export default {
                     });
                 })
                 .catch((error) => {
-                    console.error('Error fetching users:', error);
+                    toast.error(error.response.data.message, {
+                        position: POSITION.TOP_CENTER, // Center the toast at the top
+                        timeout: 5000
+                    });
                     this.users = [];
                     this.totalPages = 1;
                 });
@@ -197,7 +193,10 @@ export default {
                 .put(`/api/users/${user.id}/admin`, { is_admin: newStatus })
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    console.error('Error updating admin status:', error);
+                    toast.error(error.response.data.message, {
+                        position: POSITION.TOP_CENTER, // Center the toast at the top
+                        timeout: 5000
+                    });
                 });
         },
         toggleActivation(user) {
@@ -206,7 +205,10 @@ export default {
                 .put(`/api/users/${user.id}/activation`, { is_activated: newStatus })
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    console.error('Error updating activation status:', error);
+                    toast.error(error.response.data.message, {
+                        position: POSITION.TOP_CENTER, // Center the toast at the top
+                        timeout: 5000
+                    });
                 });
         },
         activateAll() {
@@ -214,7 +216,10 @@ export default {
                 .post('/api/users/activate-all')
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    console.error('Error activating all users:', error);
+                    toast.error(error.response.data.message, {
+                        position: POSITION.TOP_CENTER, // Center the toast at the top
+                        timeout: 5000
+                    });
                 });
         },
         deactivateAll() {
@@ -222,7 +227,10 @@ export default {
                 .post('/api/users/deactivate-all')
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    console.error('Error deactivating all users:', error);
+                    toast.error(error.response.data.message, {
+                        position: POSITION.TOP_CENTER, // Center the toast at the top
+                        timeout: 5000
+                    });
                 });
         },
         updateAreaGroup(user) {
@@ -232,11 +240,18 @@ export default {
                     group: user.group,
                 })
                 .then(() => {
-                    alert('User area and group updated.');
+                    toast.success('User area and group updated.', {
+                        position: POSITION.TOP_CENTER, // Center the toast at the top
+                        timeout: 5000
+                    });
+                    // alert('User area and group updated.');
                     this.fetchUsers();
                 })
                 .catch((error) => {
-                    console.error('Error updating area/group:', error);
+                    toast.error(error.response.data.message, {
+                        position: POSITION.TOP_CENTER, // Center the toast at the top
+                        timeout: 5000
+                    });
                 });
         },
         prevPage() {
