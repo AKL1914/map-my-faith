@@ -13,12 +13,6 @@
 
         <div class="collapse navbar-collapse" id="navbarMobile">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ url('/') }}">
-                        <i class="fas fa-home"></i> <span class="d-none d-sm-inline">Home</span>
-                    </a>
-                </li>
-
                 @admin
                 <li class="nav-item">
                     <a class="nav-link {{ request()->is('admin/dashboard') ? 'active' : '' }}" href="{{ url('/admin/dashboard') }}">
@@ -60,6 +54,12 @@
                     <i class="fas fa-user"></i>
                 </a>
 
+                @admin
+                <a href="/horizon" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm me-2" title="Laravel Horizon Dashboard">
+                    <i class="fas fa-cogs"></i>
+                </a>
+                @endadmin
+
                 <form action="{{ route('logout') }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-outline-light btn-sm" title="Logout">
@@ -67,6 +67,9 @@
                     </button>
                 </form>
             @endauth
+
+
+
 
 
         </div>

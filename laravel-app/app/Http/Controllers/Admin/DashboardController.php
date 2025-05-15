@@ -17,7 +17,12 @@ class DashboardController extends Controller
 
     public function getActiveUsersCount()
     {
-        $prefix = config('database.prefix', 'laravel');
+//        $dbIndex = config('database.redis.default.database');
+//        dd('Redis DB index:', $dbIndex);
+//        // 3. List **all** keys in the Redis DB (limit output to 20 for sanity):
+//        $allKeys = Redis::keys('*');
+//        dd('All Redis keys:', array_slice($allKeys, 0, 20));
+        $prefix = config('database.redis.default.database');
         $pattern = $prefix . ':*';
 
         // Get all session keys (this can be heavy on large Redis)
