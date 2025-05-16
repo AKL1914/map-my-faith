@@ -16,15 +16,15 @@ class DashboardController extends Controller
     public function getActiveUsersCount()
     {
 
-        $loggedInUsers = DB::table('sessions')
+        $loggedInUsersCount = DB::table('sessions')
             ->whereNotNull('user_id')
             ->where('last_activity', '>=', Carbon::now()->subMinutes(config('session.lifetime')))
             ->join('users', 'sessions.user_id', '=', 'users.id')
             ->select('users.id', 'users.name', 'users.email', 'sessions.last_activity')
-            ->get();
+            ->count();
 
         return response()->json([
-            'count' => $loggedInUsers->count(),
+            'count' => $loggedInUsersCount,
         ]);
     }
 }
