@@ -1,7 +1,5 @@
 <template>
     <div class="container mt-4">
-        <!-- Toast notification -->
-        <Toast />
 
         <div class="map-container">
             <div id="map" class="map mb-3"></div>
@@ -27,7 +25,6 @@
 </template>
 
 <script setup>
-import 'leaflet-control-geocoder';
 import { ref, onMounted } from 'vue';
 import { useToast, POSITION } from 'vue-toastification'; // Import Toast and POSITION
 import 'vue-toastification/dist/index.css'; // Import Toast CSS
@@ -132,20 +129,6 @@ onMounted(() => {
 
     pinLayerGroup = window.L.layerGroup().addTo(map);
 
-    window.L.Control.geocoder({
-        defaultMarkGeocode: false
-    })
-        .on('markgeocode', function(e) {
-            const bbox = e.geocode.bbox;
-            const poly = window.L.polygon([
-                bbox.getSouthEast(),
-                bbox.getNorthEast(),
-                bbox.getNorthWest(),
-                bbox.getSouthWest()
-            ]).addTo(map);
-            map.fitBounds(poly.getBounds());
-        })
-        .addTo(map);
 
     navigator.geolocation.getCurrentPosition(async position => {
         const lat = position.coords.latitude;
@@ -206,10 +189,8 @@ async function pinMyLocation(status) {
             timeout: 5000
         });
     } catch (error) {
-        console.error('Error pinning location:', error);
-
         // Show error toast and clear notes
-        toast.error('Failed to pin location. Please try again.', {
+        toast.error(error.response.data.message, {
             position: POSITION.TOP_CENTER, // Center the toast at the top
             timeout: 5000
         });
