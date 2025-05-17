@@ -74,6 +74,12 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{event}/pins', [EventController::class, 'eventPins']);
             });
 
+            //GamePin API routes
+            Route::prefix('game-pins')->group(function () {
+                Route::post('/', [\App\Http\Controllers\Admin\GamePinController::class, 'store']);
+                Route::delete('/{gamePin}', [\App\Http\Controllers\Admin\GamePinController::class, 'destroy']);
+            });
+
 
 
 
