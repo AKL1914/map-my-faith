@@ -61,6 +61,20 @@ class EventController extends Controller
         return view('admin.gamification.events.participants', compact('event'));
     }
 
+    public function show(Event $event)
+    {
+        return view('admin.gamification.events.show', compact('event'));
+    }
+
+    public function eventPins(Event $event)
+    {
+        $gamePins = $event->gamePins()->with(['user'])->get();
+        return response()->json([
+            'event_name' => $event->name,
+            'data' => $gamePins,
+        ]);
+    }
+
 
     public function eventParticipants($id, Request $request)
     {

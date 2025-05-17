@@ -1,64 +1,28 @@
 <template>
     <div class="container my-4">
-        <!-- Campaign Selector -->
+        <!-- Event Selector -->
         <div class="mb-4">
-            <label for="campaignSelect" class="form-label">Filter by Campaign:</label>
+            <label for="eventSelect" class="form-label">Filter by Event:</label>
             <select
-                id="campaignSelect"
+                id="eventSelect"
                 class="form-select"
-                v-model="selectedCampaignId"
+                v-model="selectedEventId"
                 @change="fetchPins"
             >
                 <option
-                    v-for="campaign in campaigns"
-                    :key="campaign.id"
-                    :value="campaign.id"
+                    v-for="event in events"
+                    :key="event.id"
+                    :value="event.id"
                 >
-                    {{ campaign.name }}
+                    {{ event.name }}
                 </option>
             </select>
 
             <!-- Pin Count -->
             <div class="mt-2">
-                <span class="badge bg-info">
-                    {{ pins.length }} Pin{{ pins.length !== 1 ? 's' : '' }} Found
-                </span>
-            </div>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-white bg-primary h-100">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Total Users</h5>
-                        <p class="card-text fs-4">{{ totalUsers }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-white bg-success h-100">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Total Pins</h5>
-                        <p class="card-text fs-4">{{ pins.length }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-white bg-info h-100">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Total Suburbs</h5>
-                        <p class="card-text fs-4">{{ totalSuburbs }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-white bg-warning h-100">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Logged-in Users</h5>
-                        <p class="card-text fs-4">{{ loggedInUsers }}</p>
-                    </div>
-                </div>
+        <span class="badge bg-info">
+          {{ pins.length }} Pin{{ pins.length !== 1 ? 's' : '' }} Found
+        </span>
             </div>
         </div>
 
@@ -68,31 +32,20 @@
 </template>
 
 <script>
-const redIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
-
-const greenIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+const treasureChestIcon = new L.Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854866.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
 });
 
 export default {
-    name: 'AdminDashboard',
+    name: 'GamePinManager',
     data() {
         return {
-            campaigns: [],
+            events: [],
             pins: [],
-            selectedCampaignId: '',
+            selectedEventId: '',
             map: null,
             markers: [],
             totalUsers: 0,
@@ -102,7 +55,7 @@ export default {
     },
     mounted() {
         this.initMap();
-        this.fetchCampaigns();
+        this.fetchEvents();
     },
     methods: {
         initMap() {
@@ -111,25 +64,30 @@ export default {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(this.map);
         },
-        fetchCampaigns() {
-            axios.get('/api/campaigns')
+        fetchEvents() {
+            axios.get('/api/events')
                 .then(response => {
-                    this.campaigns = response.data;
-                    const activeCampaign = this.campaigns.find(campaign => campaign.is_active);
-                    if (activeCampaign) {
-                        this.selectedCampaignId = activeCampaign.id;
+                    this.events = response.data;
+                    const activeEvent = this.events.find(event => event.is_active);
+                    if (activeEvent) {
+                        this.selectedEventId = activeEvent.id;
                         this.fetchPins();
                     }
+                })
+                .catch(error => {
+                    console.error('Error fetching events:', error);
                 });
         },
         fetchPins() {
-            const url = this.selectedCampaignId
-                ? `/api/pins/campaign/${this.selectedCampaignId}`
-                : '/api/pins';
+            if (!this.selectedEventId) {
+                this.pins = [];
+                this.updateMapMarkers();
+                return;
+            }
 
-            axios.get(url)
+            axios.get(`/api/events/${this.selectedEventId}/pins`)
                 .then(response => {
-                    this.pins = response.data;
+                    this.pins = response.data.data;
                     this.updateMapMarkers();
 
                     const userIds = new Set();
@@ -143,16 +101,10 @@ export default {
                     this.totalUsers = userIds.size;
                     this.totalSuburbs = suburbs.size;
 
-                    this.fetchLoggedInUsers();
-                });
-        },
-        fetchLoggedInUsers() {
-            axios.get('/admin/active-users-count')
-                .then(response => {
-                    this.loggedInUsers = response.data.count;
+                    this.fetchLoggedInUsers(); // Keep if you have this method
                 })
-                .catch(() => {
-                    this.loggedInUsers = 0;
+                .catch(error => {
+                    console.error('Error fetching pins:', error);
                 });
         },
         updateMapMarkers() {
@@ -161,13 +113,13 @@ export default {
 
             this.pins.forEach(pin => {
                 if (pin.latitude && pin.longitude) {
-                    const icon = pin.is_accepted === 1 ? greenIcon : redIcon;
+                    const icon = treasureChestIcon;
                     const popupContent = `
-                        <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
-                        ${pin.notes ?? ''}
-                    `;
+            <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
+            ${pin.notes ?? ''}
+          `;
 
-                    const marker = window.L.marker([pin.latitude, pin.longitude], {icon})
+                    const marker = window.L.marker([pin.latitude, pin.longitude], { icon })
                         .addTo(this.map)
                         .bindPopup(popupContent);
 
@@ -177,7 +129,7 @@ export default {
 
             if (this.markers.length) {
                 const group = new window.L.featureGroup(this.markers);
-                this.map.fitBounds(group.getBounds(), {padding: [30, 30]});
+                this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
             }
         }
     }

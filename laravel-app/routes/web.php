@@ -71,6 +71,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::put('/{id}', [EventController::class, 'update']);
                 Route::delete('/{id}', [EventController::class, 'destroy']);
                 Route::get('/{id}/participants', [EventController::class, 'eventParticipants']);
+                Route::get('/{event}/pins', [EventController::class, 'eventPins']);
             });
 
 
@@ -92,7 +93,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/active-users-count', [DashboardController::class, 'getActiveUsersCount']);
         Route::get('/admin/events', [EventController::class, 'manage']);
         Route::get('/admin/event/{event}/participants', [EventController::class, 'participants']);
-        Route::get('/admin/event/{event}', [EventController::class, 'show']);
+        Route::get('/admin/event/{event}/pins', [EventController::class, 'show']);
         Route::get('/admin/game-pins', [\App\Http\Controllers\Admin\GamePinController::class, 'index']);
 
 
