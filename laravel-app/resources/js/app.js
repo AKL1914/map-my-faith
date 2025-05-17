@@ -8,6 +8,10 @@ import MapManager from './components/MapManager.vue';
 import UserManager from './components/UserManager.vue';
 import PinManager from "./components/PinManager.vue";
 import PinViewer from "./components/PinViewer.vue";
+import EventManager from "./components/admin/EventManager.vue";
+import EventParticipants from "./components/admin/EventParticipants.vue";
+import EventPins from "./components/admin/EventPins.vue";
+import GamePinManager from "./components/admin/GamePinManager.vue";
 
 // Import Vue Toastification
 import Toast, { POSITION } from 'vue-toastification';
@@ -30,6 +34,10 @@ app.component('user-manager', UserManager);
 app.component('pin-manager', PinManager);
 app.component('pin-viewer', PinViewer);
 app.component('profile-viewer', ProfileViewer);
+app.component('admin-event-manager', EventManager);
+app.component('admin-event-participants', EventParticipants);
+app.component('admin-event-pins', EventPins);
+app.component('admin-game-pin-manager', GamePinManager);
 
 // Mount the app
 app.mount('#app');

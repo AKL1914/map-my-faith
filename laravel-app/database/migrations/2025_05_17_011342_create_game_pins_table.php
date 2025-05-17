@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('latitude', 10, 7);
             $table->decimal('longitude', 10, 7);
             $table->boolean('is_taken')->default(false);
+            $table->text('distance')->nullable();
             $table->timestamps();
         });
     }

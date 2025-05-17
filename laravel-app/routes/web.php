@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CampaignController;
+use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\GamePinController;
 use App\Http\Controllers\MapsController;
@@ -51,6 +52,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/pins/campaign/{campaignId}', [PinController::class, 'indexByCampaign']);
 
             Route::apiResource('campaigns', CampaignController::class);
+
             Route::get('/users', [UserController::class, 'index']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
@@ -58,6 +60,12 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/users/activate-all', [UserController::class, 'activateAll']);
             Route::post('/users/deactivate-all', [UserController::class, 'deactivateAll']);
             Route::put('/users/{user}/area-group', [UserController::class, 'updateAreaGroup']);
+
+            Route::post('event', [EventController::class, 'store']);
+            Route::put('events/{event}', [EventController::class, 'update']);
+            Route::delete('events/{id}', [EventController::class, 'destroy']);
+
+
 
         });
 
@@ -72,6 +80,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');
         Route::get('admin/pin/{pin}', [PinController::class, 'show'])->name('show');
         Route::get('/admin/active-users-count', [DashboardController::class, 'getActiveUsersCount']);
+        Route::get('/admin/events', [EventController::class, 'index']);
+        Route::get('/admin/events/{event}/participants', [EventController::class, 'participants']);
+        Route::get('/admin/event/{event}', [EventController::class, 'show']);
+        Route::get('/admin/game-pins', [\App\Http\Controllers\Admin\GamePinController::class, 'index']);
+
 
 
     });

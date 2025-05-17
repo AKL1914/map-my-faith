@@ -150,32 +150,40 @@ async function fetchGamePins() {
             const participateBtn = document.querySelector(`.participate-btn[data-id="${game.id}"]`);
             if (participateBtn) {
                 participateBtn.addEventListener('click', async () => {
-                    if (!currentPinMarker) {
-                        toast.error("Please select a location on the map first.", {
+                    // Get user's actual location using the browser's geolocation API
+                    if (!navigator.geolocation) {
+                        toast.error("Geolocation is not supported by your browser.", {
                             position: POSITION.TOP_CENTER,
                             timeout: 4000
                         });
                         return;
                     }
 
-                    const { lat, lng } = currentPinMarker.getLatLng();
+                    navigator.geolocation.getCurrentPosition(async (position) => {
+                        const { latitude, longitude } = position.coords;
 
-                    try {
-                        await axios.post(`/api/game-pins/${game.id}/participate`, {
-                            latitude: lat,
-                            longitude: lng,
-                        });
+                        try {
+                            await axios.post(`/api/game-pins/${game.id}/participate`, {
+                                latitude,
+                                longitude,
+                            });
 
-                        toast.success("Participation successful!", {
+                            toast.success("Participation successful!", {
+                                position: POSITION.TOP_CENTER,
+                                timeout: 4000
+                            });
+                        } catch (error) {
+                            toast.error(error.response?.data?.message || "Failed to participate.", {
+                                position: POSITION.TOP_CENTER,
+                                timeout: 4000
+                            });
+                        }
+                    }, (error) => {
+                        toast.error("Unable to retrieve your location.", {
                             position: POSITION.TOP_CENTER,
                             timeout: 4000
                         });
-                    } catch (error) {
-                        toast.error(error.response?.data?.message || "Failed to participate.", {
-                            position: POSITION.TOP_CENTER,
-                            timeout: 4000
-                        });
-                    }
+                    });
                 });
             }
         });

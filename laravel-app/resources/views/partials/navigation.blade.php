@@ -39,6 +39,26 @@
                         <i class="fas fa-users"></i> <span class="d-none d-sm-inline">Users</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link collapsed {{ request()->is('admin/events*') || request()->is('admin/game-pins*') ? 'active' : '' }}"
+                       href="#gamificationSubmenu" data-bs-toggle="collapse" aria-expanded="false">
+                        <i class="fas fa-gamepad"></i> <span class="d-none d-sm-inline">Gamification</span>
+                    </a>
+                    <div class="collapse {{ request()->is('admin/events*') || request()->is('admin/game-pins*') ? 'show' : '' }}" id="gamificationSubmenu">
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('admin/events') ? 'active' : '' }}" href="{{ url('/admin/events') }}">
+                                    <i class="fas fa-calendar-alt"></i> Events
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('admin/game-pins') ? 'active' : '' }}" href="{{ url('/admin/game-pins') }}">
+                                    <i class="fas fa-coins"></i> Game Pins
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
                 @endadmin
 
                 <li class="nav-item">
