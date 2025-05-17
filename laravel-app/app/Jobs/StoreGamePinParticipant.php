@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\GamePin;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class StoreGamePinParticipant implements ShouldQueue
@@ -49,6 +50,8 @@ class StoreGamePinParticipant implements ShouldQueue
             'game_pin_id' => $this->gamePinId,
             'user_id' => $this->userId,
             'distance' => $distance,
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString(),
         ]);
 
     }

@@ -104,6 +104,12 @@
             background-color: #4285f4;
         }
 
+        .nav-link {
+            color: white !important;
+        }
+
+
+
     </style>
 
     @yield('head')

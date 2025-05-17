@@ -39,6 +39,8 @@ Route::middleware(['auth'])->group(function () {
 
    // will transfer this bit of route when its needed to restful use
     Route::group(['prefix' => 'api'], function () {
+
+
         Route::get('/game-pins', [GamePinController::class, 'index']);
         Route::post('/game-pins/{gamePin}/participate', [GamePinController::class, 'participate']);
         Route::post('/pin', [PinController::class, 'store']);
@@ -49,10 +51,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pins/bounds', [PinController::class, 'indexByBounds']);
 
         Route::middleware([IsAdmin::class])->group(function () {
+            //Campaign API routes
             Route::get('/pins/campaign/{campaignId}', [PinController::class, 'indexByCampaign']);
-
             Route::apiResource('campaigns', CampaignController::class);
 
+            //User API routes
             Route::get('/users', [UserController::class, 'index']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
@@ -61,9 +64,16 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/users/deactivate-all', [UserController::class, 'deactivateAll']);
             Route::put('/users/{user}/area-group', [UserController::class, 'updateAreaGroup']);
 
-            Route::post('event', [EventController::class, 'store']);
-            Route::put('events/{event}', [EventController::class, 'update']);
-            Route::delete('events/{id}', [EventController::class, 'destroy']);
+            //Event API routes
+            Route::prefix('events')->group(function () {
+                Route::get('/', [EventController::class, 'index']);
+                Route::post('/', [EventController::class, 'store']);
+                Route::put('/{id}', [EventController::class, 'update']);
+                Route::delete('/{id}', [EventController::class, 'destroy']);
+                Route::get('/{id}/participants', [EventController::class, 'eventParticipants']);
+            });
+
+
 
 
 
@@ -80,8 +90,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');
         Route::get('admin/pin/{pin}', [PinController::class, 'show'])->name('show');
         Route::get('/admin/active-users-count', [DashboardController::class, 'getActiveUsersCount']);
-        Route::get('/admin/events', [EventController::class, 'index']);
-        Route::get('/admin/events/{event}/participants', [EventController::class, 'participants']);
+        Route::get('/admin/events', [EventController::class, 'manage']);
+        Route::get('/admin/event/{event}/participants', [EventController::class, 'participants']);
         Route::get('/admin/event/{event}', [EventController::class, 'show']);
         Route::get('/admin/game-pins', [\App\Http\Controllers\Admin\GamePinController::class, 'index']);
 
