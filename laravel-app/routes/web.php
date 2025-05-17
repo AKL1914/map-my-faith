@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\GamePinController;
 use App\Http\Controllers\MapsController;
 use App\Http\Controllers\PinController;
 use App\Http\Controllers\ProfileController;
@@ -37,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
 
    // will transfer this bit of route when its needed to restful use
     Route::group(['prefix' => 'api'], function () {
+        Route::get('/game-pins', [GamePinController::class, 'index']);
         Route::post('/pin', [PinController::class, 'store']);
         Route::get('/pins', [PinController::class, 'index']);
         Route::delete('/pin/{id}', [PinController::class, 'destroy']);
