@@ -39,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
    // will transfer this bit of route when its needed to restful use
     Route::group(['prefix' => 'api'], function () {
         Route::get('/game-pins', [GamePinController::class, 'index']);
+        Route::post('/game-pins/{gamePin}/participate', [GamePinController::class, 'participate']);
         Route::post('/pin', [PinController::class, 'store']);
         Route::get('/pins', [PinController::class, 'index']);
         Route::delete('/pin/{id}', [PinController::class, 'destroy']);

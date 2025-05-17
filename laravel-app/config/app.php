@@ -124,6 +124,7 @@ return [
     ],
     'admin_email' => 'admin@map-share-me.co.nz',
     'admin_name' => 'Admin',
+    'game_pin_distance' => 10,
 
     'area_groups' => [
         '1' => [

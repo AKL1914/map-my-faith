@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('user_id')->nullable();
             $table->integer('game_pin_id')->nullable();
+            $table->text('distance')->nullable();
             $table->timestamps();
         });
     }

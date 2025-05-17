@@ -1,6 +1,5 @@
 <template>
     <div class="container mt-4">
-
         <div class="map-container">
             <div id="map" class="map mb-3"></div>
 
@@ -26,20 +25,19 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useToast, POSITION } from 'vue-toastification'; // Import Toast and POSITION
-import 'vue-toastification/dist/index.css'; // Import Toast CSS
+import { useToast, POSITION } from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
 
 let map;
 const notes = ref('');
 let currentPinMarker = null;
 let lastSubmitTime = 0;
 let pinLayerGroup = null;
+let gamePinLayerGroup = null;
 const loading = ref(false);
 
-// Get current user ID
 const currentUserId = window.authUser?.id || null;
 
-// Marker icons
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -76,14 +74,21 @@ const orangeIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
-// Initialize toast
+
+const treasureChestIcon = new L.Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854866.png', // treasure chest image
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+});
+
 const toast = useToast();
 
 async function fetchPinsWithinBounds() {
     if (!map) return;
 
     const bounds = map.getBounds();
-    const { data } = await axios.get('/api/pins/bounds', {
+    const {data} = await axios.get('/api/pins/bounds', {
         params: {
             north: bounds.getNorth(),
             south: bounds.getSouth(),
@@ -105,7 +110,7 @@ async function fetchPinsWithinBounds() {
             ? `<button class="btn btn-sm btn-outline-danger mt-2 delete-btn" data-id="${pin.id}">🗑</button>`
             : ''}
         `;
-        const marker = L.marker([pin.latitude, pin.longitude], { icon })
+        const marker = L.marker([pin.latitude, pin.longitude], {icon})
             .addTo(pinLayerGroup)
             .bindPopup(popupContent);
 
@@ -120,6 +125,63 @@ async function fetchPinsWithinBounds() {
     });
 }
 
+async function fetchGamePins() {
+    if (!map) return;
+
+    const {data} = await axios.get('/api/game-pins');
+
+    if (gamePinLayerGroup) gamePinLayerGroup.clearLayers();
+    gamePinLayerGroup = window.L.layerGroup().addTo(map);
+
+    data.forEach(game => {
+        const popupContent = `
+            <strong>🎮 Game Pin</strong><br/>
+            ${game.name ?? ''}<br/>
+            <button class="btn btn-sm btn-success mt-2 participate-btn" data-id="${game.id}">
+                Participate
+            </button>
+        `;
+
+        const marker = L.marker([game.latitude, game.longitude], {icon: treasureChestIcon})
+            .addTo(gamePinLayerGroup)
+            .bindPopup(popupContent);
+
+        marker.on('popupopen', () => {
+            const participateBtn = document.querySelector(`.participate-btn[data-id="${game.id}"]`);
+            if (participateBtn) {
+                participateBtn.addEventListener('click', async () => {
+                    if (!currentPinMarker) {
+                        toast.error("Please select a location on the map first.", {
+                            position: POSITION.TOP_CENTER,
+                            timeout: 4000
+                        });
+                        return;
+                    }
+
+                    const { lat, lng } = currentPinMarker.getLatLng();
+
+                    try {
+                        await axios.post(`/api/game-pins/${game.id}/participate`, {
+                            latitude: lat,
+                            longitude: lng,
+                        });
+
+                        toast.success("Participation successful!", {
+                            position: POSITION.TOP_CENTER,
+                            timeout: 4000
+                        });
+                    } catch (error) {
+                        toast.error(error.response?.data?.message || "Failed to participate.", {
+                            position: POSITION.TOP_CENTER,
+                            timeout: 4000
+                        });
+                    }
+                });
+            }
+        });
+    });
+}
+
 onMounted(() => {
     map = window.L.map('map');
     window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -128,21 +190,25 @@ onMounted(() => {
     }).addTo(map);
 
     pinLayerGroup = window.L.layerGroup().addTo(map);
-
+    gamePinLayerGroup = window.L.layerGroup().addTo(map);
 
     navigator.geolocation.getCurrentPosition(async position => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         map.setView([lat, lng], 18);
 
-        currentPinMarker = L.marker([lat, lng], { icon: blueIcon })
+        currentPinMarker = L.marker([lat, lng], {icon: blueIcon})
             .addTo(map)
             .bindPopup('You are here');
 
         await fetchPinsWithinBounds();
+        await fetchGamePins();
     });
 
-    map.on('moveend', fetchPinsWithinBounds);
+    map.on('moveend', () => {
+        fetchPinsWithinBounds();
+        fetchGamePins();
+    });
 
     map.on('click', function (e) {
         const lat = e.latlng.lat;
@@ -151,7 +217,7 @@ onMounted(() => {
         if (currentPinMarker) {
             currentPinMarker.setLatLng([lat, lng]);
         } else {
-            currentPinMarker = L.marker([lat, lng], { icon: blueIcon }).addTo(map);
+            currentPinMarker = L.marker([lat, lng], {icon: blueIcon}).addTo(map);
         }
 
         currentPinMarker.bindPopup('New location').openPopup();
@@ -166,7 +232,6 @@ async function pinMyLocation(status) {
     const lat = currentPinMarker.getLatLng().lat;
     const lng = currentPinMarker.getLatLng().lng;
     const isAccepted = status === 'accepted' ? 1 : 0;
-
     let activeCampaign = window.campaign?.id;
 
     try {
@@ -183,29 +248,21 @@ async function pinMyLocation(status) {
         currentPinMarker.setLatLng([lat, lng]);
         await fetchPinsWithinBounds();
 
-        // Show success toast
         toast.success('Location pinned successfully!', {
-            position: POSITION.TOP_CENTER, // Center the toast at the top
+            position: POSITION.TOP_CENTER,
             timeout: 5000
         });
     } catch (error) {
-        // Show error toast and clear notes
         toast.error(error.response.data.message, {
-            position: POSITION.TOP_CENTER, // Center the toast at the top
+            position: POSITION.TOP_CENTER,
             timeout: 5000
         });
 
-        notes.value = ''; // Clear notes if pin fails
+        notes.value = '';
     } finally {
         setTimeout(() => {
             loading.value = false;
         }, 5000);
-    }
-}
-
-function confirmRefuse() {
-    if (confirm('Are you sure you want to refuse?')) {
-        pinMyLocation('refused');
     }
 }
 
@@ -260,7 +317,7 @@ async function deletePin(pinId) {
     gap: 0.75rem;
     width: 100%;
     border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     text-decoration: none;
     transition: background-color 0.3s ease;
 }
@@ -285,5 +342,11 @@ async function deletePin(pinId) {
 .delete-btn {
     margin-top: 8px;
     font-size: 14px;
+}
+
+.participate-btn {
+    font-size: 14px;
+    padding: 5px 10px;
+    border-radius: 6px;
 }
 </style>
