@@ -1,6 +1,7 @@
 <template>
     <div class="container my-4">
         <h2>{{ eventName }} Participants</h2>
+        <p>Total participants: {{ meta.total }}</p>
 
         <div v-if="loading" class="text-center my-3">
             Loading participants...
@@ -159,5 +160,11 @@ onMounted(() => {
         font-weight: bold;
         color: #333;
     }
+}
+
+p {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #555;
 }
 </style>

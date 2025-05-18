@@ -90,7 +90,7 @@
                                     <button class="btn btn-sm btn-danger" @click="deleteEvent(event.id)">
                                         Delete
                                     </button>
-                                    <a :href="`/admin/${event.id}`" class="btn btn-sm btn-info text-white">
+                                    <a :href="`/admin/event/${event.id}/pins`" class="btn btn-sm btn-info text-white">
                                         View
                                     </a>
                                     <a :href="`/admin/event/${event.id}/participants`" class="btn btn-sm btn-outline-primary">

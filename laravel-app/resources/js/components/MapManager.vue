@@ -150,7 +150,6 @@ async function fetchGamePins() {
             const participateBtn = document.querySelector(`.participate-btn[data-id="${game.id}"]`);
             if (participateBtn) {
                 participateBtn.addEventListener('click', async () => {
-                    // Get user's actual location using the browser's geolocation API
                     if (!navigator.geolocation) {
                         toast.error("Geolocation is not supported by your browser.", {
                             position: POSITION.TOP_CENTER,
@@ -172,6 +171,15 @@ async function fetchGamePins() {
                                 position: POSITION.TOP_CENTER,
                                 timeout: 4000
                             });
+
+                            // Close the popup immediately
+                            marker.closePopup();
+
+                            // Refetch game pins after 5 seconds
+                            setTimeout(() => {
+                                fetchGamePins();
+                            }, 5000);
+
                         } catch (error) {
                             toast.error(error.response?.data?.message || "Failed to participate.", {
                                 position: POSITION.TOP_CENTER,

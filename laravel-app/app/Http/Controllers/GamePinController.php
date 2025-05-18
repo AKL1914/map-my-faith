@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use App\Jobs\StoreGamePinParticipant;
 use App\Models\GamePin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -44,34 +45,12 @@ class GamePinController extends Controller
         $userLat = $request->input('latitude');
         $userLng = $request->input('longitude');
 
-        // Commented out for debugging queue issues
-        // StoreGamePinParticipant::dispatch(
-        //     $gamePin->id,
-        //     $request->user()->id,
-        //     $userLat,
-        //     $userLng
-        // );
-
-        // Calculate the distance between the user and the game pin
-        $distance = $this->haversineDistance($userLat, $userLng, $gamePin->latitude, $gamePin->longitude);
-        if ($distance <= config('app.game_pin_distance')) {
-            if (!$gamePin->is_taken && $gamePin->user_id == null) {
-                DB::table('game_pins')->where('id', $gamePin->id)->update([
-                    'is_taken' => true,
-                    'user_id' => $request->user()->id,
-                ]);
-            }
-        }
-
-        // Record the user's participation in the game pin
-        DB::table('game_pins_participants')->insert([
-            'game_pin_id' => $gamePin->id,
-            'user_id' => $request->user()->id,
-            'distance' => $distance,
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
-        ]);
-
+         StoreGamePinParticipant::dispatch(
+             $gamePin->id,
+             $request->user()->id,
+             $userLat,
+             $userLng
+         );
         return response()->json([
             'success' => "Thank you for participating!"
         ], 200);

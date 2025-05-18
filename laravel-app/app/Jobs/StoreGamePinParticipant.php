@@ -41,8 +41,9 @@ class StoreGamePinParticipant implements ShouldQueue
         if ($distance <= config('app.game_pin_distance')) {
             if (!$gamePin->is_taken && $gamePin->user_id == null) {
                 DB::table('game_pins')->where('id', $gamePin->id)->update([
-                    'is_taken' => true,
+                    'is_taken' => 1,
                     'user_id' => $this->userId,
+                    'distance' => $distance,
                 ]);
             }
         }
