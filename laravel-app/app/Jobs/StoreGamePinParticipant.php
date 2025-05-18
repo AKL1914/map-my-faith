@@ -50,8 +50,8 @@ class StoreGamePinParticipant implements ShouldQueue
             'game_pin_id' => $this->gamePinId,
             'user_id' => $this->userId,
             'distance' => $distance,
-            'created_at' => Carbon::now()->toDateTimeString(),
-            'updated_at' => Carbon::now()->toDateTimeString(),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ]);
 
     }

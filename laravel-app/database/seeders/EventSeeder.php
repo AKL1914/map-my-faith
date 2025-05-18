@@ -13,6 +13,6 @@ class EventSeeder extends Seeder
      */
     public function run(): void
     {
-        Event::create(['name' => 'PIN HUNT' , 'description' => 'PIN HUNT' , 'is_active' => true]);
+        Event::create(['name' => 'PIN HUNT' , 'description' => 'PIN HUNT' , 'is_active' => false]);
     }
 }
