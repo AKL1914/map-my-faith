@@ -14,7 +14,7 @@ class GamePinSeeder extends Seeder
      */
     public function run(): void
     {
-        $event = Event::where('is_active',true)->first();
+        $event = Event::first();
         GamePin::create([
             'latitude' => '-36.9246931',
             'longitude' => '174.6940595',
