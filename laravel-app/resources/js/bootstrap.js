@@ -16,3 +16,18 @@ if (token) {
 } else {
     console.error('CSRF token not found: Please make sure <meta name="csrf-token"> is in your HTML head.');
 }
+
+// Axios interceptor to catch CSRF/session errors
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        const { response } = error;
+
+        if (response && response.status === 419) {
+            // CSRF token mismatch or session expired
+            window.location.href = '/';
+        }
+
+        return Promise.reject(error);
+    }
+);
