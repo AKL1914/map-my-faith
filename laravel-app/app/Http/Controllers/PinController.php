@@ -206,4 +206,10 @@ class PinController extends Controller
         $pin->load('user');
         return view('pins.show', compact('pin'));
     }
+
+    public function update(Pin $pin,Request $request)
+    {
+        $pin->update($request->all());
+        return response()->json(['message' => 'Pin updated successfully']);
+    }
 }

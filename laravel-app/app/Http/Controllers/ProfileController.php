@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateProfileRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Class ProfileController
@@ -56,7 +57,7 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
         $user->update($request->only(['area', 'group']));
-
+        Cache::tags('users_paginated')->flush();
         return back()->with('success', 'Profile updated.');
     }
 }

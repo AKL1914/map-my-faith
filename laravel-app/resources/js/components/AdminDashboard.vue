@@ -108,7 +108,9 @@ export default {
     initMap() {
       this.map = window.L.map('map').setView([-36.8485, 174.7633], 12);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© OpenStreetMap contributors',
+          maxZoom: 18,
+          minZoom: 10
       }).addTo(this.map);
     },
     fetchCampaigns() {

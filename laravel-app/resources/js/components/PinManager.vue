@@ -241,7 +241,7 @@ export default {
                 this.isLoading = true;
                 this.error = null;
                 try {
-                    await axios.delete(`/api/pins/${id}`);
+                    await axios.delete(`/api/pin/${id}`);
                     this.fetchPins(this.pins.current_page);
                 } catch (error) {
                     console.error('Error deleting pin:', error);

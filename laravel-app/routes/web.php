@@ -45,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/game-pins/{gamePin}/participate', [GamePinController::class, 'participate']);
         Route::post('/pin', [PinController::class, 'store']);
         Route::get('/pins', [PinController::class, 'index']);
+        Route::patch('/pins/{pin}', [PinController::class, 'update']);
         Route::delete('/pin/{id}', [PinController::class, 'destroy']);
 
         Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);

@@ -5,27 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Class LeaderBoardController
- *
- * This controller handles the display and management of leaderboard data in the admin panel.
- * It provides methods to retrieve top users, suburbs, and areas based on pin counts.
- */
 class LeaderBoardController extends Controller
 {
-    /**
-     * Display the leaderboard view.
-     *
-     * This method retrieves and prepares data for the leaderboard, including:
-     * - Top 10 users based on pin count.
-     * - Top 10 suburbs based on pin count.
-     * - Top 10 areas based on pin count (grouped by user's area).
-     *
-     * @return \Illuminate\View\View The leaderboard view with the prepared data.
-     */
     public function index()
     {
-        // Top 10 users based on pin count
+        // Top 10 users by total pins
         $leaderboardData = DB::table('pins')
             ->join('users', 'pins.user_id', '=', 'users.id')
             ->select('users.id', 'users.name', 'users.area', DB::raw('count(pins.id) as pinCount'))
@@ -35,15 +19,35 @@ class LeaderBoardController extends Controller
             ->limit(10)
             ->get();
 
-        // Top 10 suburbs
-        $topSuburbs = DB::table('pins')
-            ->select('suburb', DB::raw('count(*) as pinCount'))
-            ->groupBy('suburb')
-            ->orderByDesc('pinCount')
+        // Top 10 suburbs with top user and their pin count in that suburb
+        $topSuburbs = DB::table(DB::raw('
+    (
+        SELECT
+            pins.suburb,
+            COUNT(pins.id) AS totalPins
+        FROM pins
+        GROUP BY pins.suburb
+    ) AS total
+'))
+            ->join(DB::raw('
+    (
+        SELECT
+            pins.suburb,
+            users.name AS user_name,
+            COUNT(pins.id) AS userPins,
+            ROW_NUMBER() OVER (PARTITION BY pins.suburb ORDER BY COUNT(pins.id) DESC) AS row_num
+        FROM pins
+        JOIN users ON pins.user_id = users.id
+        GROUP BY pins.suburb, users.name
+    ) AS topuser
+'), 'total.suburb', '=', 'topuser.suburb')
+            ->where('topuser.row_num', 1)
+            ->orderByDesc('total.totalPins')
             ->limit(10)
+            ->select('total.suburb', 'total.totalPins', 'topuser.user_name', 'topuser.userPins')
             ->get();
 
-        // Top 10 areas based on pin counts (grouped by user's area)
+        // Top 10 areas by pin counts (grouped by user area)
         $topAreas = DB::table('pins')
             ->join('users', 'pins.user_id', '=', 'users.id')
             ->select('users.area', DB::raw('count(pins.id) as pinCount'))
@@ -55,19 +59,9 @@ class LeaderBoardController extends Controller
         return view('admin.leaderboard.index', compact('leaderboardData', 'topSuburbs', 'topAreas'));
     }
 
-    /**
-     * Display a specific leaderboard entry.
-     *
-     * This method fetches and displays details for a specific leaderboard entry by its ID.
-     *
-     * @param int $id The ID of the leaderboard entry to display.
-     * @return \Illuminate\View\View The view displaying the leaderboard entry details.
-     */
     public function show($id)
     {
-        // Fetch specific leaderboard entry by ID
-        $entry = []; // Replace with actual data fetching logic
-
+        $entry = []; // Placeholder for show logic
         return view('admin.leaderboard.show', compact('entry'));
     }
 }

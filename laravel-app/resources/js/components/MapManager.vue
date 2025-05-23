@@ -167,7 +167,7 @@ async function fetchGamePins() {
                                 longitude,
                             });
 
-                            toast.success("Participation successful!", {
+                            toast.success("Thank you for participating!", {
                                 position: POSITION.TOP_CENTER,
                                 timeout: 4000
                             });
