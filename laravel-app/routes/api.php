@@ -4,6 +4,22 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\PinController;
 use Illuminate\Support\Facades\Route;
 
+//web push
+Route::middleware('web')->post('/save-subscription', function (Illuminate\Http\Request $request) {
+    $user = auth()->user();
+
+    if ($user && $request->has('endpoint')) {
+        $user->updatePushSubscription(
+            $request->input('endpoint'),
+            $request->input('keys.p256dh'),
+            $request->input('keys.auth')
+        );
+        return response()->json(['success' => true]);
+    }
+
+    return response()->json(['error' => 'Unauthorized'], 401);
+});
+
 
 Route::prefix('v1')->group(function () {
     // Auth for SPA using Google (Socialite)

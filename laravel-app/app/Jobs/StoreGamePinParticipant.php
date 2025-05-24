@@ -3,6 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\GamePin;
+use App\Models\User;
+use App\Notifications\GlobalAnnouncementNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Carbon;
@@ -45,6 +47,12 @@ class StoreGamePinParticipant implements ShouldQueue
                     'user_id' => $this->userId,
                     'distance' => $distance,
                 ]);
+                $winner = User::find($this->userId);
+                $message = "Congratulations! {$winner->name} You have found a game pin!";
+                $winner->notify(new GlobalAnnouncementNotification($message, $message, 'success'));
+                User::whereHas('pushSubscriptions')->get()->each(function ($user) use ($message) {
+                    $user->notify(new GlobalAnnouncementNotification($message, $message, 'info'));
+                });
             }
         }
         DB::table('game_pins_participants')->insert([

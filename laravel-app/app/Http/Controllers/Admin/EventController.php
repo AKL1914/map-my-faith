@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\User;
+use App\Notifications\GlobalAnnouncementNotification;
 use Illuminate\Http\Request;
 
 /**
@@ -87,7 +89,25 @@ class EventController extends Controller
             'is_active' => 'required|boolean',
         ]);
 
+        $statusChanged = $validated['is_active'] !== $event->is_active;
+
         $event->update($validated);
+
+        // Send notification if status changed
+        if ($statusChanged) {
+            $title = $validated['is_active']
+                ? '📢 Event Activated'
+                : '🛑 Event Ended';
+
+            $body = "The event \"{$event->name}\" has been " . ($validated['is_active'] ? 'activated' : 'deactivated') . ".";
+
+            $level = $validated['is_active'] ? 'success' : 'error';
+
+            // Notify all users with push subscriptions
+            User::whereHas('pushSubscriptions')->get()->each(function ($user) use ($title, $body, $level) {
+                $user->notify(new GlobalAnnouncementNotification($title, $body, $level));
+            });
+        }
 
         return response()->json(['message' => 'Event updated successfully.']);
     }
