@@ -99,10 +99,28 @@ class PinController extends Controller
      * @param int $campaignId The ID of the campaign.
      * @return \Illuminate\Http\JsonResponse A JSON response with the list of pins.
      */
-    public function indexByCampaign($campaignId)
+    public function indexByCampaign($campaignId, Request $request)
     {
         $cacheKey = "pins_campaign_{$campaignId}";
 
+        // Check if date filters exist and skip cache if so
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+
+        if ($dateFrom || $dateTo) {
+            $query = Pin::where('campaign_id', $campaignId);
+
+            if ($dateFrom) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+
+            return response()->json($query->get());
+        }
+
+        // Use cache only when no filters
         $pins = Cache::rememberForever($cacheKey, function () use ($campaignId) {
             return Pin::where('campaign_id', $campaignId)->get();
         });
@@ -184,7 +202,8 @@ class PinController extends Controller
     {
         $pin = Pin::findOrFail($id);
 
-        if ($pin->user_id !== auth()->id()) {
+        //if user is admin, allow deletion of any pin
+        if ($pin->user_id !== auth()->id() && !auth()->user()->is_admin) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
