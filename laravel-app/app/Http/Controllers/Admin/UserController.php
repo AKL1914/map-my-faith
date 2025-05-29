@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Jobs\SendUserActivatedEmail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -93,7 +94,13 @@ class UserController extends Controller
     {
         $user->is_activated = $request->boolean('is_activated');
         $user->save();
+
+        if ($user->is_activated) { // Only send email if activated
+            SendUserActivatedEmail::dispatch($user);
+        }
+
         Cache::tags('users_paginated')->flush();
+
         return response()->json(['message' => 'Activation status updated.']);
     }
 
@@ -107,9 +114,23 @@ class UserController extends Controller
      */
     public function activateAll()
     {
-        User::query()->where('is_admin', false)->update(['is_activated' => true]);
+        // Get all non-admin users who are NOT yet activated
+        $users = User::where('is_admin', false)
+            ->where('is_activated', false)
+            ->get();
+
+        foreach ($users as $user) {
+            // Activate the user
+            $user->is_activated = true;
+            $user->save();
+
+            // Send activation email
+            SendUserActivatedEmail::dispatch($user);
+        }
+
         Cache::tags('users_paginated')->flush();
-        return response()->json(['message' => 'All users activated.']);
+
+        return response()->json(['message' => 'All users activated and notified.']);
     }
 
     /**
