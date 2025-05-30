@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendAccessRequestNotificationToAdmins;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Auth;
@@ -73,6 +74,8 @@ class LoginController extends Controller
                 'email' => $googleUser->getEmail(),
                 'is_activated' => false,
             ]);
+            // Dispatch a job to notify admins about the new user requesting access
+            SendAccessRequestNotificationToAdmins::dispatch($user);
         }
 
         // If the user is not activated, redirect to the activation page
