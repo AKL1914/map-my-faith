@@ -1,0 +1,4 @@
+MYSQL_ROOT_PASSWORD=MyS3cureR00tP@ssw0rd!
+MYSQL_DATABASE=laravel
+MYSQL_USER=laravel_app_user
+MYSQL_PASSWORD=S3cur3P@ssw0rd!2023

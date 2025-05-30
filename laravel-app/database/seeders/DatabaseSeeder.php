@@ -17,6 +17,6 @@ class DatabaseSeeder extends Seeder
         $this->call(UsersSeeder::class);
         $this->call(PinFromCsvSeeder::class);
         $this->call(EventSeeder::class);
-        // $this->call(GamePinSeeder::class);
+        $this->call(GamePinSeeder::class);
     }
 }
