@@ -8,6 +8,20 @@ services:
     depends_on:
       - mysql
       - redis
+  vue:
+    build:
+      context: ./vue-app                     # 👈 the source code location
+      dockerfile: ../docker/vue/Dockerfile  # 👈 point to the Dockerfile manually
+    container_name: map_my_faith_vue
+    ports:
+      - "5173:5173"
+    volumes:
+    - ./vue-app:/app:cached
+    - /app/node_modules
+    working_dir: /app
+    command: npm run dev
+    depends_on:
+      - app
 
   nginx:
     image: nginx:alpine
