@@ -3,118 +3,19 @@
 
 This project is a Vue.js front-end integrated with a Laravel back-end. It allows users to manage campaigns and display pin markers on a map based on campaign selection. The application uses Docker for containerization and Laravel for back-end API services.
 
-## Prerequisites
+## DEPLOYMENT BRANCH
 
-Before running this project, ensure you have the following tools installed:
+This branch builds the artifact/docker image that would be deployed in Azure Container Apps.
 
-- Docker
-- Docker Compose
-- Node.js (for development or if you're building the front-end locally)
-- Composer (for Laravel dependencies)
-- PHP (for Laravel if running locally)
+The steps required for this are:
+  1. developers update the laravel-app folder. all of these changes need to be synced and copied in the ./docker/php        folder, as part of building the docker image requires all of these files in the same php directory
+  2. update the environment variables in azure container apps
+  3. run docker-compose up --build. 
+     IMPORTANT! Azure Container Apps only supports docker images built for amd64 platforms. run this command first before building:
 
-## Getting Started
-
-Follow these steps to set up the project in Docker.
-
-### 1. Clone the repository
-Clone the project repository to your local machine:
-
-```bash
-git clone <repository-url>
-cd <repository-directory>
-```
-
-### 2. Build and run Docker containers
-Use Docker Compose to build and run the containers for the Laravel back-end and Vue.js front-end.
-
-```bash
-docker-compose up --build
-```
-
-This will:
-- Build the necessary images.
-- Start the containers as defined in `docker-compose.yml`.
-
-You can access the app by navigating to `http://localhost:8000` for the Laravel back-end and `http://localhost:8080` for the Vue.js front-end (if these ports are mapped in `docker-compose.yml`).
-
-### 3. Docker ps (Checking running containers)
-To verify that the Docker containers are running, use the following command:
-
-To run the Laravel migrations, enter the `laravel` container and run the migration command:
-
-```bash
-docker exec -it <laravel-container-name> bash
-php artisan migrate
-```
-
-This will apply the database migrations.
-
-### 5. Running Seeders
-If you have database seeders set up and want to populate the database with sample data, run the following command after running migrations:
-
-```bash
-php artisan db:seed
-```
-
-### 6. Access the Application
-After the containers are up and the database has been migrated and seeded, you can access the app by visiting:
-
-- **Back-end API**: `http://localhost:8080`
-- **Front-end Vue.js app**: `http://localhost:8080`
-
-## Docker Commands
-
-- **Check Running Containers**:
-  ```bash
-  docker ps
-  ```
-
-- **Stop the containers**:
-  ```bash
-  docker-compose down
-  ```
-
-- **Rebuild and Restart**:
-  ```bash
-  docker-compose up --build
-  ```
-
-- **Run Artisan Commands in Docker**:
-  ```bash
-  docker exec -it <laravel-container-name> php artisan <command>
-  ```
-
-Example:
-
-```bash
-docker exec -it <laravel-container-name> php artisan migrate
-docker exec -it <laravel-container-name> php artisan db:seed
-```
-
-### 7. Development Environment
-
-If you are developing locally, you can run the back-end and front-end separately without Docker:
-
-#### Front-End (Vue.js)
-
-```bash
-cd vue-app
-npm install
-npm run serve
-```
-
-The front-end will be accessible at `http://localhost:8080`.
-
-#### Back-End (Laravel)
-
-```bash
-cd laravel-app
-composer install
-php artisan serve
-```
-
-The back-end will be accessible at `http://localhost:8080`.
+      export DOCKER_DEFAULT_PLATFORM=linux/amd64
+  4. once the image is built, tag the image as bnsebastianiii/mapmyfaithmvp:latest and upload it to docker hub
+  5. once the image is uploaded to docker hub, go to Azure container apps and create a new revision. This would automatically pull the latest version tagged in the earlier step
 
 ## building/rebuilding the container
 ## this build the necessary dependencies and installs the packages
