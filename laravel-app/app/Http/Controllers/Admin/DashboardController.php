@@ -72,7 +72,7 @@ class DashboardController extends Controller
         $filters = $request->only('campaign_id', 'start_date', 'end_date');
         $email = auth()->user()->email;
 
-        GeneratePinReport::dispatch($filters, $email);
+//        GeneratePinReport::dispatch($filters, $email);
 
         return response()->json([
             'message' => 'Report is being generated and will be emailed to you shortly.'

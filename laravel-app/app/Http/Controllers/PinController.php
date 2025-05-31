@@ -108,7 +108,7 @@ class PinController extends Controller
         $dateTo = $request->query('date_to');
 
         if ($dateFrom || $dateTo) {
-            $query = Pin::where('campaign_id', $campaignId);
+            $query = Pin::with('user')->where('campaign_id', $campaignId);
 
             if ($dateFrom) {
                 $query->whereDate('created_at', '>=', $dateFrom);
@@ -122,7 +122,7 @@ class PinController extends Controller
 
         // Use cache only when no filters
         $pins = Cache::rememberForever($cacheKey, function () use ($campaignId) {
-            return Pin::where('campaign_id', $campaignId)->get();
+            return Pin::with('user')->where('campaign_id', $campaignId)->get();
         });
 
         return response()->json($pins);

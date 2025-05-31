@@ -1,6 +1,6 @@
 <template>
     <div class="container my-4">
-        <!-- Campaign Selector and Date Filters -->
+        <!-- Campaign Selector -->
         <div class="mb-4">
             <label for="campaignSelect" class="form-label">Filter by Campaign:</label>
             <select
@@ -18,8 +18,8 @@
                 </option>
             </select>
 
-            <!-- Date Range Filters -->
-            <div class="row g-2 mt-3">
+            <!-- Date Range & Download Icon -->
+            <div class="row g-2 mt-3 align-items-end">
                 <div class="col-sm">
                     <label for="dateFrom" class="form-label">Date From:</label>
                     <input
@@ -38,20 +38,15 @@
                         v-model="dateTo"
                     />
                 </div>
-            </div>
-
-            <!-- Pin Count -->
-            <div class="mt-2">
-                <span class="badge bg-info">
-                    {{ pins.length }} Pin{{ pins.length !== 1 ? 's' : '' }} Found
-                </span>
-            </div>
-
-            <!-- Download Report Button -->
-            <div class="mt-3">
-                <button class="btn btn-outline-secondary" @click="downloadReport">
-                    Download Report
-                </button>
+                <div class="col-auto">
+                    <button
+                        class="btn btn-outline-secondary"
+                        @click="downloadReport"
+                        title="Download Report"
+                    >
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -97,6 +92,8 @@
 </template>
 
 <script>
+import { useToast } from 'vue-toastification';
+const toast = useToast();
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -228,11 +225,11 @@ export default {
             axios.get('/admin/dashboard/generate-report', {params})
                 .then(response => {
                     const message = response.data.message || 'Report generated successfully.';
-                    this.$toast.success(message);
+                    toast.success(message); // Show success toast
                 })
                 .catch(error => {
                     const message = error.response?.data?.message || 'Failed to generate report.';
-                    this.$toast.error(message);
+                    toast.error(message); // Show error toast
                 });
         }
     },
