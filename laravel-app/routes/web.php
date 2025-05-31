@@ -33,7 +33,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/maps', [MapsController::class, 'index'])->name('maps.index')->middleware(EnsureUserHasAreaAndGroup::class);
-
+    Route::get('/leaderboard', [LeaderBoardController::class, 'index']);
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
 
@@ -93,7 +93,7 @@ Route::middleware(['auth'])->group(function () {
     //Admin routes
     Route::middleware([IsAdmin::class])->group(function () {
         Route::get('/admin/dashboard', [DashboardController::class, 'index']);
-        Route::get('/admin/leaderboard', [LeaderBoardController::class, 'index']);
+
         Route::get('admin/campaigns', [CampaignController::class, 'manage'])->name('admin.campaigns.index');
         Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
         Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');
