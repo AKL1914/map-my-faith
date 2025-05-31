@@ -18,7 +18,7 @@
                 </option>
             </select>
 
-            <!-- Date Range & Download Icon -->
+            <!-- Date Range, Area Selector & Download Icon -->
             <div class="row g-2 mt-3 align-items-end">
                 <div class="col-sm">
                     <label for="dateFrom" class="form-label">Date From:</label>
@@ -37,6 +37,20 @@
                         class="form-control"
                         v-model="dateTo"
                     />
+                </div>
+                <div class="col-sm">
+                    <label for="areaFilter" class="form-label">Area:</label>
+                    <select
+                        id="areaFilter"
+                        class="form-select"
+                        v-model="selectedArea"
+                        @change="fetchPins"
+                    >
+                        <option value="">All Areas</option>
+                        <option v-for="n in 6" :key="n" :value="n">
+                            Area {{ n }}
+                        </option>
+                    </select>
                 </div>
                 <div class="col-auto">
                     <button
@@ -93,7 +107,9 @@
 
 <script>
 import { useToast } from 'vue-toastification';
+
 const toast = useToast();
+
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -121,6 +137,7 @@ export default {
             selectedCampaignId: '',
             dateFrom: '',
             dateTo: '',
+            selectedArea: '',
             map: null,
             markers: [],
             totalUsers: 0,
@@ -156,13 +173,14 @@ export default {
             const params = {
                 date_from: this.dateFrom,
                 date_to: this.dateTo,
+                area: this.selectedArea
             };
 
             const url = this.selectedCampaignId
                 ? `/api/pins/campaign/${this.selectedCampaignId}`
                 : '/api/pins';
 
-            axios.get(url, {params})
+            axios.get(url, { params })
                 .then(response => {
                     this.pins = response.data;
                     this.updateMapMarkers();
@@ -202,7 +220,7 @@ export default {
                         ${pin.notes ?? ''}
                     `;
 
-                    const marker = window.L.marker([pin.latitude, pin.longitude], {icon})
+                    const marker = window.L.marker([pin.latitude, pin.longitude], { icon })
                         .addTo(this.map)
                         .bindPopup(popupContent);
 
@@ -212,7 +230,7 @@ export default {
 
             if (this.markers.length) {
                 const group = new window.L.featureGroup(this.markers);
-                this.map.fitBounds(group.getBounds(), {padding: [30, 30]});
+                this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
             }
         },
         downloadReport() {
@@ -220,16 +238,17 @@ export default {
                 campaign_id: this.selectedCampaignId || '',
                 date_from: this.dateFrom || '',
                 date_to: this.dateTo || '',
+                area: this.selectedArea || '',
             };
 
-            axios.get('/admin/dashboard/generate-report', {params})
+            axios.get('/admin/dashboard/generate-report', { params })
                 .then(response => {
                     const message = response.data.message || 'Report generated successfully.';
-                    toast.success(message); // Show success toast
+                    toast.success(message);
                 })
                 .catch(error => {
                     const message = error.response?.data?.message || 'Failed to generate report.';
-                    toast.error(message); // Show error toast
+                    toast.error(message);
                 });
         }
     },
