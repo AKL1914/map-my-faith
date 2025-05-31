@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/users/activate-all', [UserController::class, 'activateAll']);
             Route::post('/users/deactivate-all', [UserController::class, 'deactivateAll']);
             Route::put('/users/{user}/area-group', [UserController::class, 'updateAreaGroup']);
+            Route::put('/users/{id}', [UserController::class, 'update']);
 
             //Event API routes
             Route::prefix('events')->group(function () {

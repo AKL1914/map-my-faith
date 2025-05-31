@@ -168,4 +168,16 @@ class UserController extends Controller
 
         return response()->json(['message' => 'User area and group updated.']);
     }
+
+    public function update(UpdateProfileRequest $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update($request->validated());
+        Cache::tags('users_paginated')->flush();
+        return response()->json([
+            'message' => 'User updated successfully.',
+            'user' => $user,
+        ]);
+    }
 }

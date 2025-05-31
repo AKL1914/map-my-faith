@@ -26,6 +26,7 @@ class UpdateProfileRequest extends FormRequest
 
         return [
             'area' => ['nullable', 'in:' . $validAreas],
+            'name'  => ['required', 'string', 'max:255'],
             'group' => [
                 'nullable',
                 function ($attribute, $value, $fail) use ($areaGroups) {
