@@ -103,12 +103,13 @@ class PinController extends Controller
     {
         $cacheKey = "pins_campaign_{$campaignId}";
 
-        // Check if date filters exist and skip cache if so
+        // Check if date or area filters exist and skip cache if so
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
+        $area = $request->query('area');
 
-        if ($dateFrom || $dateTo) {
-            $query = Pin::where('campaign_id', $campaignId);
+        if ($dateFrom || $dateTo || $area) {
+            $query = Pin::with('user')->where('campaign_id', $campaignId);
 
             if ($dateFrom) {
                 $query->whereDate('created_at', '>=', $dateFrom);
@@ -116,13 +117,18 @@ class PinController extends Controller
             if ($dateTo) {
                 $query->whereDate('created_at', '<=', $dateTo);
             }
+            if ($area) {
+                $query->whereHas('user', function ($q) use ($area) {
+                    $q->where('area', $area);
+                });
+            }
 
             return response()->json($query->get());
         }
 
         // Use cache only when no filters
         $pins = Cache::rememberForever($cacheKey, function () use ($campaignId) {
-            return Pin::where('campaign_id', $campaignId)->get();
+            return Pin::with('user')->where('campaign_id', $campaignId)->get();
         });
 
         return response()->json($pins);

@@ -1,6 +1,6 @@
 <template>
     <div class="container my-4">
-        <!-- Campaign Selector and Date Filters -->
+        <!-- Campaign Selector -->
         <div class="mb-4">
             <label for="campaignSelect" class="form-label">Filter by Campaign:</label>
             <select
@@ -18,8 +18,8 @@
                 </option>
             </select>
 
-            <!-- Date Range Filters -->
-            <div class="row g-2 mt-3">
+            <!-- Date Range, Area Selector & Download Icon -->
+            <div class="row g-2 mt-3 align-items-end">
                 <div class="col-sm">
                     <label for="dateFrom" class="form-label">Date From:</label>
                     <input
@@ -38,13 +38,29 @@
                         v-model="dateTo"
                     />
                 </div>
-            </div>
-
-            <!-- Pin Count -->
-            <div class="mt-2">
-        <span class="badge bg-info">
-          {{ pins.length }} Pin{{ pins.length !== 1 ? 's' : '' }} Found
-        </span>
+                <div class="col-sm">
+                    <label for="areaFilter" class="form-label">Area:</label>
+                    <select
+                        id="areaFilter"
+                        class="form-select"
+                        v-model="selectedArea"
+                        @change="fetchPins"
+                    >
+                        <option value="">All Areas</option>
+                        <option v-for="n in 6" :key="n" :value="n">
+                            Area {{ n }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button
+                        class="btn btn-outline-secondary"
+                        @click="downloadReport"
+                        title="Download Report"
+                    >
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -90,22 +106,26 @@
 </template>
 
 <script>
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
+
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: [15, 25],       // smaller icon size
+    iconAnchor: [7, 25],      // anchor at bottom middle
+    popupAnchor: [1, -20],    // popup position
+    shadowSize: [25, 25]      // shadow size
 });
 
 const greenIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: [15, 25],       // smaller icon size
+    iconAnchor: [7, 25],      // anchor at bottom middle
+    popupAnchor: [1, -20],    // popup position
+    shadowSize: [25, 25]      // shadow size
 });
 
 export default {
@@ -117,6 +137,7 @@ export default {
             selectedCampaignId: '',
             dateFrom: '',
             dateTo: '',
+            selectedArea: '',
             map: null,
             markers: [],
             totalUsers: 0,
@@ -152,6 +173,7 @@ export default {
             const params = {
                 date_from: this.dateFrom,
                 date_to: this.dateTo,
+                area: this.selectedArea
             };
 
             const url = this.selectedCampaignId
@@ -194,9 +216,9 @@ export default {
                 if (pin.latitude && pin.longitude) {
                     const icon = pin.is_accepted === 1 ? greenIcon : redIcon;
                     const popupContent = `
-            <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
-            ${pin.notes ?? ''}
-          `;
+                        <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
+                        ${pin.notes ?? ''}
+                    `;
 
                     const marker = window.L.marker([pin.latitude, pin.longitude], { icon })
                         .addTo(this.map)
@@ -210,6 +232,24 @@ export default {
                 const group = new window.L.featureGroup(this.markers);
                 this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
             }
+        },
+        downloadReport() {
+            const params = {
+                campaign_id: this.selectedCampaignId || '',
+                date_from: this.dateFrom || '',
+                date_to: this.dateTo || '',
+                area: this.selectedArea || '',
+            };
+
+            axios.get('/admin/dashboard/generate-report', { params })
+                .then(response => {
+                    const message = response.data.message || 'Report generated successfully.';
+                    toast.success(message);
+                })
+                .catch(error => {
+                    const message = error.response?.data?.message || 'Failed to generate report.';
+                    toast.error(message);
+                });
         }
     },
     watch: {

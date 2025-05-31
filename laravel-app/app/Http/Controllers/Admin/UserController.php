@@ -37,7 +37,8 @@ class UserController extends Controller
 
         // Cache the results for 10 minutes
         $users = Cache::tags('users_paginated')->remember($cacheKey, now()->addMinutes(10), function () use ($perPage, $search) {
-            $query = User::select('id', 'name', 'email', 'is_admin', 'is_activated', 'area', 'group');
+            $query = User::select('id', 'name', 'email', 'is_admin', 'is_activated', 'area', 'group','cfo')
+                ->orderBy('name');
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -167,5 +168,17 @@ class UserController extends Controller
         Cache::tags('users_paginated')->flush();
 
         return response()->json(['message' => 'User area and group updated.']);
+    }
+
+    public function update(UpdateProfileRequest $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update($request->validated());
+        Cache::tags('users_paginated')->flush();
+        return response()->json([
+            'message' => 'User updated successfully.',
+            'user' => $user,
+        ]);
     }
 }

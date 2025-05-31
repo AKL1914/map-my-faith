@@ -33,7 +33,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/maps', [MapsController::class, 'index'])->name('maps.index')->middleware(EnsureUserHasAreaAndGroup::class);
-
+    Route::get('/leaderboard', [LeaderBoardController::class, 'index']);
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
 
@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/users/activate-all', [UserController::class, 'activateAll']);
             Route::post('/users/deactivate-all', [UserController::class, 'deactivateAll']);
             Route::put('/users/{user}/area-group', [UserController::class, 'updateAreaGroup']);
+            Route::put('/users/{id}', [UserController::class, 'update']);
 
             //Event API routes
             Route::prefix('events')->group(function () {
@@ -92,7 +93,7 @@ Route::middleware(['auth'])->group(function () {
     //Admin routes
     Route::middleware([IsAdmin::class])->group(function () {
         Route::get('/admin/dashboard', [DashboardController::class, 'index']);
-        Route::get('/admin/leaderboard', [LeaderBoardController::class, 'index']);
+
         Route::get('admin/campaigns', [CampaignController::class, 'manage'])->name('admin.campaigns.index');
         Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
         Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');
@@ -102,6 +103,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/event/{event}/participants', [EventController::class, 'participants']);
         Route::get('/admin/event/{event}/pins', [EventController::class, 'show']);
         Route::get('/admin/game-pins', [\App\Http\Controllers\Admin\GamePinController::class, 'index']);
+        Route::get('/admin/dashboard/generate-report', [DashboardController::class, 'generateReport'])->name('admin.dashboard.report');
+
 
 
 
