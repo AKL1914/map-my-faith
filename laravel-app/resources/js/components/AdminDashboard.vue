@@ -113,19 +113,19 @@ const toast = useToast();
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: [15, 25],       // smaller icon size
+    iconAnchor: [7, 25],      // anchor at bottom middle
+    popupAnchor: [1, -20],    // popup position
+    shadowSize: [25, 25]      // shadow size
 });
 
 const greenIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: [15, 25],       // smaller icon size
+    iconAnchor: [7, 25],      // anchor at bottom middle
+    popupAnchor: [1, -20],    // popup position
+    shadowSize: [25, 25]      // shadow size
 });
 
 export default {
