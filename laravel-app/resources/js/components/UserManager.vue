@@ -52,6 +52,7 @@
                             <th>Activated</th>
                             <th>Area</th>
                             <th>Group</th>
+                            <th>CFO</th>
                             <th style="min-width: 180px;">Actions</th>
                         </tr>
                         </thead>
@@ -93,6 +94,18 @@
                                     class="form-control form-control-sm"
                                     placeholder="Group"
                                 />
+                            </td>
+                            <td>
+                                <select
+                                    v-model="user.cfo"
+                                    class="form-select form-select-sm"
+                                    style="min-width: 120px;"
+                                >
+                                    <option value="" disabled>Select CFO</option>
+                                    <option value="BUKLOD">BUKLOD</option>
+                                    <option value="KADIWA">KADIWA</option>
+                                    <option value="BINHI">BINHI</option>
+                                </select>
                             </td>
                             <td>
                                 <div class="d-flex flex-wrap gap-1 align-items-center">
@@ -268,6 +281,7 @@ export default {
                     name: user.name,
                     area: user.area,
                     group: user.group,
+                    cfo: user.cfo,
                 })
                 .then(() => {
                     toast.success('User info updated.', {

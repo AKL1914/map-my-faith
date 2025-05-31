@@ -1,7 +1,6 @@
 <?php
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -33,6 +32,7 @@ class User extends Authenticatable
         'is_activated', // A boolean indicating whether the user is activated.
         'area',         // The area associated with the user.
         'group',        // The group associated with the user.
+        'cfo',        // The group associated with the user.
     ];
 
     /**

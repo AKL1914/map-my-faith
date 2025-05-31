@@ -23,10 +23,12 @@ class UpdateProfileRequest extends FormRequest
     {
         $areaGroups = config('app.area_groups');
         $validAreas = implode(',', array_keys($areaGroups));
+        $validCfos = ['BUKLOD', 'KADIWA', 'BINHI'];
 
         return [
             'area' => ['nullable', 'in:' . $validAreas],
             'name'  => ['required', 'string', 'max:255'],
+            'cfo' => ['nullable', 'in:' . implode(',', $validCfos)],
             'group' => [
                 'nullable',
                 function ($attribute, $value, $fail) use ($areaGroups) {
