@@ -2,8 +2,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\GeneratePinReport;
+use App\Models\Pin;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Carbon;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Class DashboardController
@@ -55,4 +60,23 @@ class DashboardController extends Controller
             'count' => $count,
         ]);
     }
+
+    public function generateReport(Request $request)
+    {
+        $request->validate([
+            'campaign_id' => 'nullable|integer|exists:campaigns,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        $filters = $request->only('campaign_id', 'start_date', 'end_date');
+        $email = auth()->user()->email;
+
+        GeneratePinReport::dispatch($filters, $email);
+
+        return response()->json([
+            'message' => 'Report is being generated and will be emailed to you shortly.'
+        ]);
+    }
+
 }

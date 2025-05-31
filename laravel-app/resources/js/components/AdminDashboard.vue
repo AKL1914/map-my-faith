@@ -42,9 +42,16 @@
 
             <!-- Pin Count -->
             <div class="mt-2">
-        <span class="badge bg-info">
-          {{ pins.length }} Pin{{ pins.length !== 1 ? 's' : '' }} Found
-        </span>
+                <span class="badge bg-info">
+                    {{ pins.length }} Pin{{ pins.length !== 1 ? 's' : '' }} Found
+                </span>
+            </div>
+
+            <!-- Download Report Button -->
+            <div class="mt-3">
+                <button class="btn btn-outline-secondary" @click="downloadReport">
+                    Download Report
+                </button>
             </div>
         </div>
 
@@ -158,7 +165,7 @@ export default {
                 ? `/api/pins/campaign/${this.selectedCampaignId}`
                 : '/api/pins';
 
-            axios.get(url, { params })
+            axios.get(url, {params})
                 .then(response => {
                     this.pins = response.data;
                     this.updateMapMarkers();
@@ -194,11 +201,11 @@ export default {
                 if (pin.latitude && pin.longitude) {
                     const icon = pin.is_accepted === 1 ? greenIcon : redIcon;
                     const popupContent = `
-            <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
-            ${pin.notes ?? ''}
-          `;
+                        <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
+                        ${pin.notes ?? ''}
+                    `;
 
-                    const marker = window.L.marker([pin.latitude, pin.longitude], { icon })
+                    const marker = window.L.marker([pin.latitude, pin.longitude], {icon})
                         .addTo(this.map)
                         .bindPopup(popupContent);
 
@@ -208,8 +215,25 @@ export default {
 
             if (this.markers.length) {
                 const group = new window.L.featureGroup(this.markers);
-                this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
+                this.map.fitBounds(group.getBounds(), {padding: [30, 30]});
             }
+        },
+        downloadReport() {
+            const params = {
+                campaign_id: this.selectedCampaignId || '',
+                date_from: this.dateFrom || '',
+                date_to: this.dateTo || '',
+            };
+
+            axios.get('/admin/dashboard/generate-report', {params})
+                .then(response => {
+                    const message = response.data.message || 'Report generated successfully.';
+                    this.$toast.success(message);
+                })
+                .catch(error => {
+                    const message = error.response?.data?.message || 'Failed to generate report.';
+                    this.$toast.error(message);
+                });
         }
     },
     watch: {
