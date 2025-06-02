@@ -36,6 +36,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/leaderboard', [LeaderBoardController::class, 'index']);
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/user/{id}/pins', [ProfileController::class, 'userPins'])->name('profile.pins');
 
    // will transfer this bit of route when its needed to restful use
     Route::group(['prefix' => 'api'], function () {
@@ -47,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pins', [PinController::class, 'index']);
         Route::patch('/pins/{pin}', [PinController::class, 'update']);
         Route::delete('/pin/{id}', [PinController::class, 'destroy']);
+        Route::get('/user/{user}/pins', [PinController::class, 'pinsByUser']);
 
         Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
         Route::get('/pins/bounds', [PinController::class, 'indexByBounds']);
@@ -81,9 +83,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/', [\App\Http\Controllers\Admin\GamePinController::class, 'store']);
                 Route::delete('/{gamePin}', [\App\Http\Controllers\Admin\GamePinController::class, 'destroy']);
             });
-
-
-
 
 
         });
