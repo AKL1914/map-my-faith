@@ -31,7 +31,7 @@ class EnsureUserHasAreaAndGroup
 
         // Only apply for logged-in, non-admin users.
         if ($user && !$user->is_admin) {
-            $needsRedirect = empty($user->area) || empty($user->group); // Check if area or group is missing.
+            $needsRedirect = empty($user->area) || empty($user->group) || empty($user->cfo); // Check if area or group is missing.
 
             // Redirect to the profile edit page if necessary.
             if ($needsRedirect && !$request->is('profile/edit')) {
