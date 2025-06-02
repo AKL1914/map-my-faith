@@ -62,6 +62,12 @@
                     </a>
                 </li>
                 <li class="nav-item mx-2">
+                    <a class="nav-link {{ request()->is('user/' . auth()->id() . '/pins') ? 'active' : '' }}" href="{{ url('/user/' . auth()->id() . '/pins') }}">
+                        <i class="fas fa-map-pin"></i> <span class="d-none d-sm-inline">My Pins</span>
+                    </a>
+                </li>
+
+                <li class="nav-item mx-2">
                     <a class="nav-link {{ request()->is('leaderboard') ? 'active' : '' }}" href="{{ url('/leaderboard') }}">
                         <i class="fas fa-award"></i> <span class="d-none d-sm-inline">Leaderboard</span>
                     </a>

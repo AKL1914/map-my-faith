@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PinStoreRequest;
 use App\Jobs\FetchSuburbFromCoordinates;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\Pin;
 use Illuminate\Support\Facades\Auth;
@@ -230,6 +231,18 @@ class PinController extends Controller
     {
         $pin->load('user');
         return view('pins.show', compact('pin'));
+    }
+
+    public function pinsByUser(User $user, Request $request)
+    {
+        // Get all pins belonging to the user
+        $userPins = $user->pins()->get();
+
+        return response()->json([
+            'pins' => $userPins,
+            'user_name' => $user->name,
+            'total_pins' => $userPins->count(),
+        ]);
     }
 
     public function update(Pin $pin,Request $request)

@@ -1,6 +1,5 @@
 <template>
     <div class="container my-4">
-        <!-- Toast notification -->
         <Toast />
         <h2 class="mb-3">User Manager</h2>
 
@@ -11,18 +10,10 @@
                 <!-- Actions & Search -->
                 <div class="row gy-2 gx-3 align-items-center mb-3">
                     <div class="col-12 col-md-auto d-flex flex-wrap gap-2">
-                        <button
-                            class="btn btn-success btn-sm"
-                            @click="activateAll"
-                            title="Activate all users"
-                        >
+                        <button class="btn btn-success btn-sm" @click="activateAll" title="Activate all users">
                             <i class="bi bi-check-circle"></i>
                         </button>
-                        <button
-                            class="btn btn-danger btn-sm"
-                            @click="deactivateAll"
-                            title="Deactivate all users"
-                        >
+                        <button class="btn btn-danger btn-sm" @click="deactivateAll" title="Deactivate all users">
                             <i class="bi bi-x-circle"></i>
                         </button>
                     </div>
@@ -53,7 +44,7 @@
                             <th>Area</th>
                             <th>Group</th>
                             <th>CFO</th>
-                            <th style="min-width: 180px;">Actions</th>
+                            <th style="min-width: 200px;">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -70,14 +61,14 @@
                             </td>
                             <td>{{ user.email }}</td>
                             <td>
-                  <span class="badge" :class="user.is_admin ? 'bg-success' : 'bg-secondary'">
-                    {{ user.is_admin ? 'Yes' : 'No' }}
-                  </span>
+                                    <span class="badge" :class="user.is_admin ? 'bg-success' : 'bg-secondary'">
+                                        {{ user.is_admin ? 'Yes' : 'No' }}
+                                    </span>
                             </td>
                             <td>
-                  <span class="badge" :class="user.is_activated ? 'bg-success' : 'bg-secondary'">
-                    {{ user.is_activated ? 'Yes' : 'No' }}
-                  </span>
+                                    <span class="badge" :class="user.is_activated ? 'bg-success' : 'bg-secondary'">
+                                        {{ user.is_activated ? 'Yes' : 'No' }}
+                                    </span>
                             </td>
                             <td>
                                 <input
@@ -132,23 +123,32 @@
                                     >
                                         <i class="bi bi-save"></i>
                                     </button>
+                                    <!-- 🔗 View Pins Link -->
+                                    <a
+                                        :href="`/user/${user.id}/pins`"
+                                        class="btn btn-info btn-sm"
+                                        title="View pins"
+                                        target="_blank"
+                                    >
+                                        <i class="bi bi-map"></i>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
                         <tr v-if="users.length === 0">
-                            <td colspan="8" class="text-center">No users found.</td>
+                            <td colspan="9" class="text-center">No users found.</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pagination & Per Page -->
+                <!-- Pagination -->
                 <div class="row align-items-center mt-3 gy-2">
                     <div class="col">
                         <nav aria-label="Page navigation">
                             <ul class="pagination justify-content-center">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                    <button class="page-link" @click="prevPage" title="Previous page">
+                                    <button class="page-link" @click="prevPage">
                                         <i class="bi bi-chevron-left"></i>
                                     </button>
                                 </li>
@@ -158,12 +158,12 @@
                                     :key="page"
                                     :class="{ active: currentPage === page }"
                                 >
-                                    <button class="page-link" @click="goToPage(page)" :title="`Go to page ${page}`">
+                                    <button class="page-link" @click="goToPage(page)">
                                         {{ page }}
                                     </button>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <button class="page-link" @click="nextPage" title="Next page">
+                                    <button class="page-link" @click="nextPage">
                                         <i class="bi bi-chevron-right"></i>
                                     </button>
                                 </li>
@@ -221,7 +221,7 @@ export default {
                     });
                 })
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
+                    toast.error(error.response?.data?.message || 'Failed to fetch users.', {
                         position: POSITION.TOP_CENTER,
                         timeout: 5000,
                     });
@@ -230,24 +230,22 @@ export default {
                 });
         },
         toggleAdmin(user) {
-            const newStatus = !user.is_admin;
             axios
-                .put(`/api/users/${user.id}/admin`, { is_admin: newStatus })
+                .put(`/api/users/${user.id}/admin`, { is_admin: !user.is_admin })
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
+                    toast.error(error.response?.data?.message || 'Failed to update admin status.', {
                         position: POSITION.TOP_CENTER,
                         timeout: 5000,
                     });
                 });
         },
         toggleActivation(user) {
-            const newStatus = !user.is_activated;
             axios
-                .put(`/api/users/${user.id}/activation`, { is_activated: newStatus })
+                .put(`/api/users/${user.id}/activation`, { is_activated: !user.is_activated })
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
+                    toast.error(error.response?.data?.message || 'Failed to update activation status.', {
                         position: POSITION.TOP_CENTER,
                         timeout: 5000,
                     });
@@ -258,7 +256,7 @@ export default {
                 .post('/api/users/activate-all')
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
+                    toast.error(error.response?.data?.message || 'Failed to activate all users.', {
                         position: POSITION.TOP_CENTER,
                         timeout: 5000,
                     });
@@ -269,7 +267,7 @@ export default {
                 .post('/api/users/deactivate-all')
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
+                    toast.error(error.response?.data?.message || 'Failed to deactivate all users.', {
                         position: POSITION.TOP_CENTER,
                         timeout: 5000,
                     });
@@ -291,7 +289,7 @@ export default {
                     this.fetchUsers();
                 })
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
+                    toast.error(error.response?.data?.message || 'Failed to update user.', {
                         position: POSITION.TOP_CENTER,
                         timeout: 5000,
                     });
@@ -325,11 +323,9 @@ export default {
     font-size: 0.85rem;
     line-height: 1;
 }
-
 table input.form-control-sm {
     min-width: 100px;
 }
-
 .btn i {
     pointer-events: none;
     vertical-align: middle;
