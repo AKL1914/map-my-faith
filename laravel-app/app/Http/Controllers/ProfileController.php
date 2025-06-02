@@ -56,7 +56,7 @@ class ProfileController extends Controller
     public function update(UpdateProfileRequest $request)
     {
         $user = auth()->user();
-        $user->update($request->only(['area', 'group']));
+        $user->update($request->only(['area', 'group','cfo']));
         Cache::tags('users_paginated')->flush();
         return back()->with('success', 'Profile updated.');
     }
