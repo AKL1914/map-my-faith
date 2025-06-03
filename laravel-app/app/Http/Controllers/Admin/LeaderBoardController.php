@@ -16,16 +16,16 @@ class LeaderBoardController extends Controller
             $topSuburbs = $this->getTopSuburbs();
             $topAreas = $this->getTopAreas();
         } else {
-            // Non-admin user — cache for 1 hour
-            $leaderboardData = cache()->remember('leaderboardData', 3600, function () {
+            // Non-admin user — cache for 30 minutes
+            $leaderboardData = cache()->remember('leaderboardData', now()->addMinutes(30), function () {
                 return $this->getLeaderboardData();
             });
 
-            $topSuburbs = cache()->remember('topSuburbs', 3600, function () {
+            $topSuburbs = cache()->remember('topSuburbs', now()->addMinutes(30), function () {
                 return $this->getTopSuburbs();
             });
 
-            $topAreas = cache()->remember('topAreas', 3600, function () {
+            $topAreas = cache()->remember('topAreas', now()->addMinutes(30), function () {
                 return $this->getTopAreas();
             });
         }
