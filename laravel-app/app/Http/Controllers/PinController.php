@@ -104,36 +104,87 @@ class PinController extends Controller
     {
         $cacheKey = "pins_campaign_{$campaignId}";
 
-        // Check if date or area filters exist and skip cache if so
+        // Extract filters
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
         $area = $request->query('area');
+        $north = $request->query('north');
+        $south = $request->query('south');
+        $east = $request->query('east');
+        $west = $request->query('west');
 
-        if ($dateFrom || $dateTo || $area) {
-            $query = Pin::with('user')->where('campaign_id', $campaignId);
+        // Determine if filters exist
+        $hasDateOrAreaFilter = $dateFrom || $dateTo || $area;
+        $hasBoundsFilter = $north && $south && $east && $west;
+        $hasAnyFilter = $hasDateOrAreaFilter || $hasBoundsFilter;
 
-            if ($dateFrom) {
-                $query->whereDate('created_at', '>=', $dateFrom);
-            }
-            if ($dateTo) {
-                $query->whereDate('created_at', '<=', $dateTo);
-            }
-            if ($area) {
-                $query->whereHas('user', function ($q) use ($area) {
-                    $q->where('area', $area);
-                });
-            }
+        $baseQuery = Pin::with('user')->where('campaign_id', $campaignId);
 
-            return response()->json($query->get());
+        // Apply bounding box filtering if bounds present
+        if ($hasBoundsFilter) {
+            $baseQuery->whereBetween('latitude', [$south, $north])
+                ->whereBetween('longitude', [$west, $east]);
         }
 
-        // Use cache only when no filters
-        $pins = Cache::rememberForever($cacheKey, function () use ($campaignId) {
-            return Pin::with('user')->where('campaign_id', $campaignId)->get();
-        });
+        // Apply date filters
+        if ($dateFrom) {
+            $baseQuery->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $baseQuery->whereDate('created_at', '<=', $dateTo);
+        }
 
-        return response()->json($pins);
+        // Apply area filter based on user's area
+        if ($area) {
+            $baseQuery->whereHas('user', function ($q) use ($area) {
+                $q->where('area', $area);
+            });
+        }
+
+        if ($hasAnyFilter) {
+            // If date or area filters exist, no limit
+            if ($hasDateOrAreaFilter) {
+                $pins = $baseQuery->get();
+            } else {
+                // Only bounds filter: limit 200
+                $pins = $baseQuery->limit(200)->get();
+            }
+
+            // Calculate totals from full matching data (no limit)
+            $totalPins = $baseQuery->count();
+            $totalUsers = $baseQuery->distinct('user_id')->count('user_id');
+            $totalSuburbs = $baseQuery->pluck('suburb')
+                ->filter()
+                ->map(fn($s) => strtolower($s))
+                ->unique()
+                ->count();
+
+        } else {
+            // No filters: cache pins with limit 200
+            $pins = Cache::rememberForever($cacheKey, function () use ($campaignId) {
+                return Pin::with('user')->where('campaign_id', $campaignId)->limit(200)->get();
+            });
+
+            // Totals without filters
+            $totalPins = Pin::where('campaign_id', $campaignId)->count();
+            $totalUsers = Pin::where('campaign_id', $campaignId)->distinct('user_id')->count('user_id');
+            $totalSuburbs = Pin::where('campaign_id', $campaignId)
+                ->pluck('suburb')
+                ->filter()
+                ->map(fn($s) => strtolower($s))
+                ->unique()
+                ->count();
+        }
+
+        return response()->json([
+            'pins' => $pins,
+            'total_pins' => $totalPins,
+            'total_users' => $totalUsers,
+            'total_suburbs' => $totalSuburbs,
+        ]);
     }
+
+
 
     /**
      * Retrieve and return all pins associated with a specific user.
@@ -235,8 +286,11 @@ class PinController extends Controller
 
     public function pinsByUser(User $user, Request $request)
     {
-        // Get all pins belonging to the user
-        $userPins = $user->pins()->get();
+        $cacheKey = "user_pins_{$user->id}";
+
+        $userPins = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
+            return $user->pins()->get();
+        });
 
         return response()->json([
             'pins' => $userPins,
