@@ -56,8 +56,18 @@ class ProfileController extends Controller
     public function update(UpdateProfileRequest $request)
     {
         $user = auth()->user();
-        $user->update($request->only(['area', 'group']));
+        $user->update($request->only(['area', 'group','cfo']));
         Cache::tags('users_paginated')->flush();
         return back()->with('success', 'Profile updated.');
+    }
+
+    public function userPins(Request $request, $userId)
+    {
+        // validate only allow is_admin user and if the user id matches the authenticated user
+        if (!auth()->user() || (!auth()->user()->is_admin && auth()->id() != $userId)) {
+            return redirect()->route('home')->with('error', 'Unauthorized access.');
+        }
+
+        return view('profile.pins', compact('userId'));
     }
 }

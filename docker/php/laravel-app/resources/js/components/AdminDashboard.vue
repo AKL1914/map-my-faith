@@ -1,6 +1,6 @@
 <template>
     <div class="container my-4">
-        <!-- Campaign Selector and Date Filters -->
+        <!-- Campaign Selector -->
         <div class="mb-4">
             <label for="campaignSelect" class="form-label">Filter by Campaign:</label>
             <select
@@ -18,8 +18,8 @@
                 </option>
             </select>
 
-            <!-- Date Range Filters -->
-            <div class="row g-2 mt-3">
+            <!-- Date Range, Area Selector & Download Icon -->
+            <div class="row g-2 mt-3 align-items-end">
                 <div class="col-sm">
                     <label for="dateFrom" class="form-label">Date From:</label>
                     <input
@@ -38,13 +38,29 @@
                         v-model="dateTo"
                     />
                 </div>
-            </div>
-
-            <!-- Pin Count -->
-            <div class="mt-2">
-        <span class="badge bg-info">
-          {{ pins.length }} Pin{{ pins.length !== 1 ? 's' : '' }} Found
-        </span>
+                <div class="col-sm">
+                    <label for="areaFilter" class="form-label">Area:</label>
+                    <select
+                        id="areaFilter"
+                        class="form-select"
+                        v-model="selectedArea"
+                        @change="fetchPins"
+                    >
+                        <option value="">All Areas</option>
+                        <option v-for="n in 6" :key="n" :value="n">
+                            Area {{ n }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button
+                        class="btn btn-outline-secondary"
+                        @click="downloadReport"
+                        title="Download Report"
+                    >
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -62,7 +78,7 @@
                 <div class="card text-white bg-success h-100">
                     <div class="card-body text-center">
                         <h5 class="card-title">Total Pins</h5>
-                        <p class="card-text fs-4">{{ pins.length }}</p>
+                        <p class="card-text fs-4">{{ totalPins }}</p>
                     </div>
                 </div>
             </div>
@@ -90,22 +106,26 @@
 </template>
 
 <script>
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
+
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: [15, 25],
+    iconAnchor: [7, 25],
+    popupAnchor: [1, -20],
+    shadowSize: [25, 25]
 });
 
 const greenIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: [15, 25],
+    iconAnchor: [7, 25],
+    popupAnchor: [1, -20],
+    shadowSize: [25, 25]
 });
 
 export default {
@@ -117,10 +137,13 @@ export default {
             selectedCampaignId: '',
             dateFrom: '',
             dateTo: '',
+            selectedArea: '',
             map: null,
             markers: [],
+            lastFetchedBounds: null,
             totalUsers: 0,
             totalSuburbs: 0,
+            totalPins: 0,
             loggedInUsers: 0,
         };
     },
@@ -136,46 +159,67 @@ export default {
                 maxZoom: 18,
                 minZoom: 10
             }).addTo(this.map);
+
+            this.map.on('moveend', () => {
+                const currentBounds = this.map.getBounds();
+                if (this.hasBoundsChanged(currentBounds)) {
+                    this.lastFetchedBounds = currentBounds;
+                    this.fetchPins();
+                }
+            });
+        },
+        hasBoundsChanged(newBounds) {
+            if (!this.lastFetchedBounds) return true;
+
+            const old = this.lastFetchedBounds;
+            const margin = 0.001;
+
+            return (
+                Math.abs(old.getNorth() - newBounds.getNorth()) > margin ||
+                Math.abs(old.getSouth() - newBounds.getSouth()) > margin ||
+                Math.abs(old.getEast() - newBounds.getEast()) > margin ||
+                Math.abs(old.getWest() - newBounds.getWest()) > margin
+            );
         },
         fetchCampaigns() {
             axios.get('/api/campaigns')
                 .then(response => {
                     this.campaigns = response.data;
-                    const activeCampaign = this.campaigns.find(campaign => campaign.is_active);
+                    const activeCampaign = this.campaigns.find(c => c.is_active);
                     if (activeCampaign) {
                         this.selectedCampaignId = activeCampaign.id;
                         this.fetchPins();
                     }
                 });
         },
-        fetchPins() {
+        async fetchPins() {
+            if (!this.map || !this.selectedCampaignId) return;
+
+            const bounds = this.map.getBounds();
             const params = {
+                north: bounds.getNorth(),
+                south: bounds.getSouth(),
+                east: bounds.getEast(),
+                west: bounds.getWest(),
                 date_from: this.dateFrom,
                 date_to: this.dateTo,
+                area: this.selectedArea
             };
 
-            const url = this.selectedCampaignId
-                ? `/api/pins/campaign/${this.selectedCampaignId}`
-                : '/api/pins';
+            try {
+                const { data } = await axios.get(`/api/pins/campaign/${this.selectedCampaignId}`, { params });
 
-            axios.get(url, { params })
-                .then(response => {
-                    this.pins = response.data;
-                    this.updateMapMarkers();
+                this.pins = data.pins || [];
+                this.totalUsers = data.total_users || 0;
+                this.totalSuburbs = data.total_suburbs || 0;
+                this.totalPins = data.total_pins || 0;
 
-                    const userIds = new Set();
-                    const suburbs = new Set();
+                this.updateMapMarkers();
+                this.fetchLoggedInUsers();
 
-                    this.pins.forEach(pin => {
-                        if (pin.user_id) userIds.add(pin.user_id);
-                        if (pin.suburb) suburbs.add(pin.suburb.toLowerCase());
-                    });
-
-                    this.totalUsers = userIds.size;
-                    this.totalSuburbs = suburbs.size;
-
-                    this.fetchLoggedInUsers();
-                });
+            } catch (error) {
+                toast.error('Failed to fetch pins.');
+            }
         },
         fetchLoggedInUsers() {
             axios.get('/admin/active-users-count')
@@ -194,9 +238,9 @@ export default {
                 if (pin.latitude && pin.longitude) {
                     const icon = pin.is_accepted === 1 ? greenIcon : redIcon;
                     const popupContent = `
-            <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
-            ${pin.notes ?? ''}
-          `;
+                        <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
+                        ${pin.notes ?? ''}
+                    `;
 
                     const marker = window.L.marker([pin.latitude, pin.longitude], { icon })
                         .addTo(this.map)
@@ -210,6 +254,24 @@ export default {
                 const group = new window.L.featureGroup(this.markers);
                 this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
             }
+        },
+        downloadReport() {
+            const params = {
+                campaign_id: this.selectedCampaignId || '',
+                date_from: this.dateFrom || '',
+                date_to: this.dateTo || '',
+                area: this.selectedArea || '',
+            };
+
+            axios.get('/admin/dashboard/generate-report', { params })
+                .then(response => {
+                    const message = response.data.message || 'Report generated successfully.';
+                    toast.success(message);
+                })
+                .catch(error => {
+                    const message = error.response?.data?.message || 'Failed to generate report.';
+                    toast.error(message);
+                });
         }
     },
     watch: {
