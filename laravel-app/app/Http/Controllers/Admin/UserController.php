@@ -37,8 +37,8 @@ class UserController extends Controller
 
         // Cache the results for 10 minutes
         $users = Cache::tags('users_paginated')->remember($cacheKey, now()->addMinutes(10), function () use ($perPage, $search) {
-            $query = User::select('id', 'name', 'email', 'is_admin', 'is_activated', 'area', 'group','cfo')
-                ->orderBy('name');
+            $query = User::select('id', 'name', 'email', 'is_admin', 'is_activated', 'area', 'group', 'cfo')
+                ->orderByDesc('created_at'); // Show latest users first
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
