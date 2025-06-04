@@ -11,12 +11,10 @@ class LeaderBoardController extends Controller
     public function index(Request $request)
     {
         if ($request->user() && $request->user()->is_admin) {
-            // Admin user — do not cache
             $leaderboardData = $this->getLeaderboardData();
             $topSuburbs = $this->getTopSuburbs();
             $topAreas = $this->getTopAreas();
         } else {
-            // Non-admin user — cache for 30 minutes
             $leaderboardData = cache()->remember('leaderboardData', now()->addMinutes(30), function () {
                 return $this->getLeaderboardData();
             });
@@ -38,7 +36,8 @@ class LeaderBoardController extends Controller
         return DB::table('pins')
             ->join('users', 'pins.user_id', '=', 'users.id')
             ->select('users.id', 'users.name', 'users.area', DB::raw('count(pins.id) as pinCount'))
-            ->where('users.email', '!=', config('app.admin_email')) // Exclude admin
+            ->where('users.email', '!=', config('app.admin_email'))
+            ->where('users.name', '!=', 'Admin') // Exclude user with name 'Admin'
             ->groupBy('users.id', 'users.name', 'users.area')
             ->orderByDesc('pinCount')
             ->limit(10)
@@ -48,26 +47,29 @@ class LeaderBoardController extends Controller
     private function getTopSuburbs()
     {
         return DB::table(DB::raw('
-        (
-            SELECT
-                pins.suburb,
-                COUNT(pins.id) AS totalPins
-            FROM pins
-            GROUP BY pins.suburb
-        ) AS total
-    '))
+            (
+                SELECT
+                    pins.suburb,
+                    COUNT(pins.id) AS totalPins
+                FROM pins
+                JOIN users ON pins.user_id = users.id
+                WHERE users.name != "Admin"
+                GROUP BY pins.suburb
+            ) AS total
+        '))
             ->join(DB::raw('
-        (
-            SELECT
-                pins.suburb,
-                users.name AS user_name,
-                COUNT(pins.id) AS userPins,
-                ROW_NUMBER() OVER (PARTITION BY pins.suburb ORDER BY COUNT(pins.id) DESC) AS row_num
-            FROM pins
-            JOIN users ON pins.user_id = users.id
-            GROUP BY pins.suburb, users.name
-        ) AS topuser
-    '), 'total.suburb', '=', 'topuser.suburb')
+            (
+                SELECT
+                    pins.suburb,
+                    users.name AS user_name,
+                    COUNT(pins.id) AS userPins,
+                    ROW_NUMBER() OVER (PARTITION BY pins.suburb ORDER BY COUNT(pins.id) DESC) AS row_num
+                FROM pins
+                JOIN users ON pins.user_id = users.id
+                WHERE users.name != "Admin"
+                GROUP BY pins.suburb, users.name
+            ) AS topuser
+        '), 'total.suburb', '=', 'topuser.suburb')
             ->where('topuser.row_num', 1)
             ->orderByDesc('total.totalPins')
             ->limit(10)
@@ -79,6 +81,7 @@ class LeaderBoardController extends Controller
     {
         return DB::table('pins')
             ->join('users', 'pins.user_id', '=', 'users.id')
+            ->where('users.name', '!=', 'Admin') // Exclude user with name 'Admin'
             ->select('users.area', DB::raw('count(pins.id) as pinCount'))
             ->groupBy('users.area')
             ->orderByDesc('pinCount')
@@ -86,10 +89,9 @@ class LeaderBoardController extends Controller
             ->get();
     }
 
-
     public function show($id)
     {
-        $entry = []; // Placeholder for show logic
+        $entry = []; // Placeholder
         return view('admin.leaderboard.show', compact('entry'));
     }
 }
