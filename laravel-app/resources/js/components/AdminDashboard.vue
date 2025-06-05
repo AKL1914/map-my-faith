@@ -18,7 +18,7 @@
                 </option>
             </select>
 
-            <!-- Date Range, Area Selector & Download Icon -->
+            <!-- Date Range, Limit, Area Selector & Download Icon -->
             <div class="row g-2 mt-3 align-items-end">
                 <div class="col-sm">
                     <label for="dateFrom" class="form-label">Date From:</label>
@@ -37,6 +37,18 @@
                         class="form-control"
                         v-model="dateTo"
                     />
+                </div>
+                <div class="col-sm">
+                    <label for="limitSelect" class="form-label">Limit:</label>
+                    <select
+                        id="limitSelect"
+                        class="form-select"
+                        v-model="selectedLimit"
+                        @change="fetchPins"
+                    >
+                        <option value="">All</option>
+                        <option v-for="n in [200, 400, 600, 800, 1000]" :key="n" :value="n">{{ n }}</option>
+                    </select>
                 </div>
                 <div class="col-sm">
                     <label for="areaFilter" class="form-label">Area:</label>
@@ -78,7 +90,7 @@
                 <div class="card text-white bg-success h-100">
                     <div class="card-body text-center">
                         <h5 class="card-title">Total Pins</h5>
-                        <p class="card-text fs-4">{{ totalPins }}</p>
+                        <p class="card-text fs-4">{{ pins.length }}</p>
                     </div>
                 </div>
             </div>
@@ -106,7 +118,7 @@
 </template>
 
 <script>
-import { useToast } from 'vue-toastification';
+import {useToast} from 'vue-toastification';
 
 const toast = useToast();
 
@@ -138,12 +150,11 @@ export default {
             dateFrom: '',
             dateTo: '',
             selectedArea: '',
+            selectedLimit: 200,
             map: null,
             markers: [],
-            lastFetchedBounds: null,
             totalUsers: 0,
             totalSuburbs: 0,
-            totalPins: 0,
             loggedInUsers: 0,
         };
     },
@@ -159,67 +170,48 @@ export default {
                 maxZoom: 18,
                 minZoom: 10
             }).addTo(this.map);
-
-            this.map.on('moveend', () => {
-                const currentBounds = this.map.getBounds();
-                if (this.hasBoundsChanged(currentBounds)) {
-                    this.lastFetchedBounds = currentBounds;
-                    this.fetchPins();
-                }
-            });
-        },
-        hasBoundsChanged(newBounds) {
-            if (!this.lastFetchedBounds) return true;
-
-            const old = this.lastFetchedBounds;
-            const margin = 0.001;
-
-            return (
-                Math.abs(old.getNorth() - newBounds.getNorth()) > margin ||
-                Math.abs(old.getSouth() - newBounds.getSouth()) > margin ||
-                Math.abs(old.getEast() - newBounds.getEast()) > margin ||
-                Math.abs(old.getWest() - newBounds.getWest()) > margin
-            );
         },
         fetchCampaigns() {
             axios.get('/api/campaigns')
                 .then(response => {
                     this.campaigns = response.data;
-                    const activeCampaign = this.campaigns.find(c => c.is_active);
+                    const activeCampaign = this.campaigns.find(campaign => campaign.is_active);
                     if (activeCampaign) {
                         this.selectedCampaignId = activeCampaign.id;
                         this.fetchPins();
                     }
                 });
         },
-        async fetchPins() {
-            if (!this.map || !this.selectedCampaignId) return;
-
-            const bounds = this.map.getBounds();
+        fetchPins() {
             const params = {
-                north: bounds.getNorth(),
-                south: bounds.getSouth(),
-                east: bounds.getEast(),
-                west: bounds.getWest(),
                 date_from: this.dateFrom,
                 date_to: this.dateTo,
-                area: this.selectedArea
+                area: this.selectedArea,
+                limit: this.selectedLimit || ''
             };
 
-            try {
-                const { data } = await axios.get(`/api/pins/campaign/${this.selectedCampaignId}`, { params });
+            const url = this.selectedCampaignId
+                ? `/api/pins/campaign/${this.selectedCampaignId}`
+                : '/api/pins';
 
-                this.pins = data.pins || [];
-                this.totalUsers = data.total_users || 0;
-                this.totalSuburbs = data.total_suburbs || 0;
-                this.totalPins = data.total_pins || 0;
+            axios.get(url, {params})
+                .then(response => {
+                    this.pins = response.data;
+                    this.updateMapMarkers();
 
-                this.updateMapMarkers();
-                this.fetchLoggedInUsers();
+                    const userIds = new Set();
+                    const suburbs = new Set();
 
-            } catch (error) {
-                toast.error('Failed to fetch pins.');
-            }
+                    this.pins.forEach(pin => {
+                        if (pin.user_id) userIds.add(pin.user_id);
+                        if (pin.suburb) suburbs.add(pin.suburb.toLowerCase());
+                    });
+
+                    this.totalUsers = userIds.size;
+                    this.totalSuburbs = suburbs.size;
+
+                    this.fetchLoggedInUsers();
+                });
         },
         fetchLoggedInUsers() {
             axios.get('/admin/active-users-count')
@@ -242,7 +234,7 @@ export default {
                         ${pin.notes ?? ''}
                     `;
 
-                    const marker = window.L.marker([pin.latitude, pin.longitude], { icon })
+                    const marker = window.L.marker([pin.latitude, pin.longitude], {icon})
                         .addTo(this.map)
                         .bindPopup(popupContent);
 
@@ -252,7 +244,7 @@ export default {
 
             if (this.markers.length) {
                 const group = new window.L.featureGroup(this.markers);
-                this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
+                this.map.fitBounds(group.getBounds(), {padding: [30, 30]});
             }
         },
         downloadReport() {
@@ -261,9 +253,10 @@ export default {
                 date_from: this.dateFrom || '',
                 date_to: this.dateTo || '',
                 area: this.selectedArea || '',
+                limit: this.selectedLimit || '',
             };
 
-            axios.get('/admin/dashboard/generate-report', { params })
+            axios.get('/admin/dashboard/generate-report', {params})
                 .then(response => {
                     const message = response.data.message || 'Report generated successfully.';
                     toast.success(message);
