@@ -104,86 +104,48 @@ class PinController extends Controller
     {
         $cacheKey = "pins_campaign_{$campaignId}";
 
-        // Extract filters
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
         $area = $request->query('area');
-        $north = $request->query('north');
-        $south = $request->query('south');
-        $east = $request->query('east');
-        $west = $request->query('west');
+        $limit = $request->query('limit');
 
-        // Determine if filters exist
-        $hasDateOrAreaFilter = $dateFrom || $dateTo || $area;
-        $hasBoundsFilter = $north && $south && $east && $west;
-        $hasAnyFilter = $hasDateOrAreaFilter || $hasBoundsFilter;
+        $pinFields = ['id', 'user_id', 'latitude', 'longitude', 'notes', 'is_accepted', 'suburb', 'created_at', 'campaign_id'];
 
-        $baseQuery = Pin::with('user')->where('campaign_id', $campaignId);
+        if ($dateFrom || $dateTo || $area) {
+            $query = Pin::select($pinFields)
+                ->with(['user:id,name,area'])
+                ->where('campaign_id', $campaignId);
 
-        // Apply bounding box filtering if bounds present
-        if ($hasBoundsFilter) {
-            $baseQuery->whereBetween('latitude', [$south, $north])
-                ->whereBetween('longitude', [$west, $east]);
-        }
-
-        // Apply date filters
-        if ($dateFrom) {
-            $baseQuery->whereDate('created_at', '>=', $dateFrom);
-        }
-        if ($dateTo) {
-            $baseQuery->whereDate('created_at', '<=', $dateTo);
-        }
-
-        // Apply area filter based on user's area
-        if ($area) {
-            $baseQuery->whereHas('user', function ($q) use ($area) {
-                $q->where('area', $area);
-            });
-        }
-
-        if ($hasAnyFilter) {
-            // If date or area filters exist, no limit
-            if ($hasDateOrAreaFilter) {
-                $pins = $baseQuery->get();
-            } else {
-                // Only bounds filter: limit 200
-                $pins = $baseQuery->limit(200)->get();
+            if ($dateFrom) {
+                $query->whereDate('created_at', '>=', $dateFrom);
             }
 
-            // Calculate totals from full matching data (no limit)
-            $totalPins = $baseQuery->count();
-            $totalUsers = $baseQuery->distinct('user_id')->count('user_id');
-            $totalSuburbs = $baseQuery->pluck('suburb')
-                ->filter()
-                ->map(fn($s) => strtolower($s))
-                ->unique()
-                ->count();
+            if ($dateTo) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
 
-        } else {
-            // No filters: cache pins with limit 200
-            $pins = Cache::rememberForever($cacheKey, function () use ($campaignId) {
-                return Pin::with('user')->where('campaign_id', $campaignId)->limit(200)->get();
-            });
+            if ($area) {
+                $query->whereHas('user', function ($q) use ($area) {
+                    $q->where('area', $area);
+                });
+            }
 
-            // Totals without filters
-            $totalPins = Pin::where('campaign_id', $campaignId)->count();
-            $totalUsers = Pin::where('campaign_id', $campaignId)->distinct('user_id')->count('user_id');
-            $totalSuburbs = Pin::where('campaign_id', $campaignId)
-                ->pluck('suburb')
-                ->filter()
-                ->map(fn($s) => strtolower($s))
-                ->unique()
-                ->count();
+            return response()->json($query->get());
         }
 
-        return response()->json([
-            'pins' => $pins,
-            'total_pins' => $totalPins,
-            'total_users' => $totalUsers,
-            'total_suburbs' => $totalSuburbs,
-        ]);
-    }
+        $pins = Cache::rememberForever($cacheKey, function () use ($campaignId, $pinFields) {
+            return Pin::select($pinFields)
+                ->with(['user:id,name,area'])
+                ->where('campaign_id', $campaignId)
+                ->get();
+        });
 
+        if (is_numeric($limit)) {
+            return response()->json($pins->take((int) $limit)->values());
+        }
+
+        return response()->json($pins);
+    }
 
 
     /**
