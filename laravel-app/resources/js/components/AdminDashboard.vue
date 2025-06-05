@@ -90,7 +90,7 @@
                 <div class="card text-white bg-success h-100">
                     <div class="card-body text-center">
                         <h5 class="card-title">Total Pins</h5>
-                        <p class="card-text fs-4">{{ pins.length }}</p>
+                        <p class="card-text fs-4">{{ totalPins }}</p>
                     </div>
                 </div>
             </div>
@@ -154,6 +154,7 @@ export default {
             map: null,
             markers: [],
             totalUsers: 0,
+            totalPins: 0,
             totalSuburbs: 0,
             loggedInUsers: 0,
         };
@@ -161,6 +162,17 @@ export default {
     mounted() {
         this.initMap();
         this.fetchCampaigns();
+    },
+    watch: {
+        dateFrom() {
+            this.fetchPins();
+        },
+        dateTo() {
+            this.fetchPins();
+        },
+        selectedCampaignId() {
+            this.fetchPins();
+        }
     },
     methods: {
         initMap() {
@@ -178,7 +190,7 @@ export default {
                     const activeCampaign = this.campaigns.find(campaign => campaign.is_active);
                     if (activeCampaign) {
                         this.selectedCampaignId = activeCampaign.id;
-                        this.fetchPins();
+                        // fetchPins will run automatically because of watcher
                     }
                 });
         },
@@ -196,21 +208,25 @@ export default {
 
             axios.get(url, {params})
                 .then(response => {
-                    this.pins = response.data;
-                    this.updateMapMarkers();
+                    // Response shape: { data: [...pins], total_pins, total_users }
+                    this.pins = response.data.data || [];
+                    this.totalPins = response.data.total_pins || this.pins.length;
+                    this.totalUsers = response.data.total_users || 0;
 
-                    const userIds = new Set();
                     const suburbs = new Set();
-
                     this.pins.forEach(pin => {
-                        if (pin.user_id) userIds.add(pin.user_id);
                         if (pin.suburb) suburbs.add(pin.suburb.toLowerCase());
                     });
-
-                    this.totalUsers = userIds.size;
                     this.totalSuburbs = suburbs.size;
 
+                    this.updateMapMarkers();
                     this.fetchLoggedInUsers();
+                })
+                .catch(() => {
+                    this.pins = [];
+                    this.totalPins = 0;
+                    this.totalUsers = 0;
+                    this.totalSuburbs = 0;
                 });
         },
         fetchLoggedInUsers() {
@@ -265,14 +281,6 @@ export default {
                     const message = error.response?.data?.message || 'Failed to generate report.';
                     toast.error(message);
                 });
-        }
-    },
-    watch: {
-        dateFrom() {
-            this.fetchPins();
-        },
-        dateTo() {
-            this.fetchPins();
         }
     }
 };

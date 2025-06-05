@@ -111,40 +111,50 @@ class PinController extends Controller
 
         $pinFields = ['id', 'user_id', 'latitude', 'longitude', 'notes', 'is_accepted', 'suburb', 'created_at', 'campaign_id'];
 
-        if ($dateFrom || $dateTo || $area) {
-            $query = Pin::select($pinFields)
-                ->with(['user:id,name,area'])
-                ->where('campaign_id', $campaignId);
+        $useFilters = $dateFrom || $dateTo || $area;
 
-            if ($dateFrom) {
-                $query->whereDate('created_at', '>=', $dateFrom);
-            }
+        $query = Pin::select($pinFields)
+            ->with(['user:id,name,area'])
+            ->where('campaign_id', $campaignId);
 
-            if ($dateTo) {
-                $query->whereDate('created_at', '<=', $dateTo);
-            }
-
-            if ($area) {
-                $query->whereHas('user', function ($q) use ($area) {
-                    $q->where('area', $area);
-                });
-            }
-
-            return response()->json($query->get());
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
         }
 
-        $pins = Cache::rememberForever($cacheKey, function () use ($campaignId, $pinFields) {
-            return Pin::select($pinFields)
-                ->with(['user:id,name,area'])
-                ->where('campaign_id', $campaignId)
-                ->get();
-        });
-
-        if (is_numeric($limit)) {
-            return response()->json($pins->take((int) $limit)->values());
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
         }
 
-        return response()->json($pins);
+        if ($area) {
+            $query->whereHas('user', function ($q) use ($area) {
+                $q->where('area', $area);
+            });
+        }
+
+        if ($useFilters) {
+            $pins = $query->get();
+        } else {
+            $pins = Cache::rememberForever($cacheKey, function () use ($campaignId, $pinFields) {
+                return Pin::select($pinFields)
+                    ->with(['user:id,name,area'])
+                    ->where('campaign_id', $campaignId)
+                    ->get();
+            });
+        }
+
+        $totalPins = $pins->count();
+        $totalUsers = $pins->pluck('user_id')->unique()->count();
+
+        // Only limit displayed data — totals remain full
+        if (!$useFilters && is_numeric($limit)) {
+            $pins = $pins->take((int) $limit)->values();
+        }
+
+        return response()->json([
+            'data' => $pins,
+            'total_pins' => $totalPins,
+            'total_users' => $totalUsers,
+        ]);
     }
 
 
