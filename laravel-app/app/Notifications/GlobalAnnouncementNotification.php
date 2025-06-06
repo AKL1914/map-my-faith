@@ -30,7 +30,7 @@ class GlobalAnnouncementNotification extends Notification
 
     public function toWebPush($notifiable, $notification)
     {
-        return (new WebPushMessage)
+        return (new WebPushMessage())
             ->title($this->title)
             ->body($this->body)
             ->icon('/icon.png')

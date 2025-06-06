@@ -81,7 +81,7 @@ class LeaderBoardController extends Controller
     {
         return DB::table('pins')
             ->join('users', 'pins.user_id', '=', 'users.id')
-            ->where('users.name', '!=', 'Admin') // Exclude user with name 'Admin'
+            ->where('users.email', '!=', config('app.admin_email'))
             ->select('users.area', DB::raw('count(pins.id) as pinCount'))
             ->groupBy('users.area')
             ->orderByDesc('pinCount')

@@ -18,7 +18,10 @@ use Illuminate\Support\Facades\Http;
  */
 class FetchSuburbFromCoordinates implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     /**
      * The ID of the pin for which the suburb information is to be fetched.

@@ -8,7 +8,8 @@ use Illuminate\Queue\SerializesModels;
 
 class PinUpdated
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
