@@ -1,10 +1,10 @@
 <?php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Facades\Socialite;
 
 /**
  * Class AuthController
@@ -26,7 +26,7 @@ class AuthController extends Controller
     public function redirectToGoogle()
     {
         return response()->json([
-            'url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl()
+            'url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl(),
         ]);
     }
 
@@ -53,7 +53,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => $user
+            'user' => $user,
         ]);
     }
 }

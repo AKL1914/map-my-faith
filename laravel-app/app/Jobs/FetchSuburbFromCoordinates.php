@@ -1,12 +1,13 @@
 <?php
+
 namespace App\Jobs;
 
 use App\Models\Pin;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -29,7 +30,7 @@ class FetchSuburbFromCoordinates implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param int $pinId The ID of the pin.
+     * @param  int  $pinId  The ID of the pin.
      */
     public function __construct($pinId)
     {
@@ -42,8 +43,6 @@ class FetchSuburbFromCoordinates implements ShouldQueue
      * This method retrieves the pin by its ID, fetches the suburb information
      * from the Nominatim OpenStreetMap API, and updates the pin's suburb field
      * if the information is successfully retrieved.
-     *
-     * @return void
      */
     public function handle(): void
     {
@@ -51,7 +50,7 @@ class FetchSuburbFromCoordinates implements ShouldQueue
         $pin = Pin::find($this->pinId);
 
         // If the pin does not exist, exit the job
-        if (!$pin) {
+        if (! $pin) {
             return;
         }
 
@@ -61,7 +60,7 @@ class FetchSuburbFromCoordinates implements ShouldQueue
 
         // Make a request to the Nominatim OpenStreetMap API
         $response = Http::withHeaders([
-            'User-Agent' => 'maps/1.0 (villamornatonio@gmail.com)' // Set the correct User-Agent header
+            'User-Agent' => 'maps/1.0 (villamornatonio@gmail.com)', // Set the correct User-Agent header
         ])->get('https://nominatim.openstreetmap.org/reverse', [
             'format' => 'json',
             'lat' => $lat,

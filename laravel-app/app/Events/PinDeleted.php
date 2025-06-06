@@ -17,5 +17,4 @@ class PinDeleted
     {
         $this->pin = $pin;
     }
-
 }

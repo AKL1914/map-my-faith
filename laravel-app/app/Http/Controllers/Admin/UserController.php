@@ -23,7 +23,7 @@ class UserController extends Controller
      * This method fetches users from the database with optional search functionality
      * and caches the results for 10 minutes.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing pagination and search parameters.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing pagination and search parameters.
      * @return \Illuminate\Http\JsonResponse A JSON response containing the paginated list of users.
      */
     public function index(Request $request)
@@ -46,7 +46,6 @@ class UserController extends Controller
         return response()->json($users);
     }
 
-
     /**
      * Display the user management view.
      *
@@ -64,14 +63,15 @@ class UserController extends Controller
      *
      * This method updates the `is_admin` attribute of the specified user and clears the cache.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing the new admin status.
-     * @param \App\Models\User $user The user whose admin status is to be updated.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing the new admin status.
+     * @param  \App\Models\User  $user  The user whose admin status is to be updated.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function updateAdminStatus(Request $request, User $user)
     {
         $user->is_admin = $request->boolean('is_admin');
         $user->save();
+
         return response()->json(['message' => 'Admin status updated.']);
     }
 
@@ -80,8 +80,8 @@ class UserController extends Controller
      *
      * This method updates the `is_activated` attribute of the specified user and clears the cache.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing the new activation status.
-     * @param \App\Models\User $user The user whose activation status is to be updated.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing the new activation status.
+     * @param  \App\Models\User  $user  The user whose activation status is to be updated.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function updateActivationStatus(Request $request, User $user)
@@ -92,7 +92,6 @@ class UserController extends Controller
         if ($user->is_activated) { // Only send email if activated
             SendUserActivatedEmail::dispatch($user);
         }
-
 
         return response()->json(['message' => 'Activation status updated.']);
     }
@@ -121,7 +120,6 @@ class UserController extends Controller
             SendUserActivatedEmail::dispatch($user);
         }
 
-
         return response()->json(['message' => 'All users activated and notified.']);
     }
 
@@ -136,6 +134,7 @@ class UserController extends Controller
     public function deactivateAll()
     {
         User::query()->where('is_admin', false)->update(['is_activated' => false]);
+
         return response()->json(['message' => 'All users deactivated.']);
     }
 
@@ -145,8 +144,8 @@ class UserController extends Controller
      * This method updates the `area` and `group` attributes of the specified user
      * and clears the cache.
      *
-     * @param \App\Http\Requests\UpdateProfileRequest $request The HTTP request containing the new area and group data.
-     * @param \App\Models\User $user The user whose area and group are to be updated.
+     * @param  \App\Http\Requests\UpdateProfileRequest  $request  The HTTP request containing the new area and group data.
+     * @param  \App\Models\User  $user  The user whose area and group are to be updated.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function updateAreaGroup(UpdateProfileRequest $request, User $user)
@@ -163,6 +162,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $user->update($request->validated());
+
         return response()->json([
             'message' => 'User updated successfully.',
             'user' => $user,

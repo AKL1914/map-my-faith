@@ -10,10 +10,11 @@ class StaticPinSeeder extends Seeder
     public function run(): void
     {
         $campaignId = DB::table('campaigns')->where('is_active', true)->value('id');
-        $userId = DB::table('users')->where('email','Dennisapolonio@gmail.com')->where('is_admin', true)->value('id');
+        $userId = DB::table('users')->where('email', 'Dennisapolonio@gmail.com')->where('is_admin', true)->value('id');
 
-        if (!$campaignId || !$userId) {
+        if (! $campaignId || ! $userId) {
             $this->command->error('No active campaign or admin user found.');
+
             return;
         }
 
@@ -434,6 +435,6 @@ class StaticPinSeeder extends Seeder
             ]);
         }
 
-        $this->command->info(count($pins) . " pins inserted.");
+        $this->command->info(count($pins).' pins inserted.');
     }
 }

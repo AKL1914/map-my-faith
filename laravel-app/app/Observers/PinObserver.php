@@ -18,8 +18,7 @@ class PinObserver
      *
      * Clears the bounds cache and the cache for all pins when a new pin is created.
      *
-     * @param Pin $pin The pin instance that was created.
-     * @return void
+     * @param  Pin  $pin  The pin instance that was created.
      */
     public function created(Pin $pin): void
     {
@@ -33,14 +32,13 @@ class PinObserver
      * Clears the bounds cache and specific caches related to the pin's campaign and user
      * when a pin is updated.
      *
-     * @param Pin $pin The pin instance that was updated.
-     * @return void
+     * @param  Pin  $pin  The pin instance that was updated.
      */
     public function updated(Pin $pin): void
     {
         $this->clearAllBoundsCache();
-        Cache::forget('pins_campaign_' . $pin->campaign_id);
-        Cache::forget('pins_user_' . $pin->user_id);
+        Cache::forget('pins_campaign_'.$pin->campaign_id);
+        Cache::forget('pins_user_'.$pin->user_id);
     }
 
     /**
@@ -49,14 +47,13 @@ class PinObserver
      * Clears the bounds cache and specific caches related to the pin's campaign and user
      * when a pin is deleted.
      *
-     * @param Pin $pin The pin instance that was deleted.
-     * @return void
+     * @param  Pin  $pin  The pin instance that was deleted.
      */
     public function deleted(Pin $pin): void
     {
         $this->clearAllBoundsCache();
-        Cache::forget('pins_campaign_' . $pin->campaign_id);
-        Cache::forget('pins_user_' . $pin->user_id);
+        Cache::forget('pins_campaign_'.$pin->campaign_id);
+        Cache::forget('pins_user_'.$pin->user_id);
     }
 
     /**
@@ -65,14 +62,13 @@ class PinObserver
      * Clears the bounds cache and specific caches related to the pin's campaign and user
      * when a deleted pin is restored.
      *
-     * @param Pin $pin The pin instance that was restored.
-     * @return void
+     * @param  Pin  $pin  The pin instance that was restored.
      */
     public function restored(Pin $pin): void
     {
         $this->clearAllBoundsCache();
-        Cache::forget('pins_campaign_' . $pin->campaign_id);
-        Cache::forget('pins_user_' . $pin->user_id);
+        Cache::forget('pins_campaign_'.$pin->campaign_id);
+        Cache::forget('pins_user_'.$pin->user_id);
     }
 
     /**
@@ -81,22 +77,19 @@ class PinObserver
      * Clears the bounds cache and specific caches related to the pin's campaign and user
      * when a pin is permanently deleted.
      *
-     * @param Pin $pin The pin instance that was force deleted.
-     * @return void
+     * @param  Pin  $pin  The pin instance that was force deleted.
      */
     public function forceDeleted(Pin $pin): void
     {
         $this->clearAllBoundsCache();
-        Cache::forget('pins_campaign_' . $pin->campaign_id);
-        Cache::forget('pins_user_' . $pin->user_id);
+        Cache::forget('pins_campaign_'.$pin->campaign_id);
+        Cache::forget('pins_user_'.$pin->user_id);
     }
 
     /**
      * Clear all bounds-related cache.
      *
      * Removes cached data for all bounds keys and the bounds keys cache itself.
-     *
-     * @return void
      */
     protected function clearAllBoundsCache(): void
     {

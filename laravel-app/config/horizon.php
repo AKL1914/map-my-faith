@@ -70,7 +70,7 @@ return [
     |
     */
 
-    'middleware' => ['web', 'auth',\App\Http\Middleware\IsAdmin::class],
+    'middleware' => ['web', 'auth', \App\Http\Middleware\IsAdmin::class],
 
     /*
     |--------------------------------------------------------------------------

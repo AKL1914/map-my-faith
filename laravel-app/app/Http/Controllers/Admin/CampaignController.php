@@ -43,7 +43,7 @@ class CampaignController extends Controller
      *
      * This method fetches a campaign from the database or throws a 404 error if not found.
      *
-     * @param int $id The ID of the campaign to retrieve.
+     * @param  int  $id  The ID of the campaign to retrieve.
      * @return \App\Models\Campaign The requested campaign.
      */
     public function show($id)
@@ -56,7 +56,7 @@ class CampaignController extends Controller
      *
      * This method validates the request data and creates a new campaign.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing campaign data.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing campaign data.
      * @return \App\Models\Campaign The newly created campaign.
      */
     public function store(Request $request)
@@ -74,8 +74,8 @@ class CampaignController extends Controller
      * This method validates the request data, updates the specified campaign, and ensures
      * only one campaign is active at a time.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing updated campaign data.
-     * @param int $id The ID of the campaign to update.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing updated campaign data.
+     * @param  int  $id  The ID of the campaign to update.
      * @return \Illuminate\Http\JsonResponse A JSON response with the updated campaign and a success message.
      */
     public function update(Request $request, $id)
@@ -103,7 +103,7 @@ class CampaignController extends Controller
      *
      * This method deletes the specified campaign by its ID.
      *
-     * @param int $id The ID of the campaign to delete.
+     * @param  int  $id  The ID of the campaign to delete.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function destroy($id)
