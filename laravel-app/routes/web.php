@@ -1,9 +1,14 @@
 <?php
 
 use App\Http\Controllers\Admin\CampaignController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\LeaderBoardController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Auth\AdminLoginController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\GamePinController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MapsController;
 use App\Http\Controllers\PinController;
 use App\Http\Controllers\ProfileController;
@@ -11,23 +16,18 @@ use App\Http\Middleware\EnsureUserHasAreaAndGroup;
 use App\Http\Middleware\IsAdmin;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Auth\AdminLoginController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\LeaderBoardController;
-use App\Http\Controllers\Auth\LoginController;
 
 Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('login.google');
 Route::get('/auth/callback/google', [LoginController::class, 'handleGoogleCallback']);
 Route::post('/logout', function () {
     Auth::logout();
+
     return redirect('/');
 })->name('logout');
 
 Route::get('/login', function () {
     return redirect('/');
 })->name('login');
-
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -38,9 +38,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/user/{id}/pins', [ProfileController::class, 'userPins'])->name('profile.pins');
 
-   // will transfer this bit of route when its needed to restful use
+    // will transfer this bit of route when its needed to restful use
     Route::group(['prefix' => 'api'], function () {
-
 
         Route::get('/game-pins', [GamePinController::class, 'index']);
         Route::post('/game-pins/{gamePin}/participate', [GamePinController::class, 'participate']);
@@ -54,11 +53,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pins/bounds', [PinController::class, 'indexByBounds']);
 
         Route::middleware([IsAdmin::class])->group(function () {
-            //Campaign API routes
+            // Campaign API routes
             Route::get('/pins/campaign/{campaignId}', [PinController::class, 'indexByCampaign']);
             Route::apiResource('campaigns', CampaignController::class);
 
-            //User API routes
+            // User API routes
             Route::get('/users', [UserController::class, 'index']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
@@ -68,7 +67,7 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/users/{user}/area-group', [UserController::class, 'updateAreaGroup']);
             Route::put('/users/{id}', [UserController::class, 'update']);
 
-            //Event API routes
+            // Event API routes
             Route::prefix('events')->group(function () {
                 Route::get('/', [EventController::class, 'index']);
                 Route::post('/', [EventController::class, 'store']);
@@ -78,18 +77,17 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{event}/pins', [EventController::class, 'eventPins']);
             });
 
-            //GamePin API routes
+            // GamePin API routes
             Route::prefix('game-pins')->group(function () {
                 Route::post('/', [\App\Http\Controllers\Admin\GamePinController::class, 'store']);
                 Route::delete('/{gamePin}', [\App\Http\Controllers\Admin\GamePinController::class, 'destroy']);
             });
 
-
         });
 
     });
 
-    //Admin routes
+    // Admin routes
     Route::middleware([IsAdmin::class])->group(function () {
         Route::get('/admin/dashboard', [DashboardController::class, 'index']);
 
@@ -104,15 +102,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/game-pins', [\App\Http\Controllers\Admin\GamePinController::class, 'index']);
         Route::get('/admin/dashboard/generate-report', [DashboardController::class, 'generateReport'])->name('admin.dashboard.report');
 
-
-
-
     });
 
 });
 
-////Admin
+// //Admin
 Route::get('/activate', [HomeController::class, 'activate'])->name('activate');
 Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
 Route::post('/admin/login', [AdminLoginController::class, 'login']);
-

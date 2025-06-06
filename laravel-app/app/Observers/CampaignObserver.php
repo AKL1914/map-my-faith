@@ -18,8 +18,7 @@ class CampaignObserver
      *
      * Clears the campaign-related cache when a new campaign is created.
      *
-     * @param Campaign $campaign The campaign instance that was created.
-     * @return void
+     * @param  Campaign  $campaign  The campaign instance that was created.
      */
     public function created(Campaign $campaign): void
     {
@@ -31,8 +30,7 @@ class CampaignObserver
      *
      * Clears the campaign-related cache when a campaign is updated.
      *
-     * @param Campaign $campaign The campaign instance that was updated.
-     * @return void
+     * @param  Campaign  $campaign  The campaign instance that was updated.
      */
     public function updated(Campaign $campaign): void
     {
@@ -44,8 +42,7 @@ class CampaignObserver
      *
      * Clears the campaign-related cache when a campaign is deleted.
      *
-     * @param Campaign $campaign The campaign instance that was deleted.
-     * @return void
+     * @param  Campaign  $campaign  The campaign instance that was deleted.
      */
     public function deleted(Campaign $campaign): void
     {
@@ -57,8 +54,7 @@ class CampaignObserver
      *
      * Clears the campaign-related cache when a deleted campaign is restored.
      *
-     * @param Campaign $campaign The campaign instance that was restored.
-     * @return void
+     * @param  Campaign  $campaign  The campaign instance that was restored.
      */
     public function restored(Campaign $campaign): void
     {
@@ -70,8 +66,7 @@ class CampaignObserver
      *
      * Clears the campaign-related cache when a campaign is permanently deleted.
      *
-     * @param Campaign $campaign The campaign instance that was force deleted.
-     * @return void
+     * @param  Campaign  $campaign  The campaign instance that was force deleted.
      */
     public function forceDeleted(Campaign $campaign): void
     {
@@ -83,8 +78,6 @@ class CampaignObserver
      *
      * Removes cached data for all campaigns, the active campaign ID, and optionally
      * clears cached keys related to pin bounds.
-     *
-     * @return void
      */
     protected function clearCampaignCache(): void
     {

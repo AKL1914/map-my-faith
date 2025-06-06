@@ -20,6 +20,7 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\PinUpdated::class => [\App\Listeners\UpdatePinCache::class],
         \App\Events\PinDeleted::class => [\App\Listeners\UpdatePinCache::class],
     ];
+
     /**
      * Register any events for your application.
      *

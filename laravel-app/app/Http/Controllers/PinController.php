@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PinStoreRequest;
 use App\Jobs\FetchSuburbFromCoordinates;
+use App\Models\Pin;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\Pin;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
@@ -34,7 +34,7 @@ class PinController extends Controller
      * This method validates the request data, creates a new pin, and dispatches a job
      * to fetch the suburb from the pin's coordinates.
      *
-     * @param \App\Http\Requests\PinStoreRequest $request The validated request containing pin data.
+     * @param  \App\Http\Requests\PinStoreRequest  $request  The validated request containing pin data.
      * @return \Illuminate\Http\JsonResponse A JSON response with the created pin.
      */
     public function store(PinStoreRequest $request)
@@ -58,7 +58,7 @@ class PinController extends Controller
      *
      * This method supports filtering by search term, date range, and pagination.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing query parameters.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing query parameters.
      * @return \Illuminate\Http\JsonResponse A JSON response with the list of pins.
      */
     public function index(Request $request)
@@ -97,7 +97,7 @@ class PinController extends Controller
     /**
      * Retrieve and return all pins associated with a specific campaign.
      *
-     * @param int $campaignId The ID of the campaign.
+     * @param  int  $campaignId  The ID of the campaign.
      * @return \Illuminate\Http\JsonResponse A JSON response with the list of pins.
      */
     public function indexByCampaign($campaignId, Request $request)
@@ -146,7 +146,7 @@ class PinController extends Controller
         $totalUsers = $pins->pluck('user_id')->unique()->count();
 
         // Only limit displayed data — totals remain full
-        if (!$useFilters && is_numeric($limit)) {
+        if (! $useFilters && is_numeric($limit)) {
             $pins = $pins->take((int) $limit)->values();
         }
 
@@ -157,11 +157,10 @@ class PinController extends Controller
         ]);
     }
 
-
     /**
      * Retrieve and return all pins associated with a specific user.
      *
-     * @param int $userId The ID of the user.
+     * @param  int  $userId  The ID of the user.
      * @return \Illuminate\Http\JsonResponse A JSON response with the list of pins.
      */
     public function indexByUser($userId)
@@ -180,7 +179,7 @@ class PinController extends Controller
      *
      * This method validates the bounds and caches the results for future requests.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing geographic bounds.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing geographic bounds.
      * @return \Illuminate\Http\JsonResponse A JSON response with the list of pins.
      */
     public function indexByBounds(Request $request)
@@ -192,7 +191,7 @@ class PinController extends Controller
             'west' => 'required|numeric',
         ]);
 
-        $cacheKey = 'pins_bounds_' . md5(json_encode([
+        $cacheKey = 'pins_bounds_'.md5(json_encode([
             $request->north,
             $request->south,
             $request->east,
@@ -200,7 +199,7 @@ class PinController extends Controller
         ]));
 
         $allBoundsKeys = Cache::get('pins_bounds_keys', []);
-        if (!in_array($cacheKey, $allBoundsKeys)) {
+        if (! in_array($cacheKey, $allBoundsKeys)) {
             $allBoundsKeys[] = $cacheKey;
             Cache::forever('pins_bounds_keys', $allBoundsKeys);
         }
@@ -225,15 +224,15 @@ class PinController extends Controller
      *
      * This method ensures that only the owner of the pin can delete it.
      *
-     * @param int $id The ID of the pin to delete.
+     * @param  int  $id  The ID of the pin to delete.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function destroy($id)
     {
         $pin = Pin::findOrFail($id);
 
-        //if user is admin, allow deletion of any pin
-        if ($pin->user_id !== auth()->id() && !auth()->user()->is_admin) {
+        // if user is admin, allow deletion of any pin
+        if ($pin->user_id !== auth()->id() && ! auth()->user()->is_admin) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -247,12 +246,13 @@ class PinController extends Controller
      *
      * This method loads the associated user and returns the pin details view.
      *
-     * @param \App\Models\Pin $pin The pin to display.
+     * @param  \App\Models\Pin  $pin  The pin to display.
      * @return \Illuminate\View\View The view displaying the pin details.
      */
     public function show(Pin $pin)
     {
         $pin->load('user');
+
         return view('pins.show', compact('pin'));
     }
 
@@ -271,9 +271,10 @@ class PinController extends Controller
         ]);
     }
 
-    public function update(Pin $pin,Request $request)
+    public function update(Pin $pin, Request $request)
     {
         $pin->update($request->all());
+
         return response()->json(['message' => 'Pin updated successfully']);
     }
 }

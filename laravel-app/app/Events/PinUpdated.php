@@ -17,5 +17,4 @@ class PinUpdated
     {
         $this->pin = $pin;
     }
-
 }

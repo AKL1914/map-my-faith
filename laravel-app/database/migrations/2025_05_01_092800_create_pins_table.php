@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('pins', function (Blueprint $table) {
             $table->id();
-//            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            //            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->integer('user_id')->nullable();
             $table->decimal('latitude', 10, 7);
             $table->decimal('longitude', 10, 7);
@@ -19,11 +19,9 @@ return new class extends Migration
             $table->boolean('is_accepted')->default(true);
             $table->string('suburb')->nullable();
             $table->timestamps();
-//            $table->foreignId('campaign_id')->constrained()->onDelete('cascade');
+            //            $table->foreignId('campaign_id')->constrained()->onDelete('cascade');
             $table->integer('campaign_id')->nullable();
         });
-
-
 
     }
 

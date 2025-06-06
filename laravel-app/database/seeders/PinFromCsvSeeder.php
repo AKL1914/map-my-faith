@@ -13,8 +13,9 @@ class PinFromCsvSeeder extends Seeder
     {
         $path = database_path('seeders/data/data.csv');
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             $this->command->error("CSV file not found: $path");
+
             return;
         }
 
@@ -24,8 +25,9 @@ class PinFromCsvSeeder extends Seeder
         $campaignId = DB::table('campaigns')->where('is_active', true)->value('id');
         $userId = DB::table('users')->where('email', config('app.admin_email'))->value('id');
 
-        if (!$campaignId || !$userId) {
+        if (! $campaignId || ! $userId) {
             $this->command->error('Missing active campaign or admin user.');
+
             return;
         }
 
@@ -34,8 +36,8 @@ class PinFromCsvSeeder extends Seeder
         while (($row = fgetcsv($file)) !== false) {
             $wkt = $row[0]; // e.g. POINT (174.7633 -36.8485)
             if (preg_match('/POINT\s*\(([-\d.]+)\s+([-\d.]+)\)/', $wkt, $matches)) {
-                $longitude = (float)$matches[1];
-                $latitude = (float)$matches[2];
+                $longitude = (float) $matches[1];
+                $latitude = (float) $matches[2];
             } else {
                 continue; // Skip invalid points
             }

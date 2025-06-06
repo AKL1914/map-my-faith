@@ -92,6 +92,7 @@ class LeaderBoardController extends Controller
     public function show($id)
     {
         $entry = []; // Placeholder
+
         return view('admin.leaderboard.show', compact('entry'));
     }
 }

@@ -15,7 +15,6 @@ class PinCreated
     /**
      * Create a new event instance.
      *
-     * @param  \App\Models\Pin  $pin
      * @return void
      */
     public function __construct(Pin $pin)

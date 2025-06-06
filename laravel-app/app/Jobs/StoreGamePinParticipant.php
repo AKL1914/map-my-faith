@@ -18,9 +18,13 @@ class StoreGamePinParticipant implements ShouldQueue
      * Create a new job instance.
      */
     protected $gamePinId;
+
     protected $userId;
+
     protected $latitude;
+
     protected $longitude;
+
     protected $distance;
 
     public function __construct($gamePinId, $userId, $latitude, $longitude)
@@ -41,7 +45,7 @@ class StoreGamePinParticipant implements ShouldQueue
         $distance = $this->haversineDistance($this->latitude, $this->longitude, $gamePin->latitude, $gamePin->longitude);
 
         if ($distance <= config('app.game_pin_distance')) {
-            if (!$gamePin->is_taken && $gamePin->user_id == null) {
+            if (! $gamePin->is_taken && $gamePin->user_id == null) {
                 DB::table('game_pins')->where('id', $gamePin->id)->update([
                     'is_taken' => 1,
                     'user_id' => $this->userId,

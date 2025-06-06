@@ -11,7 +11,9 @@ class GlobalAnnouncementNotification extends Notification
     use Queueable;
 
     public $title;
+
     public $body;
+
     public $level;
 
     public function __construct($title, $body, $level = 'info')
