@@ -17,7 +17,10 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
  */
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasPushSubscriptions, Notifiable;
+    use HasApiTokens;
+    use HasFactory;
+    use HasPushSubscriptions;
+    use Notifiable;
 
     /**
      * The attributes that are mass assignable.

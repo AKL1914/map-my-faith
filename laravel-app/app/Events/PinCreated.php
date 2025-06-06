@@ -8,7 +8,8 @@ use Illuminate\Queue\SerializesModels;
 
 class PinCreated
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public $pin;
 
