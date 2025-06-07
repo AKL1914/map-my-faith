@@ -11,7 +11,9 @@ class GlobalAnnouncementNotification extends Notification
     use Queueable;
 
     public $title;
+
     public $body;
+
     public $level;
 
     public function __construct($title, $body, $level = 'info')
@@ -28,7 +30,7 @@ class GlobalAnnouncementNotification extends Notification
 
     public function toWebPush($notifiable, $notification)
     {
-        return (new WebPushMessage)
+        return (new WebPushMessage())
             ->title($this->title)
             ->body($this->body)
             ->icon('/icon.png')

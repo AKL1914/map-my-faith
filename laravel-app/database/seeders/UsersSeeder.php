@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class UsersSeeder extends Seeder
@@ -13,13 +12,13 @@ class UsersSeeder extends Seeder
      */
     public function run(): void
     {
-         User::factory()->create([
-             'name' => env('ADMIN_NAME1'),
-             'email' => env('ADMIN_EMAIL1'),
-             'password' => bcrypt(env('ADMIN_PASSWORD1')),
-             'is_activated' => true,
-             'is_admin' => true,
-         ]);
+        User::factory()->create([
+            'name' => env('ADMIN_NAME1'),
+            'email' => env('ADMIN_EMAIL1'),
+            'password' => bcrypt(env('ADMIN_PASSWORD1')),
+            'is_activated' => true,
+            'is_admin' => true,
+        ]);
 
         User::factory()->create([
             'name' => env('ADMIN_NAME2'),
@@ -60,11 +59,6 @@ class UsersSeeder extends Seeder
             'is_activated' => false,
             'is_admin' => false,
         ]);
-
-
-
-
-
 
     }
 }

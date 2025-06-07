@@ -2,13 +2,14 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Jobs\GeneratePinReport;
+use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
 class WeeklyPinReport extends Command
 {
     protected $signature = 'report:weekly-pin';
+
     protected $description = 'Dispatch weekly pin report from last Sunday to this Saturday';
 
     public function handle()
@@ -22,4 +23,3 @@ class WeeklyPinReport extends Command
         $this->info('Weekly pin report dispatched for last Sunday to this Saturday.1');
     }
 }
-

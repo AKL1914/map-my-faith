@@ -2,16 +2,17 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Pin;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class PinControllerTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $user;
+
     protected $token;
 
     protected function setUp(): void
@@ -46,7 +47,7 @@ class PinControllerTest extends TestCase
     public function test_get_pins_with_sanctum_token_returns_existing_pins()
     {
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
+            'Authorization' => 'Bearer '.$this->token,
             'Accept' => 'application/json',
         ])->getJson('/api/v1/pins');
 

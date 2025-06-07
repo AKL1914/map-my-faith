@@ -56,7 +56,7 @@ class EventController extends Controller
      *
      * This method validates the request data and creates a new event.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing event data.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing event data.
      * @return \App\Models\Event The newly created event.
      */
     public function store(Request $request)
@@ -75,8 +75,8 @@ class EventController extends Controller
      *
      * This method validates the request data and updates the specified event.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing updated event data.
-     * @param int $id The ID of the event to update.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing updated event data.
+     * @param  int  $id  The ID of the event to update.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function update(Request $request, $id)
@@ -99,7 +99,7 @@ class EventController extends Controller
                 ? '📢 Event Activated'
                 : '🛑 Event Ended';
 
-            $body = "The event \"{$event->name}\" has been " . ($validated['is_active'] ? 'activated' : 'deactivated') . ".";
+            $body = "The event \"{$event->name}\" has been ".($validated['is_active'] ? 'activated' : 'deactivated').'.';
 
             $level = $validated['is_active'] ? 'success' : 'error';
 
@@ -117,7 +117,7 @@ class EventController extends Controller
      *
      * This method deletes the specified event by its ID.
      *
-     * @param int $id The ID of the event to delete.
+     * @param  int  $id  The ID of the event to delete.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function destroy($id)
@@ -133,7 +133,7 @@ class EventController extends Controller
      *
      * This method returns the view displaying participants of the specified event.
      *
-     * @param \App\Models\Event $event The event whose participants are to be displayed.
+     * @param  \App\Models\Event  $event  The event whose participants are to be displayed.
      * @return \Illuminate\View\View The participants view.
      */
     public function participants(Event $event)
@@ -146,7 +146,7 @@ class EventController extends Controller
      *
      * This method returns the view displaying the details of the specified event.
      *
-     * @param \App\Models\Event $event The event to display.
+     * @param  \App\Models\Event  $event  The event to display.
      * @return \Illuminate\View\View The event details view.
      */
     public function show(Event $event)
@@ -159,12 +159,13 @@ class EventController extends Controller
      *
      * This method fetches all game pins for the specified event, including associated user data.
      *
-     * @param \App\Models\Event $event The event whose pins are to be retrieved.
+     * @param  \App\Models\Event  $event  The event whose pins are to be retrieved.
      * @return \Illuminate\Http\JsonResponse A JSON response containing the event name and pins data.
      */
     public function eventPins(Event $event)
     {
         $gamePins = $event->gamePins()->with(['user'])->get();
+
         return response()->json([
             'event_name' => $event->name,
             'data' => $gamePins,
@@ -177,8 +178,8 @@ class EventController extends Controller
      * This method fetches participants for the specified event by joining through game pins.
      * The results are paginated.
      *
-     * @param int $id The ID of the event.
-     * @param \Illuminate\Http\Request $request The HTTP request instance.
+     * @param  int  $id  The ID of the event.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request instance.
      * @return \Illuminate\Http\JsonResponse A JSON response containing participants data and pagination metadata.
      */
     public function eventParticipants($id, Request $request)

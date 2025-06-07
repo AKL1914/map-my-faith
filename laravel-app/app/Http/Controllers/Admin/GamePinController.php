@@ -42,7 +42,7 @@ class GamePinController extends Controller
      *
      * This method validates the request data and creates a new game pin.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing game pin data.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing game pin data.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function store(Request $request)
@@ -65,8 +65,8 @@ class GamePinController extends Controller
      *
      * This method ensures that a game pin cannot be deleted if its associated event is active.
      *
-     * @param \App\Models\GamePin $gamePin The game pin to delete.
-     * @param \Illuminate\Http\Request $request The HTTP request instance.
+     * @param  \App\Models\GamePin  $gamePin  The game pin to delete.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request instance.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function destroy(GamePin $gamePin, Request $request)

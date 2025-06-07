@@ -1,14 +1,11 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\GeneratePinReport;
-use App\Models\Pin;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Carbon;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Class DashboardController
@@ -23,7 +20,7 @@ class DashboardController extends Controller
      *
      * This method returns the main dashboard page for the admin panel.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request instance.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request instance.
      * @return \Illuminate\View\View The admin dashboard view.
      */
     public function index(Request $request)
@@ -50,7 +47,7 @@ class DashboardController extends Controller
         // Use SCAN to iterate over keys with your session prefix
         do {
             // SCAN returns an array with [cursor, keys]
-            list($cursor, $keys) = $redis->scan($cursor, ['MATCH' => 'maps_session_*', 'COUNT' => 100]);
+            [$cursor, $keys] = $redis->scan($cursor, ['MATCH' => 'maps_session_*', 'COUNT' => 100]);
             if ($keys) {
                 $count += count($keys);
             }
@@ -75,8 +72,7 @@ class DashboardController extends Controller
         GeneratePinReport::dispatch($filters, $email);
 
         return response()->json([
-            'message' => 'Report is being generated and will be emailed to you shortly.'
+            'message' => 'Report is being generated and will be emailed to you shortly.',
         ]);
     }
-
 }

@@ -22,8 +22,8 @@ class IsAdmin
      * the request is passed to the next middleware or controller. Otherwise, the user is redirected
      * to the home page with an error message.
      *
-     * @param Request $request The incoming HTTP request.
-     * @param Closure $next The next middleware or controller to handle the request.
+     * @param  Request  $request  The incoming HTTP request.
+     * @param  Closure  $next  The next middleware or controller to handle the request.
      * @return Response The HTTP response.
      */
     public function handle(Request $request, Closure $next): Response

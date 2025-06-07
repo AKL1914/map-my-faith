@@ -22,6 +22,7 @@ class MapsController extends Controller
     public function index()
     {
         $campaign = Campaign::where('is_active', true)->first();
+
         return view('maps.index', compact('campaign'));
     }
 
@@ -30,7 +31,7 @@ class MapsController extends Controller
      *
      * This method returns the maps show view for a specific map identified by its ID.
      *
-     * @param int $id The ID of the map to display.
+     * @param  int  $id  The ID of the map to display.
      * @return \Illuminate\View\View The maps show view with the specified ID.
      */
     public function show($id)
@@ -56,7 +57,7 @@ class MapsController extends Controller
      * This method validates the request data and stores the new map pin.
      * After storing, it redirects the user to the maps index view.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing map pin data.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing map pin data.
      * @return \Illuminate\Http\RedirectResponse A redirect response to the maps index view.
      */
     public function store(Request $request)

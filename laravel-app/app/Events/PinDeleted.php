@@ -8,7 +8,8 @@ use Illuminate\Queue\SerializesModels;
 
 class PinDeleted
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
@@ -17,5 +18,4 @@ class PinDeleted
     {
         $this->pin = $pin;
     }
-
 }

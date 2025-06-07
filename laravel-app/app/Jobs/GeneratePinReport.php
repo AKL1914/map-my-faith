@@ -4,20 +4,22 @@ namespace App\Jobs;
 
 use App\Models\Pin;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Foundation\Bus\Dispatchable;
-
-
 
 class GeneratePinReport implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     protected $filters;
+
     protected $userEmail;
 
     /**
@@ -45,15 +47,15 @@ class GeneratePinReport implements ShouldQueue
         // Build query with filters
         $query = Pin::with(['campaign', 'user']);
 
-        if (!empty($this->filters['campaign_id'])) {
+        if (! empty($this->filters['campaign_id'])) {
             $query->where('campaign_id', $this->filters['campaign_id']);
         }
 
-        if (!empty($this->filters['start_date'])) {
+        if (! empty($this->filters['start_date'])) {
             $query->whereDate('created_at', '>=', Carbon::parse($this->filters['start_date']));
         }
 
-        if (!empty($this->filters['end_date'])) {
+        if (! empty($this->filters['end_date'])) {
             $query->whereDate('created_at', '<=', Carbon::parse($this->filters['end_date']));
         }
 
@@ -61,10 +63,10 @@ class GeneratePinReport implements ShouldQueue
 
         // Temporary file path for CSV
         $filename = 'pin_report_'.time().'.csv';
-        $filepath = storage_path('app/reports/' . $filename);
+        $filepath = storage_path('app/reports/'.$filename);
 
         // Ensure reports directory exists
-        if (!file_exists(dirname($filepath))) {
+        if (! file_exists(dirname($filepath))) {
             mkdir(dirname($filepath), 0755, true);
         }
 
@@ -100,7 +102,7 @@ class GeneratePinReport implements ShouldQueue
         fclose($handle);
 
         // Send email with attachment
-//        Mail::to($this->userEmail)->send(new PinReportGenerated($filepath));
+        //        Mail::to($this->userEmail)->send(new PinReportGenerated($filepath));
         $filePath = $filepath;
         Mail::raw('Your Pin Report is Ready', function ($message) use ($filePath) {
             $message->to($this->userEmail)

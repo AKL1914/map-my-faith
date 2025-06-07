@@ -1,12 +1,13 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendAccessRequestNotificationToAdmins;
-use Illuminate\Http\Request;
-use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Facades\Socialite;
 
 /**
  * Class LoginController
@@ -24,7 +25,7 @@ class LoginController extends Controller
      * If successful, the session is regenerated, and the user is redirected to the intended page.
      * If the credentials are invalid, an error message is returned.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing login credentials.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing login credentials.
      * @return \Illuminate\Http\RedirectResponse A redirect response to the intended page or back with errors.
      */
     public function login(Request $request)
@@ -32,8 +33,10 @@ class LoginController extends Controller
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+
             return redirect()->intended('dashboard');
         }
+
         return back()->withErrors(['email' => 'Invalid credentials']);
     }
 
@@ -79,11 +82,12 @@ class LoginController extends Controller
         }
 
         // If the user is not activated, redirect to the activation page
-        if (!$user->is_activated) {
+        if (! $user->is_activated) {
             return redirect('/activate')->with('message', 'Please activate your account.');
         }
 
         Auth::login($user); // Set the session auth
+
         return redirect('/maps'); // Redirect to the dashboard or any other route
     }
 }

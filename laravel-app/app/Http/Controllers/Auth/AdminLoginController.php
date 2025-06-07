@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -28,6 +29,7 @@ class AdminLoginController extends Controller
             // If the user is already logged in, redirect to the admin dashboard
             return redirect('/admin/dashboard');
         }
+
         return view('auth.admin-login');
     }
 
@@ -38,7 +40,7 @@ class AdminLoginController extends Controller
      * If the user is an admin, they are redirected to the admin dashboard.
      * If the user is not an admin or the credentials are invalid, appropriate error messages are returned.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing login credentials.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing login credentials.
      * @return \Illuminate\Http\RedirectResponse
      */
     public function login(Request $request)
@@ -51,6 +53,7 @@ class AdminLoginController extends Controller
                 return redirect('/admin/dashboard'); // Redirect to admin dashboard
             } else {
                 Auth::logout();
+
                 return redirect()->back()->withErrors(['email' => 'You are not an admin.']);
             }
         }
