@@ -245,8 +245,8 @@ onMounted(() => {
         } else {
             currentPinMarker = L.marker([lat, lng], {icon: blueIcon}).addTo(map);
         }
-
-        currentPinMarker.bindPopup('New location').openPopup();
+        //disable the popup for now
+        // currentPinMarker.bindPopup('New').openPopup();
     });
 });
 
@@ -353,7 +353,7 @@ async function deletePin(pinId) {
 }
 
 .notes-textarea {
-    font-size: 1.125rem;
+    //font-size: 1.125rem;
     padding: 1rem;
     border-radius: 12px;
     border: 2px solid #eee;

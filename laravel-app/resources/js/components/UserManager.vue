@@ -3,8 +3,7 @@
         <h1 class="h3 mb-4 text-gray-800">Users</h1>
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 font-weight-bold text-primary">Actions
-                </h6>
+                <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
             </div>
             <div class="card-body">
                 <div class="row gy-2 gx-3 align-items-center mb-3">
@@ -16,7 +15,6 @@
                             <i class="bi bi-x-circle"></i>
                         </button>
                     </div>
-
                     <div class="col-12 col-md">
                         <div class="input-group">
                             <input
@@ -28,18 +26,15 @@
                             />
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
 
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 font-weight-bold text-primary">Users
-                </h6>
+                <h6 class="m-0 font-weight-bold text-primary">Users</h6>
             </div>
             <div class="card-body">
-                <!-- Responsive Table -->
                 <div class="table-responsive">
                     <table class="table table-striped align-middle">
                         <thead class="table-light">
@@ -59,47 +54,27 @@
                         <tr v-for="user in users" :key="user.id">
                             <td>{{ user.id }}</td>
                             <td>
-                                <input
-                                    type="text"
-                                    v-model="user.name"
-                                    class="form-control form-control-sm w-100"
-                                    style="min-width: 200px;"
-                                    placeholder="Name"
-                                />
+                                <input type="text" v-model="user.name" class="form-control form-control-sm w-100" style="min-width: 200px;" placeholder="Name" />
                             </td>
                             <td>{{ user.email }}</td>
                             <td>
-                                    <span class="badge" :class="user.is_admin ? 'bg-success' : 'bg-secondary'">
-                                        {{ user.is_admin ? 'Yes' : 'No' }}
-                                    </span>
+                                <span class="badge text-white" :class="user.is_admin ? 'bg-success' : 'bg-secondary'">
+                                    {{ user.is_admin ? 'Yes' : 'No' }}
+                                </span>
                             </td>
                             <td>
-                                    <span class="badge" :class="user.is_activated ? 'bg-success' : 'bg-secondary'">
-                                        {{ user.is_activated ? 'Yes' : 'No' }}
-                                    </span>
+                                <span class="badge text-white" :class="user.is_activated ? 'bg-success' : 'bg-secondary'">
+                                    {{ user.is_activated ? 'Yes' : 'No' }}
+                                </span>
                             </td>
                             <td>
-                                <input
-                                    type="text"
-                                    v-model="user.area"
-                                    class="form-control form-control-sm"
-                                    placeholder="Area"
-                                />
+                                <input type="text" v-model="user.area" class="form-control form-control-sm" placeholder="Area" />
                             </td>
                             <td>
-                                <input
-                                    type="text"
-                                    v-model="user.group"
-                                    class="form-control form-control-sm"
-                                    placeholder="Group"
-                                />
+                                <input type="text" v-model="user.group" class="form-control form-control-sm" placeholder="Group" />
                             </td>
                             <td>
-                                <select
-                                    v-model="user.cfo"
-                                    class="form-select form-select-sm"
-                                    style="min-width: 120px;"
-                                >
+                                <select v-model="user.cfo" class="custom-select custom-select-sm" style="min-width: 120px;">
                                     <option value="" disabled>Select CFO</option>
                                     <option value="BUKLOD">BUKLOD</option>
                                     <option value="KADIWA">KADIWA</option>
@@ -108,36 +83,16 @@
                             </td>
                             <td>
                                 <div class="d-flex flex-wrap gap-1 align-items-center">
-                                    <button
-                                        class="btn btn-sm"
-                                        :class="user.is_admin ? 'btn-secondary' : 'btn-warning'"
-                                        @click="toggleAdmin(user)"
-                                        :title="user.is_admin ? 'Revoke admin access' : 'Grant admin access'"
-                                    >
+                                    <button class="btn btn-sm" :class="user.is_admin ? 'btn-secondary' : 'btn-warning'" @click="toggleAdmin(user)" :title="user.is_admin ? 'Revoke admin access' : 'Grant admin access'">
                                         <i :class="user.is_admin ? 'bi bi-person-x' : 'bi bi-person-check'"></i>
                                     </button>
-                                    <button
-                                        class="btn btn-sm"
-                                        :class="user.is_activated ? 'btn-danger' : 'btn-success'"
-                                        @click="toggleActivation(user)"
-                                        :title="user.is_activated ? 'Deactivate user' : 'Activate user'"
-                                    >
+                                    <button class="btn btn-sm" :class="user.is_activated ? 'btn-danger' : 'btn-success'" @click="toggleActivation(user)" :title="user.is_activated ? 'Deactivate user' : 'Activate user'">
                                         <i :class="user.is_activated ? 'bi bi-toggle-off' : 'bi bi-toggle-on'"></i>
                                     </button>
-                                    <button
-                                        class="btn btn-primary btn-sm"
-                                        @click="updateUser(user)"
-                                        title="Save changes"
-                                    >
+                                    <button class="btn btn-primary btn-sm" @click="updateUser(user)" title="Save changes">
                                         <i class="bi bi-save"></i>
                                     </button>
-                                    <!-- 🔗 View Pins Link -->
-                                    <a
-                                        :href="`/user/${user.id}/pins`"
-                                        class="btn btn-info btn-sm"
-                                        title="View pins"
-                                        target="_blank"
-                                    >
+                                    <a :href="`/user/${user.id}/pins`" class="btn btn-info btn-sm" title="View pins" target="_blank">
                                         <i class="bi bi-map"></i>
                                     </a>
                                 </div>
@@ -149,8 +104,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Pagination -->
                 <div class="row align-items-center mt-3 gy-2">
                     <div class="col">
                         <nav aria-label="Page navigation">
@@ -160,15 +113,8 @@
                                         <i class="bi bi-chevron-left"></i>
                                     </button>
                                 </li>
-                                <li
-                                    class="page-item"
-                                    v-for="page in totalPages"
-                                    :key="page"
-                                    :class="{ active: currentPage === page }"
-                                >
-                                    <button class="page-link" @click="goToPage(page)">
-                                        {{ page }}
-                                    </button>
+                                <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }">
+                                    <button class="page-link" @click="goToPage(page)">{{ page }}</button>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
                                     <button class="page-link" @click="nextPage">
@@ -221,7 +167,6 @@ export default {
                     this.currentPage = response.data.current_page;
                     this.perPage = response.data.per_page;
                     this.totalPages = response.data.last_page;
-
                     this.users.forEach((user) => {
                         user.area = user.area || '';
                         user.group = user.group || '';

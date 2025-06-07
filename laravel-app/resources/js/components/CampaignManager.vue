@@ -76,7 +76,7 @@
                             <td>{{ campaign.id }}</td>
                             <td>{{ campaign.name }}</td>
                             <td>
-                                    <span class="badge" :class="campaign.is_active ? 'bg-success' : 'bg-secondary'">
+                                    <span class="badge text-white" :class="campaign.is_active ? 'bg-success' : 'bg-secondary'">
                                         {{ campaign.is_active ? 'Active' : 'Inactive' }}
                                     </span>
                             </td>

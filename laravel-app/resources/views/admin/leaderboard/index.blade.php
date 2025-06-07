@@ -22,7 +22,7 @@
                     <tbody>
                     @foreach($leaderboardData as $index => $entry)
                         <tr>
-                            <td><i class="fas fa-crown text-warning"></i> {{ $index + 1 }}</td>
+                            <td><i class="fas fa-crown {{ ($index == 1) ? '' : 'text-warning'}}"></i> {{ $index + 1 }}</td>
                             <td>{{ $entry->name }}</td>
                             <td>{{ $entry->area ?? 'N/A' }}</td>
                             <td>{{ $entry->pinCount }}</td>

@@ -82,7 +82,7 @@
                         <td>{{ event.name }}</td>
                         <td>{{ event.description }}</td>
                         <td>
-                                <span class="badge px-2 py-1" :class="event.is_active ? 'bg-success' : 'bg-secondary'">
+                                <span class="badge px-2 py-1 text-white" :class="event.is_active ? 'bg-success' : 'bg-secondary'">
                                     {{ event.is_active ? 'Active' : 'Inactive' }}
                                 </span>
                         </td>
