@@ -1,9 +1,11 @@
 <template>
     <div class="container my-4">
-        <h2 class="mb-3">Pin Manager</h2>
-
-        <!-- Search Input -->
-        <div class="card mb-4">
+        <h1 class="h3 mb-4 text-gray-800">Pins</h1>
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Filters
+                </h6>
+            </div>
             <div class="card-body">
                 <div class="input-group mb-3">
                     <input
@@ -41,12 +43,12 @@
                 </div>
             </div>
         </div>
-
-        <!-- Pins Table -->
-        <div class="card">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Pins
+                </h6>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Pins</h5>
-
                 <div v-if="isLoading" class="text-center my-3">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">Loading...</span>

@@ -1,13 +1,12 @@
 <template>
     <div class="container my-4">
-        <Toast />
-        <h2 class="mb-3">User Manager</h2>
-
-        <div class="card">
+        <h1 class="h3 mb-4 text-gray-800">Users</h1>
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Actions
+                </h6>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Users</h5>
-
-                <!-- Actions & Search -->
                 <div class="row gy-2 gx-3 align-items-center mb-3">
                     <div class="col-12 col-md-auto d-flex flex-wrap gap-2">
                         <button class="btn btn-success btn-sm" @click="activateAll" title="Activate all users">
@@ -29,8 +28,17 @@
                             />
                         </div>
                     </div>
-                </div>
 
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Users
+                </h6>
+            </div>
+            <div class="card-body">
                 <!-- Responsive Table -->
                 <div class="table-responsive">
                     <table class="table table-striped align-middle">

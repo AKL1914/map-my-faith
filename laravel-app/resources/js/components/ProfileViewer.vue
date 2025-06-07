@@ -1,78 +1,79 @@
 <template>
-    <div class="container mt-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title text-center">User Profile</h5>
+    <h1 class="h3 mb-4 text-gray-800">Profile</h1>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Details
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="info-section">
+                <p><strong>Name:</strong> {{ user?.name ?? 'Unknown User' }}</p>
+                <p><strong>Email:</strong> {{ user?.email ?? 'Unknown Email' }}</p>
+                <p><strong>Area:</strong> {{ user?.area ?? '' }}</p>
+                <p><strong>Group:</strong> {{ user?.group ?? '' }}</p>
+                <p><strong>CFO:</strong> {{ user?.cfo ?? 'Not specified' }}</p>
+                <p><strong>Pins:</strong> {{ pinCount }}</p>
+            </div>
 
-                <div class="info-section">
-                    <p><strong>Name:</strong> {{ user?.name ?? 'Unknown User' }}</p>
-                    <p><strong>Email:</strong> {{ user?.email ?? 'Unknown Email' }}</p>
-                    <p><strong>Area:</strong> {{ user?.area ?? '' }}</p>
-                    <p><strong>Group:</strong> {{ user?.group ?? '' }}</p>
-                    <p><strong>CFO:</strong> {{ user?.cfo ?? 'Not specified' }}</p>
-                    <p><strong>Pins:</strong> {{ pinCount }}</p>
+            <!-- Show form only if area, group, or cfo is null or empty -->
+            <div v-if="!user?.area || !user?.group || !user?.cfo" class="form-section">
+                <div class="form-group">
+                    <label for="area">Area</label>
+                    <select id="area" v-model="selectedArea" class="form-control">
+                        <option value="">-- Select Area --</option>
+                        <option v-for="(groups, area) in areaGroups" :key="area" :value="area">
+                            Area {{ area }}
+                        </option>
+                    </select>
                 </div>
 
-                <!-- Show form only if area, group, or cfo is null or empty -->
-                <div v-if="!user?.area || !user?.group || !user?.cfo" class="form-section">
-                    <div class="form-group">
-                        <label for="area">Area</label>
-                        <select id="area" v-model="selectedArea" class="form-control">
-                            <option value="">-- Select Area --</option>
-                            <option v-for="(groups, area) in areaGroups" :key="area" :value="area">
-                                Area {{ area }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="group">Group</label>
-                        <select
-                            id="group"
-                            v-model="selectedGroup"
-                            class="form-control"
-                            :disabled="!selectedArea"
-                        >
-                            <option value="">-- Select Group --</option>
-                            <option
-                                v-for="group in areaGroups[selectedArea]"
-                                :key="group"
-                                :value="group"
-                            >
-                                Group {{ group }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="cfo">CFO</label>
-                        <select id="cfo" v-model="selectedCFO" class="form-control">
-                            <option value="">-- Select CFO --</option>
-                            <option value="BUKLOD">BUKLOD</option>
-                            <option value="KADIWA">KADIWA</option>
-                            <option value="BINHI">BINHI</option>
-                        </select>
-                    </div>
-
-                    <button
-                        @click="saveProfile"
-                        class="btn btn-primary btn-block"
-                        :disabled="loading"
+                <div class="form-group">
+                    <label for="group">Group</label>
+                    <select
+                        id="group"
+                        v-model="selectedGroup"
+                        class="form-control"
+                        :disabled="!selectedArea"
                     >
-                        {{ loading ? 'Saving...' : 'Save' }}
-                    </button>
-
-                    <p v-if="successMessage" class="alert alert-success mt-3">
-                        {{ successMessage }}
-                    </p>
-                    <p v-if="errorMessage" class="alert alert-danger mt-3">
-                        {{ errorMessage }}
-                    </p>
+                        <option value="">-- Select Group --</option>
+                        <option
+                            v-for="group in areaGroups[selectedArea]"
+                            :key="group"
+                            :value="group"
+                        >
+                            Group {{ group }}
+                        </option>
+                    </select>
                 </div>
 
-                <div v-else class="text-center mt-3 text-muted">
-                    Your profile is already complete.
+                <div class="form-group">
+                    <label for="cfo">CFO</label>
+                    <select id="cfo" v-model="selectedCFO" class="form-control">
+                        <option value="">-- Select CFO --</option>
+                        <option value="BUKLOD">BUKLOD</option>
+                        <option value="KADIWA">KADIWA</option>
+                        <option value="BINHI">BINHI</option>
+                    </select>
                 </div>
+
+                <button
+                    @click="saveProfile"
+                    class="btn btn-primary btn-block"
+                    :disabled="loading"
+                >
+                    {{ loading ? 'Saving...' : 'Save' }}
+                </button>
+
+                <p v-if="successMessage" class="alert alert-success mt-3">
+                    {{ successMessage }}
+                </p>
+                <p v-if="errorMessage" class="alert alert-danger mt-3">
+                    {{ errorMessage }}
+                </p>
+            </div>
+
+            <div v-else class="text-center mt-3 text-muted">
+                Your profile is already complete.
             </div>
         </div>
     </div>

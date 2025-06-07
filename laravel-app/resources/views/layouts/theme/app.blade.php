@@ -153,6 +153,9 @@
 
     <!-- Custom styles for this template-->
     <link href="{{ asset('theme/css/sb-admin-2.min.css')}}" rel="stylesheet">
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
     @yield('head')
     <script>
         window.authUser = @json(auth()->user());
