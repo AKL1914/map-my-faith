@@ -1,6 +1,9 @@
 <template>
-    <div class="container mt-4">
-        <div class="map-container">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center text-center">
+            <h6 class="m-0 font-weight-bold text-primary text-center">{{ campaignName }}</h6>
+        </div>
+        <div class="card-body">
             <div id="map" class="map mb-3"></div>
 
             <div class="button-group d-flex gap-3 mb-4">
@@ -35,6 +38,8 @@ let lastSubmitTime = 0;
 let pinLayerGroup = null;
 let gamePinLayerGroup = null;
 const loading = ref(false);
+const campaignName = ref(window.campaign?.name || 'Map Manager');
+
 
 const currentUserId = window.authUser?.id || null;
 
@@ -240,8 +245,8 @@ onMounted(() => {
         } else {
             currentPinMarker = L.marker([lat, lng], {icon: blueIcon}).addTo(map);
         }
-
-        currentPinMarker.bindPopup('New location').openPopup();
+        //disable the popup for now
+        // currentPinMarker.bindPopup('New').openPopup();
     });
 });
 
@@ -348,7 +353,7 @@ async function deletePin(pinId) {
 }
 
 .notes-textarea {
-    font-size: 1.125rem;
+    //font-size: 1.125rem;
     padding: 1rem;
     border-radius: 12px;
     border: 2px solid #eee;

@@ -1,40 +1,50 @@
 <template>
-    <div class="container my-4">
-        <h2>{{ eventName }} Pins</h2>
+    <h1 class="h3 mb-4 text-gray-800">Event Pins</h1>
 
-        <div v-if="loading" class="text-center my-3">
-            Loading pins...
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">{{ eventName }} Pins</h6>
         </div>
 
-        <div v-else>
-            <table class="table table-striped table-responsive">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>User Name</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
-                    <th>Distance</th>
-                    <th>Updated At</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="pin in pins" :key="pin.id">
-                    <td data-label="ID">{{ pin.id }}</td>
-                    <td data-label="User Name">{{ pin.user ? pin.user.name : '—' }}</td>
-                    <td data-label="Latitude">{{ pin.latitude }}</td>
-                    <td data-label="Longitude">{{ pin.longitude }}</td>
-                    <td data-label="Distance">{{ pin.distance ?? '—' }}</td>
-                    <td data-label="Updated At">{{ formatDate(pin.updated_at) }}</td>
-                </tr>
-                <tr v-if="pins.length === 0">
-                    <td colspan="6" class="text-center">No pins found.</td>
-                </tr>
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div v-if="loading" class="text-center my-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="mt-2 text-muted">Loading pins...</div>
+            </div>
+
+            <div v-else class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>User Name</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Distance</th>
+                        <th>Updated At</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="pin in pins" :key="pin.id">
+                        <td>{{ pin.id }}</td>
+                        <td>{{ pin.user ? pin.user.name : '—' }}</td>
+                        <td>{{ pin.latitude }}</td>
+                        <td>{{ pin.longitude }}</td>
+                        <td>{{ pin.distance ?? '—' }}</td>
+                        <td>{{ formatDate(pin.updated_at) }}</td>
+                    </tr>
+                    <tr v-if="pins.length === 0">
+                        <td colspan="6" class="text-center text-muted">No pins found.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';

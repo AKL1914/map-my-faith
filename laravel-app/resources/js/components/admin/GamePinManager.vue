@@ -1,20 +1,40 @@
 <template>
-    <div class="container my-4">
-        <div class="mb-4">
-            <label for="eventSelect" class="form-label">Filter by Event:</label>
-            <select id="eventSelect" class="form-select" v-model="selectedEventId" @change="fetchPins">
-                <option v-for="event in events" :key="event.id" :value="event.id">{{ event.name }}</option>
-            </select>
-            <div class="mt-2">
-                <span class="badge bg-info">{{ pins.length }} Pin{{ pins.length !== 1 ? 's' : '' }} Found</span>
+    <h1 class="h3 mb-4 text-gray-800">Game Pins</h1>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Filters
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label for="eventSelect" class="form-label font-weight-bold text-primary">
+                    <i class="fas fa-filter"></i> Filter by Event:
+                </label>
+                <select id="eventSelect" class="form-control custom-select" v-model="selectedEventId" @change="fetchPins">
+                    <option v-for="event in events" :key="event.id" :value="event.id">{{ event.name }}</option>
+                </select>
+            </div>
+
+            <div class="mt-3">
+        <span class="badge badge-info">
+            <i class="fas fa-map-pin"></i> {{ pins.length }} Pin{{ pins.length !== 1 ? 's' : '' }} Found
+        </span>
             </div>
         </div>
-        <div class="mb-4 border rounded shadow" id="map"></div>
-        <div class="button-group d-flex gap-3 mb-4">
-            <button :disabled="loading" @click="pinMyLocation('accepted')" class="btn google-btn-pin">
-                <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span v-else><i class="bi bi-geo-alt-fill"></i> Pin Location</span>
-            </button>
+    </div>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Map
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="mb-4 border rounded shadow" id="map"></div>
+            <div class="button-group d-flex gap-3 mb-4">
+                <button :disabled="loading" @click="pinMyLocation('accepted')" class="btn google-btn-pin">
+                    <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span v-else><i class="bi bi-geo-alt-fill"></i> Pin Location</span>
+                </button>
+            </div>
         </div>
     </div>
 </template>

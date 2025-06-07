@@ -1,7 +1,11 @@
 <template>
-    <div class="container mt-4">
-        <div class="map-container">
-            <!-- Pin Details Card -->
+    <h1 class="h3 mb-4 text-gray-800">Pins</h1>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Details
+            </h6>
+        </div>
+        <div class="card-body">
             <div v-if="userName" class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">{{ userName }}</h5>
@@ -10,8 +14,14 @@
                     </p>
                 </div>
             </div>
-
-            <!-- Map -->
+        </div>
+    </div>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Pins
+            </h6>
+        </div>
+        <div class="card-body">
             <div id="map" class="map mb-3"></div>
         </div>
     </div>
