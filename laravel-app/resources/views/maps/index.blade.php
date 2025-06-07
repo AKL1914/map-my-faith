@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.theme.app')
 @section('head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
@@ -6,9 +6,6 @@
     </script>
 @endsection
 @section('content')
-
-    <h1 class="text-center text-secondary">{{ $campaign->name }}</h1>
-
     <!-- Main Content -->
     <map-manager></map-manager>
 

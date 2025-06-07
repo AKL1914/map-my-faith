@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.theme.app')
 @section('head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
