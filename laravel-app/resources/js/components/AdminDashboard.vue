@@ -117,25 +117,108 @@
                 </div>
             </div>
         </div>
-
         <!-- Content Row -->
         <div class="row">
-            <div class="col-xl-3 col-md-6 mb-4" v-for="stat in stats" :key="stat.label">
-                <div class="card shadow h-100 py-2" :class="stat.borderClass">
+            <!-- Card 1 -->
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">Details</h6>
+                    </div>
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-uppercase mb-1" :class="stat.textClass">
-                                    {{ stat.label }}
+                                <div class="text-xs font-weight-bold text-uppercase mb-1 text-success">
+                                    Total Pins
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stat.value }}</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ this.totalPins }}</div>
                             </div>
                             <div class="col-auto">
-                                <i :class="stat.iconClass"></i>
+                                <i class="fas fa-map-pin fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                        <div class="row no-gutters align-items-center mt-3">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1 text-primary">
+                                    Total Users
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ this.totalUsers }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                        <div class="row no-gutters align-items-center mt-3">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1 text-info">
+                                    Suburbs
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ this.totalSuburbs }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-city fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                        <div class="row no-gutters align-items-center mt-3">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1 text-warning">
+                                    Total Logged In Users
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ this.loggedInUsers }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-user-check fa-2x text-gray-300"></i>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="col-xl-4 col-md-6 mb-4">
+                <admin-chart-pie
+                    title="Pin Distribution by Area (%)"
+                    :labels="chartLabels"
+                    :data="chartData"
+                    :background-colors="chartColors"
+                />
+
+            </div>
+
+            <!-- Card 3 -->
+            <div class="col-xl-4 col-md-12 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">User Participated</h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0 text-center">
+                                <thead class="thead-light">
+                                <tr>
+                                    <th>Area</th>
+                                    <th>With Pins</th>
+                                    <th>No Pins</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr><td>Area 1</td><td>2</td><td>3</td></tr>
+                                <tr><td>Area 2</td><td>2</td><td>3</td></tr>
+                                <tr><td>Area 3</td><td>2</td><td>3</td></tr>
+                                <tr><td>Area 4</td><td>2</td><td>3</td></tr>
+                                <tr><td>Area 5</td><td>2</td><td>3</td></tr>
+                                <tr><td>Area 6</td><td>2</td><td>3</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+
+            <div class="col-xl-12 mb-4">
+                <admin-chart-area :pinsByAreaData="pinsData" />
             </div>
         </div>
 
@@ -173,7 +256,6 @@ const greenIcon = new L.Icon({
     popupAnchor: [1, -20],
     shadowSize: [25, 25]
 });
-
 export default {
     name: 'AdminDashboard',
     data() {
@@ -191,6 +273,25 @@ export default {
             totalPins: 0,
             totalSuburbs: 0,
             loggedInUsers: 0,
+            areaCounts: {
+                1: 4,
+                2: 35,
+                3: 15,
+                4: 10,
+                5: 12,
+                6: 8
+            },
+            pinsData: {
+                labels: ['2025-06-01', '2025-06-02', '2025-06-03', '2025-06-04', '2025-06-05', '2025-06-06', '2025-06-07'],
+                areas: {
+                    1: [5, 6, 7, 4, 8, 6, 5],
+                    2: [3, 4, 5, 2, 3, 5, 3],
+                    3: [6, 7, 6, 8, 7, 7, 8],
+                    4: [2, 3, 1, 3, 4, 2, 3],
+                    5: [1, 2, 3, 1, 2, 3, 2],
+                    6: [4, 5, 4, 5, 6, 4, 5],
+                }
+            }
         };
     },
     computed: {
@@ -206,25 +307,11 @@ export default {
         stats() {
             return [
                 {
-                    label: 'Total Users',
-                    value: this.totalUsers,
-                    iconClass: 'fas fa-users fa-2x text-gray-300',
-                    borderClass: 'border-left-primary',
-                    textClass: 'text-primary'
-                },
-                {
                     label: 'Total Pins',
                     value: this.totalPins,
                     iconClass: 'fas fa-map-pin fa-2x text-gray-300',
                     borderClass: 'border-left-success',
                     textClass: 'text-success'
-                },
-                {
-                    label: 'Suburbs',
-                    value: this.totalSuburbs,
-                    iconClass: 'fas fa-city fa-2x text-gray-300',
-                    borderClass: 'border-left-info',
-                    textClass: 'text-info'
                 },
                 {
                     label: 'Logged In Users',
@@ -234,6 +321,15 @@ export default {
                     textClass: 'text-warning'
                 }
             ];
+        },
+        chartLabels() {
+            return Object.keys(this.areaCounts).map(area => `${area}`);
+        },
+        chartData() {
+            return Object.values(this.areaCounts).map(count => ((count / 100) * 100).toFixed(2));
+        },
+        chartColors() {
+            return ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'];
         }
     },
     mounted() {
