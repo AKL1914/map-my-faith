@@ -7,6 +7,7 @@ use App\Jobs\FetchSuburbFromCoordinates;
 use App\Models\Pin;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
@@ -277,4 +278,88 @@ class PinController extends Controller
 
         return response()->json(['message' => 'Pin updated successfully']);
     }
+    public function pinsByArea(Request $request)
+    {
+        $days = (int) $request->input('days', 7);
+
+        $cacheKey = "pins_by_area_{$days}";
+        $cacheDuration = now()->addHour(); // 1 hour
+
+        return Cache::remember($cacheKey, $cacheDuration, function () use ($days) {
+            $startDate = Carbon::now()->subDays($days - 1)->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+
+            $pins = Pin::with('user')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get()
+                ->groupBy(fn($pin) => $pin->created_at->format('Y-m-d'))
+                ->map(fn($pinsOnDay) => $pinsOnDay
+                    ->filter(fn($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)))
+                    ->groupBy(fn($pin) => (int)$pin->user->area)
+                    ->map->count()
+                );
+
+            $labels = [];
+            $areas = [];
+
+            foreach (range(1, 6) as $areaId) {
+                $areas[$areaId] = array_fill(0, $days, 0);
+            }
+
+            foreach (range(0, $days - 1) as $i) {
+                $date = Carbon::now()->subDays($days - 1 - $i)->format('Y-m-d');
+                $labels[] = $date;
+
+                if (isset($pins[$date])) {
+                    foreach ($pins[$date] as $areaId => $count) {
+                        $areaId = (int) $areaId;
+                        if (isset($areas[$areaId])) {
+                            $areas[$areaId][$i] = $count;
+                        }
+                    }
+                }
+            }
+
+            return [
+                'labels' => $labels,
+                'areas' => $areas,
+            ];
+        });
+    }
+
+    public function pinsDistributionByArea(Request $request)
+    {
+        $days = $request->query('days');
+        $cacheKey = 'pins_distribution_by_area_' . ($days ?? 'all');
+
+        $areaCounts = Cache::remember($cacheKey, 3600, function () use ($days) {
+            $query = Pin::with('user');
+
+            if (in_array($days, [7, 15, 30])) {
+                $fromDate = Carbon::now()->subDays($days);
+                $query->where('created_at', '>=', $fromDate);
+            }
+
+            $pins = $query->get()
+                ->filter(fn($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)));
+
+            $areaCountsRaw = $pins->groupBy(fn($pin) => (int) $pin->user->area)
+                ->map(fn($pins) => $pins->count());
+
+            $areaCounts = [];
+            foreach (range(1, 6) as $areaId) {
+                $areaCounts[$areaId] = $areaCountsRaw->get($areaId, 0);
+            }
+
+            return $areaCounts;
+        });
+
+        return response()->json([
+            'area_counts' => $areaCounts,
+        ]);
+    }
+
+
+
+
 }

@@ -1,6 +1,7 @@
 <template>
-    <div class="container my-4">
+    <div>
         <h1 class="h3 mb-4 text-gray-800">Users</h1>
+
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
@@ -15,6 +16,14 @@
                             <i class="bi bi-x-circle"></i>
                         </button>
                     </div>
+
+                    <div class="col-md-2">
+                        <select v-model="selectedArea" class="form-control">
+                            <option value="">All</option>
+                            <option v-for="area in [1, 2, 3, 4, 5, 6]" :key="area" :value="area">{{ area }}</option>
+                        </select>
+                    </div>
+
                     <div class="col-12 col-md">
                         <div class="input-group">
                             <input
@@ -42,6 +51,7 @@
                             <th>ID</th>
                             <th>Name</th>
                             <th>Email</th>
+                            <th>Pins</th>
                             <th>Admin</th>
                             <th>Activated</th>
                             <th>Area</th>
@@ -57,6 +67,7 @@
                                 <input type="text" v-model="user.name" class="form-control form-control-sm w-100" style="min-width: 200px;" placeholder="Name" />
                             </td>
                             <td>{{ user.email }}</td>
+                            <td class="text-center text-info">{{ user.pins_count }}</td>
                             <td>
                                 <span class="badge text-white" :class="user.is_admin ? 'bg-success' : 'bg-secondary'">
                                     {{ user.is_admin ? 'Yes' : 'No' }}
@@ -145,7 +156,16 @@ export default {
             currentPage: 1,
             perPage: 10,
             totalPages: 1,
+            areaFilter: 'all',
+            selectedArea: '',
         };
+    },
+    watch: {
+        selectedArea(val) {
+            this.areaFilter = val || 'all';
+            this.currentPage = 1;
+            this.fetchUsers();
+        }
     },
     created() {
         this.debouncedFetchUsers = window.debounce(this.fetchUsers, 300);
@@ -159,6 +179,7 @@ export default {
                 page: this.currentPage,
                 per_page: this.perPage,
                 search: this.searchQuery || undefined,
+                area: this.areaFilter !== 'all' ? this.areaFilter : undefined,
             };
             axios
                 .get('/api/users', { params })

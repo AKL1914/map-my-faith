@@ -101,6 +101,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/event/{event}/pins', [EventController::class, 'show']);
         Route::get('/admin/game-pins', [\App\Http\Controllers\Admin\GamePinController::class, 'index']);
         Route::get('/admin/dashboard/generate-report', [DashboardController::class, 'generateReport'])->name('admin.dashboard.report');
+        Route::get('/admin/pins/summary/by-area', [PinController::class, 'pinsByArea']);
+        Route::get('/admin/pins/distribution/by-area', [PinController::class, 'pinsDistributionByArea']);
+        Route::get('/admin/users/participation/by-area', [UserController::class, 'userParticipationByArea']);
+
 
     });
 

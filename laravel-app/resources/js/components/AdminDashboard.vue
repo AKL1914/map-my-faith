@@ -117,25 +117,113 @@
                 </div>
             </div>
         </div>
-
         <!-- Content Row -->
         <div class="row">
-            <div class="col-xl-3 col-md-6 mb-4" v-for="stat in stats" :key="stat.label">
-                <div class="card shadow h-100 py-2" :class="stat.borderClass">
+            <!-- Card 1 -->
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">Details</h6>
+                    </div>
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-uppercase mb-1" :class="stat.textClass">
-                                    {{ stat.label }}
+                                <div class="text-xs font-weight-bold text-uppercase mb-1 text-success">
+                                    Total Pins
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stat.value }}</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ this.totalPins }}</div>
                             </div>
                             <div class="col-auto">
-                                <i :class="stat.iconClass"></i>
+                                <i class="fas fa-map-pin fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                        <div class="row no-gutters align-items-center mt-3">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1 text-primary">
+                                    Total Users
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ this.totalUsers }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                        <div class="row no-gutters align-items-center mt-3">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1 text-info">
+                                    Suburbs
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ this.totalSuburbs }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-city fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                        <div class="row no-gutters align-items-center mt-3">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1 text-warning">
+                                    Total Logged In Users
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ this.loggedInUsers }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-user-check fa-2x text-gray-300"></i>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">User Participated</h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0 text-center">
+                                <thead class="thead-light">
+                                <tr>
+                                    <th>Area</th>
+                                    <th>With Pins</th>
+                                    <th>No Pins</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="item in participation" :key="item.area">
+                                    <td>Area {{ item.area }}</td>
+                                    <td class="text-success">{{ item.with_pins }}</td>
+                                    <td class="text-warning">{{ item.no_pins }}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-md-6 mb-4">
+                <admin-chart-pie
+                    :key="Object.values(areaCounts).join('-')"
+                    title="Pin Distribution by Area (%)"
+                    :labels="chartLabels"
+                    :data="chartData"
+                    :background-colors="chartColors"
+                    @period-change="fetchAreaDistribution"
+                />
+
+            </div>
+
+            <!-- Card 3 -->
+
+        </div>
+
+
+        <div class="row">
+            <div class="col-xl-12 mb-4">
+                <admin-chart-area
+                    :pins-by-area-data="pinsData"
+                    :days="selectedDays"
+                    @update:days="selectedDays = $event; fetchPinSummary()"
+                />
             </div>
         </div>
 
@@ -191,6 +279,10 @@ export default {
             totalPins: 0,
             totalSuburbs: 0,
             loggedInUsers: 0,
+            areaCounts: {}, // from API
+            pinsData: {},
+            selectedDays: 7,
+            participation: [],
         };
     },
     computed: {
@@ -206,25 +298,11 @@ export default {
         stats() {
             return [
                 {
-                    label: 'Total Users',
-                    value: this.totalUsers,
-                    iconClass: 'fas fa-users fa-2x text-gray-300',
-                    borderClass: 'border-left-primary',
-                    textClass: 'text-primary'
-                },
-                {
                     label: 'Total Pins',
                     value: this.totalPins,
                     iconClass: 'fas fa-map-pin fa-2x text-gray-300',
                     borderClass: 'border-left-success',
                     textClass: 'text-success'
-                },
-                {
-                    label: 'Suburbs',
-                    value: this.totalSuburbs,
-                    iconClass: 'fas fa-city fa-2x text-gray-300',
-                    borderClass: 'border-left-info',
-                    textClass: 'text-info'
                 },
                 {
                     label: 'Logged In Users',
@@ -234,11 +312,26 @@ export default {
                     textClass: 'text-warning'
                 }
             ];
+        },
+        chartLabels() {
+            return Object.keys(this.areaCounts).map(area => `Area ${area}`);
+        },
+        chartData() {
+            const total = Object.values(this.areaCounts).reduce((sum, val) => sum + val, 0);
+            return Object.values(this.areaCounts).map(count =>
+                total ? ((count / total) * 100).toFixed(2) : 0
+            );
+        },
+        chartColors() {
+            return ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'];
         }
     },
     mounted() {
         this.initMap();
         this.fetchCampaigns();
+        this.fetchPinSummary();
+        this.fetchAreaDistribution();
+        this.fetchParticipation();
     },
     watch: {
         dateFrom() { this.fetchPins(); },
@@ -319,8 +412,44 @@ export default {
             }).catch(e => {
                 toast.error(e.response?.data?.message || 'Failed to generate report.');
             });
-        }
+        },
+        fetchPinSummary() {
+            axios
+                .get('/admin/pins/summary/by-area', {
+                    params: {
+                        days: this.selectedDays
+                    }
+                })
+                .then(response => {
+                    this.pinsData = response.data;
+                })
+                .catch(error => {
+                    console.error('Error fetching pin summary:', error);
+                });
+        },
+        fetchAreaDistribution(days) {
+            let url = '/admin/pins/distribution/by-area';
+            if (days && ['7', '15', '30'].includes(days)) {
+                url += `?days=${days}`;
+            }
+            axios.get(url)
+                .then(res => {
+                    this.areaCounts = res.data.area_counts || {};
+                })
+                .catch(err => {
+                    console.error('Failed to load area distribution:', err);
+                });
+        },
+        async fetchParticipation() {
+            try {
+                const response = await axios.get('/admin/users/participation/by-area');
+                this.participation = response.data.participation || [];
+            } catch (error) {
+                console.error('Failed to fetch participation data:', error);
+            }
+        },
     }
+
 };
 </script>
 
