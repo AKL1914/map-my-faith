@@ -31,15 +31,21 @@ class UserController extends Controller
     {
         $perPage = $request->input('per_page', 10); // Default to 10 items per page
         $search = $request->input('search');
+        $area = $request->input('area');
 
         $query = User::select('id', 'name', 'email', 'is_admin', 'is_activated', 'area', 'group', 'cfo')
-            ->orderByDesc('created_at'); // Show latest users first
+            ->withCount('pins') // 👈 adds pins_count field
+            ->orderByDesc('created_at');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             });
+        }
+
+        if ($area && $area !== 'all') {
+            $query->where('area', $area);
         }
 
         $users = $query->paginate($perPage);

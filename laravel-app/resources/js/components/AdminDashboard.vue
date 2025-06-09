@@ -191,8 +191,8 @@
                                 <tbody>
                                 <tr v-for="item in participation" :key="item.area">
                                     <td>Area {{ item.area }}</td>
-                                    <td>{{ item.with_pins }}</td>
-                                    <td>{{ item.no_pins }}</td>
+                                    <td class="text-success">{{ item.with_pins }}</td>
+                                    <td class="text-warning">{{ item.no_pins }}</td>
                                 </tr>
                                 </tbody>
                             </table>
