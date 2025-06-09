@@ -327,6 +327,38 @@ class PinController extends Controller
         });
     }
 
+    public function pinsDistributionByArea(Request $request)
+    {
+        $days = $request->query('days');
+        $cacheKey = 'pins_distribution_by_area_' . ($days ?? 'all');
+
+        $areaCounts = Cache::remember($cacheKey, 3600, function () use ($days) {
+            $query = Pin::with('user');
+
+            if (in_array($days, [7, 15, 30])) {
+                $fromDate = Carbon::now()->subDays($days);
+                $query->where('created_at', '>=', $fromDate);
+            }
+
+            $pins = $query->get()
+                ->filter(fn($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)));
+
+            $areaCountsRaw = $pins->groupBy(fn($pin) => (int) $pin->user->area)
+                ->map(fn($pins) => $pins->count());
+
+            $areaCounts = [];
+            foreach (range(1, 6) as $areaId) {
+                $areaCounts[$areaId] = $areaCountsRaw->get($areaId, 0);
+            }
+
+            return $areaCounts;
+        });
+
+        return response()->json([
+            'area_counts' => $areaCounts,
+        ]);
+    }
+
 
 
 

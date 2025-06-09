@@ -175,10 +175,12 @@
             </div>
             <div class="col-xl-4 col-md-6 mb-4">
                 <admin-chart-pie
+                    :key="Object.values(areaCounts).join('-')"
                     title="Pin Distribution by Area (%)"
                     :labels="chartLabels"
                     :data="chartData"
                     :background-colors="chartColors"
+                    @period-change="fetchAreaDistribution"
                 />
 
             </div>
@@ -277,14 +279,7 @@ export default {
             totalPins: 0,
             totalSuburbs: 0,
             loggedInUsers: 0,
-            areaCounts: {
-                1: 4,
-                2: 35,
-                3: 15,
-                4: 10,
-                5: 12,
-                6: 8
-            },
+            areaCounts: {}, // from API
             pinsData: {},
             selectedDays: 7
         };
@@ -318,10 +313,13 @@ export default {
             ];
         },
         chartLabels() {
-            return Object.keys(this.areaCounts).map(area => `${area}`);
+            return Object.keys(this.areaCounts).map(area => `Area ${area}`);
         },
         chartData() {
-            return Object.values(this.areaCounts).map(count => ((count / 100) * 100).toFixed(2));
+            const total = Object.values(this.areaCounts).reduce((sum, val) => sum + val, 0);
+            return Object.values(this.areaCounts).map(count =>
+                total ? ((count / total) * 100).toFixed(2) : 0
+            );
         },
         chartColors() {
             return ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'];
@@ -331,6 +329,7 @@ export default {
         this.initMap();
         this.fetchCampaigns();
         this.fetchPinSummary();
+        this.fetchAreaDistribution();
     },
     watch: {
         dateFrom() { this.fetchPins(); },
@@ -425,8 +424,22 @@ export default {
                 .catch(error => {
                     console.error('Error fetching pin summary:', error);
                 });
+        },
+        fetchAreaDistribution(days) {
+            let url = '/admin/pins/distribution/by-area';
+            if (days && ['7', '15', '30'].includes(days)) {
+                url += `?days=${days}`;
+            }
+            axios.get(url)
+                .then(res => {
+                    this.areaCounts = res.data.area_counts || {};
+                })
+                .catch(err => {
+                    console.error('Failed to load area distribution:', err);
+                });
         }
     }
+
 };
 </script>
 
