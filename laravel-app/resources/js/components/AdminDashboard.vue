@@ -174,20 +174,7 @@
                 </div>
             </div>
             <div class="col-xl-4 col-md-6 mb-4">
-                <admin-chart-pie
-                    :key="Object.values(areaCounts).join('-')"
-                    title="Pin Distribution by Area (%)"
-                    :labels="chartLabels"
-                    :data="chartData"
-                    :background-colors="chartColors"
-                    @period-change="fetchAreaDistribution"
-                />
-
-            </div>
-
-            <!-- Card 3 -->
-            <div class="col-xl-4 col-md-12 mb-4">
-                <div class="card shadow h-100">
+                <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">User Participated</h6>
                     </div>
@@ -202,18 +189,31 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr><td>Area 1</td><td>2</td><td>3</td></tr>
-                                <tr><td>Area 2</td><td>2</td><td>3</td></tr>
-                                <tr><td>Area 3</td><td>2</td><td>3</td></tr>
-                                <tr><td>Area 4</td><td>2</td><td>3</td></tr>
-                                <tr><td>Area 5</td><td>2</td><td>3</td></tr>
-                                <tr><td>Area 6</td><td>2</td><td>3</td></tr>
+                                <tr v-for="item in participation" :key="item.area">
+                                    <td>Area {{ item.area }}</td>
+                                    <td>{{ item.with_pins }}</td>
+                                    <td>{{ item.no_pins }}</td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
+            <div class="col-xl-4 col-md-6 mb-4">
+                <admin-chart-pie
+                    :key="Object.values(areaCounts).join('-')"
+                    title="Pin Distribution by Area (%)"
+                    :labels="chartLabels"
+                    :data="chartData"
+                    :background-colors="chartColors"
+                    @period-change="fetchAreaDistribution"
+                />
+
+            </div>
+
+            <!-- Card 3 -->
+
         </div>
 
 
@@ -281,7 +281,8 @@ export default {
             loggedInUsers: 0,
             areaCounts: {}, // from API
             pinsData: {},
-            selectedDays: 7
+            selectedDays: 7,
+            participation: [],
         };
     },
     computed: {
@@ -330,6 +331,7 @@ export default {
         this.fetchCampaigns();
         this.fetchPinSummary();
         this.fetchAreaDistribution();
+        this.fetchParticipation();
     },
     watch: {
         dateFrom() { this.fetchPins(); },
@@ -437,7 +439,15 @@ export default {
                 .catch(err => {
                     console.error('Failed to load area distribution:', err);
                 });
-        }
+        },
+        async fetchParticipation() {
+            try {
+                const response = await axios.get('/admin/users/participation/by-area');
+                this.participation = response.data.participation || [];
+            } catch (error) {
+                console.error('Failed to fetch participation data:', error);
+            }
+        },
     }
 
 };

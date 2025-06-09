@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Jobs\SendUserActivatedEmail;
+use App\Models\Pin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -166,6 +167,41 @@ class UserController extends Controller
         return response()->json([
             'message' => 'User updated successfully.',
             'user' => $user,
+        ]);
+    }
+
+    public function userParticipationByArea(Request $request)
+    {
+        $cacheKey = 'user_participation_by_area';
+
+        // Try to get from cache, if not present compute and store for 1 hour
+        $participation = Cache::remember($cacheKey, now()->addHour(), function () {
+            $areas = range(1, 6);
+
+            return collect($areas)->map(function ($areaId) {
+                $usersInArea = User::where('area', $areaId)->pluck('id');
+
+                // Count users with pins
+                $withPins = Pin::whereIn('user_id', $usersInArea)
+                    ->distinct('user_id')
+                    ->count('user_id');
+
+                // Total users in the area
+                $totalUsers = $usersInArea->count();
+
+                // Users with no pins = total - with pins
+                $noPins = max(0, $totalUsers - $withPins); // safety check
+
+                return [
+                    'area' => $areaId,
+                    'with_pins' => $withPins,
+                    'no_pins' => $noPins,
+                ];
+            });
+        });
+
+        return response()->json([
+            'participation' => $participation,
         ]);
     }
 }
