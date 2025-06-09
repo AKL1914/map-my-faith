@@ -7,6 +7,7 @@ use App\Jobs\FetchSuburbFromCoordinates;
 use App\Models\Pin;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
@@ -277,4 +278,56 @@ class PinController extends Controller
 
         return response()->json(['message' => 'Pin updated successfully']);
     }
+    public function pinsByArea(Request $request)
+    {
+        $days = (int) $request->input('days', 7);
+
+        $cacheKey = "pins_by_area_{$days}";
+        $cacheDuration = now()->addHour(); // 1 hour
+
+        return Cache::remember($cacheKey, $cacheDuration, function () use ($days) {
+            $startDate = Carbon::now()->subDays($days - 1)->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+
+            $pins = Pin::with('user')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get()
+                ->groupBy(fn($pin) => $pin->created_at->format('Y-m-d'))
+                ->map(fn($pinsOnDay) => $pinsOnDay
+                    ->filter(fn($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)))
+                    ->groupBy(fn($pin) => (int)$pin->user->area)
+                    ->map->count()
+                );
+
+            $labels = [];
+            $areas = [];
+
+            foreach (range(1, 6) as $areaId) {
+                $areas[$areaId] = array_fill(0, $days, 0);
+            }
+
+            foreach (range(0, $days - 1) as $i) {
+                $date = Carbon::now()->subDays($days - 1 - $i)->format('Y-m-d');
+                $labels[] = $date;
+
+                if (isset($pins[$date])) {
+                    foreach ($pins[$date] as $areaId => $count) {
+                        $areaId = (int) $areaId;
+                        if (isset($areas[$areaId])) {
+                            $areas[$areaId][$i] = $count;
+                        }
+                    }
+                }
+            }
+
+            return [
+                'labels' => $labels,
+                'areas' => $areas,
+            ];
+        });
+    }
+
+
+
+
 }

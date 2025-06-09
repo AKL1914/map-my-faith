@@ -1,7 +1,12 @@
 <template>
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Pins Over Last 7 Days by Area</h6>
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Pins by Area</h6>
+            <select v-model="selectedDays" @change="onDaysChange" class="form-control form-control-sm w-auto">
+                <option value="7">Last 7 Days</option>
+                <option value="15">Last 15 Days</option>
+                <option value="30">Last 30 Days</option>
+            </select>
         </div>
         <div class="card-body">
             <canvas ref="pinsChart"></canvas>
@@ -13,7 +18,6 @@
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-// Colors for each area, SB Admin 2 theme inspired
 const areaColors = [
     'rgba(78, 115, 223, 1)',   // Area 1 - blue
     'rgba(28, 200, 138, 1)',   // Area 2 - green
@@ -26,36 +30,53 @@ const areaColors = [
 export default {
     name: 'PinsByAreaChart',
     props: {
-        // Expecting data like:
-        // {
-        //   labels: ['2025-06-01', '2025-06-02', ..., '2025-06-07'],
-        //   areas: {
-        //     1: [5, 3, 6, 7, 2, 4, 3],
-        //     2: [2, 1, 4, 6, 3, 5, 2],
-        //     ...
-        //     6: [1, 2, 3, 1, 4, 2, 3]
-        //   }
-        // }
         pinsByAreaData: {
             type: Object,
             required: true
+        },
+        days: {
+            type: Number,
+            default: 7
         }
     },
-    mounted() {
-        this.renderChart();
+    data() {
+        return {
+            chart: null,
+            selectedDays: this.days
+        };
+    },
+    watch: {
+        pinsByAreaData: {
+            handler() {
+                this.$nextTick(() => {
+                    if (this.chart) {
+                        this.chart.destroy();
+                        this.chart = null;
+                    }
+                    this.renderChart();
+                });
+            },
+            deep: true,
+            immediate: true
+        }
     },
     methods: {
+        onDaysChange() {
+            this.$emit('update:days', parseInt(this.selectedDays));
+        },
         renderChart() {
-            const ctx = this.$refs.pinsChart.getContext('2d');
-            const labels = this.pinsByAreaData.labels;
-            const areas = this.pinsByAreaData.areas;
+            const canvas = this.$refs.pinsChart;
+            if (!canvas) return;
 
-            // Prepare datasets for each area
+            const ctx = canvas.getContext('2d');
+            const labels = this.pinsByAreaData.labels || [];
+            const areas = this.pinsByAreaData.areas || {};
+
             const datasets = Object.keys(areas).map((areaId, index) => ({
                 label: `Area ${areaId}`,
                 data: areas[areaId],
                 fill: true,
-                backgroundColor: areaColors[index].replace('1)', '0.1)'), // translucent fill
+                backgroundColor: areaColors[index].replace('1)', '0.1)'),
                 borderColor: areaColors[index],
                 tension: 0.4,
                 pointRadius: 3,
@@ -64,7 +85,7 @@ export default {
                 borderWidth: 2,
             }));
 
-            new Chart(ctx, {
+            this.chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
@@ -90,7 +111,7 @@ export default {
                             display: true,
                             labels: {
                                 color: '#4e73df',
-                                font: { weight: 'bold' }
+                                font: {weight: 'bold'}
                             }
                         }
                     }
@@ -98,7 +119,7 @@ export default {
             });
         }
     }
-}
+};
 </script>
 
 <style scoped>

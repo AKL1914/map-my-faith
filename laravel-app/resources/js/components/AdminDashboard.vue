@@ -216,9 +216,12 @@
 
 
         <div class="row">
-
             <div class="col-xl-12 mb-4">
-                <admin-chart-area :pinsByAreaData="pinsData" />
+                <admin-chart-area
+                    :pins-by-area-data="pinsData"
+                    :days="selectedDays"
+                    @update:days="selectedDays = $event; fetchPinSummary()"
+                />
             </div>
         </div>
 
@@ -256,6 +259,7 @@ const greenIcon = new L.Icon({
     popupAnchor: [1, -20],
     shadowSize: [25, 25]
 });
+
 export default {
     name: 'AdminDashboard',
     data() {
@@ -281,17 +285,8 @@ export default {
                 5: 12,
                 6: 8
             },
-            pinsData: {
-                labels: ['2025-06-01', '2025-06-02', '2025-06-03', '2025-06-04', '2025-06-05', '2025-06-06', '2025-06-07'],
-                areas: {
-                    1: [5, 6, 7, 4, 8, 6, 5],
-                    2: [3, 4, 5, 2, 3, 5, 3],
-                    3: [6, 7, 6, 8, 7, 7, 8],
-                    4: [2, 3, 1, 3, 4, 2, 3],
-                    5: [1, 2, 3, 1, 2, 3, 2],
-                    6: [4, 5, 4, 5, 6, 4, 5],
-                }
-            }
+            pinsData: {},
+            selectedDays: 7
         };
     },
     computed: {
@@ -335,6 +330,7 @@ export default {
     mounted() {
         this.initMap();
         this.fetchCampaigns();
+        this.fetchPinSummary();
     },
     watch: {
         dateFrom() { this.fetchPins(); },
@@ -415,6 +411,20 @@ export default {
             }).catch(e => {
                 toast.error(e.response?.data?.message || 'Failed to generate report.');
             });
+        },
+        fetchPinSummary() {
+            axios
+                .get('/admin/pins/summary/by-area', {
+                    params: {
+                        days: this.selectedDays
+                    }
+                })
+                .then(response => {
+                    this.pinsData = response.data;
+                })
+                .catch(error => {
+                    console.error('Error fetching pin summary:', error);
+                });
         }
     }
 };
