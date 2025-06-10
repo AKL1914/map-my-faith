@@ -27,6 +27,13 @@
         window.authUser = @json(auth()->user());
     </script>
 
+    <style>
+        .map-outer-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+    </style>
+
 </head>
 
 <body id="page-top" class="sidebar-toggled">
@@ -50,7 +57,7 @@
             <!-- End of Topbar -->
 
             <!-- Begin Page Content -->
-            <div class="container-fluid">
+            <div class="container-fluid {{ request()->is('maps') ? 'map-outer-container' : '' }}">
                 <div id="app">
                         @yield('content')
                 </div>
