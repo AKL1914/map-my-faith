@@ -14,11 +14,11 @@ class DatabaseSeeder extends Seeder
     {
         // DatabaseSeeder.php
         //commented out the seeder calls to avoid running them all at once
-//        $this->call(CampaignSeeder::class);
-//        $this->call(UsersSeeder::class);
-//        $this->call(PinFromCsvSeeder::class);
-//        $this->call(EventSeeder::class);
-//        $this->call(GamePinSeeder::class);
-//        $this->call(BulkPinsDataSeeder::class);
+        //        $this->call(CampaignSeeder::class);
+        //        $this->call(UsersSeeder::class);
+        //        $this->call(PinFromCsvSeeder::class);
+        //        $this->call(EventSeeder::class);
+        //        $this->call(GamePinSeeder::class);
+        //        $this->call(BulkPinsDataSeeder::class);
     }
 }
