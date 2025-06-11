@@ -2,15 +2,23 @@
     <div>
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-            <button
-                class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
-                @click="downloadReport"
-                title="Download Report"
-            >
-                <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
-            </button>
+            <div class="d-flex gap-2">
+                <a
+                    href="/admin/dashboard/foyer"
+                    class="btn btn-sm btn-secondary shadow-sm"
+                    title="Go to Foyer"
+                >
+                    <i class="fas fa-door-open fa-sm text-white-50"></i> Foyer
+                </a>
+                <button
+                    class="btn btn-sm btn-primary shadow-sm"
+                    @click="downloadReport"
+                    title="Download Report"
+                >
+                    <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+                </button>
+            </div>
         </div>
-
         <!-- Campaign Filters Card -->
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex justify-content-between align-items-center">

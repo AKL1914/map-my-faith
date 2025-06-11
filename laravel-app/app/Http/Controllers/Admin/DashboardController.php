@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\GeneratePinReport;
+use App\Models\Pin;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
 /**
@@ -73,6 +76,71 @@ class DashboardController extends Controller
 
         return response()->json([
             'message' => 'Report is being generated and will be emailed to you shortly.',
+        ]);
+    }
+
+
+    public function foyer(Request $request)
+    {
+        // Cache total number of pins for 1 hour
+        $totalPins = Cache::remember('foyer_total_pins', 3600, function () {
+            return Pin::count();
+        });
+
+        // Cache total number of participants for 1 hour
+        $totalParticipants = Cache::remember('foyer_total_participants', 3600, function () {
+            return Pin::distinct('user_id')->count('user_id');
+        });
+
+        // Cache top 5 pin users for 1 hour
+        $topPins = Cache::remember('foyer_top_pins', 3600, function () {
+            return DB::table('pins')
+                ->join('users', 'pins.user_id', '=', 'users.id')
+                ->select('users.id', 'users.name', 'users.area', DB::raw('count(pins.id) as pinCount'))
+                ->where('users.email', '!=', config('app.admin_email'))
+                ->where('users.name', '!=', 'Admin')
+                ->groupBy('users.id', 'users.name', 'users.area')
+                ->orderByDesc('pinCount')
+                ->limit(5)
+                ->get();
+        });
+
+        // Cache area distribution data for 1 hour
+        $areasData = Cache::remember('foyer_areas_data', 3600, function () {
+            $pins = Pin::with('user')
+                ->get()
+                ->filter(fn ($pin) => isset($pin->user->area));
+
+            $areaCountsRaw = $pins->groupBy(fn ($pin) => (int) $pin->user->area)
+                ->map(fn ($pins) => $pins->count());
+
+            $areaCounts = $areaCountsRaw->sortKeys()->toArray();
+
+            $settings = \App\Models\Setting::where('name', 'LIKE', 'AREA_%')
+                ->pluck('value', 'name')
+                ->toArray();
+
+            $result = [];
+            foreach ($areaCounts as $areaId => $count) {
+                $key = "AREA_{$areaId}";
+                $settingValue = isset($settings[$key]) ? (int) $settings[$key] : 0;
+                $percentage = ($settingValue > 0) ? round(($count / $settingValue) * 100, 2) : 0;
+
+                $result[$areaId] = [
+                    'count' => $count,
+                    'setting_value' => $settingValue,
+                    'percentage' => $percentage,
+                ];
+            }
+
+            return $result;
+        });
+
+        return view('admin.foyer', [
+            'totalPins' => $totalPins,
+            'totalParticipants' => $totalParticipants,
+            'topPins' => $topPins,
+            'areasData' => $areasData,
         ]);
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\LeaderBoardController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\Auth\LoginController;
@@ -90,6 +91,7 @@ Route::middleware(['auth'])->group(function () {
     // Admin routes
     Route::middleware([IsAdmin::class])->group(function () {
         Route::get('/admin/dashboard', [DashboardController::class, 'index']);
+        Route::get('/admin/dashboard/foyer', [DashboardController::class, 'foyer']);
 
         Route::get('admin/campaigns', [CampaignController::class, 'manage'])->name('admin.campaigns.index');
         Route::get('admin/users', [UserController::class, 'manage'])->name('admin.users.index');
@@ -104,6 +106,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/pins/summary/by-area', [PinController::class, 'pinsByArea']);
         Route::get('/admin/pins/distribution/by-area', [PinController::class, 'pinsDistributionByArea']);
         Route::get('/admin/users/participation/by-area', [UserController::class, 'userParticipationByArea']);
+        Route::get('/admin/settings/manage', [SettingsController::class, 'manage']);
+        Route::get('/admin/settings', [SettingsController::class, 'index']);
+        Route::post('/admin/settings', [SettingsController::class, 'store']);
+        Route::put('/admin/settings/{setting}', [SettingsController::class, 'update']);
+        Route::delete('/admin/settings/{setting}', [SettingsController::class, 'destroy']);
 
 
     });

@@ -3,7 +3,7 @@
         <div class="card-header py-3 d-flex justify-content-between align-items-center text-center">
             <h6 class="m-0 font-weight-bold text-primary text-center">{{ campaignName }}</h6>
         </div>
-        <div class="card-body">
+        <div class="card-body map-container">
             <div id="map" class="map mb-3"></div>
 
             <div class="button-group d-flex gap-3 mb-4">
@@ -360,4 +360,10 @@ async function deletePin(pinId) {
     resize: vertical;
     width: 100%;
 }
+
+.map-container{
+    padding: 0.25rem !important;
+}
+
+
 </style>

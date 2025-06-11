@@ -292,10 +292,11 @@ class PinController extends Controller
             $pins = Pin::with('user')
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->get()
-                ->groupBy(fn($pin) => $pin->created_at->format('Y-m-d'))
-                ->map(fn($pinsOnDay) => $pinsOnDay
-                    ->filter(fn($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)))
-                    ->groupBy(fn($pin) => (int)$pin->user->area)
+                ->groupBy(fn ($pin) => $pin->created_at->format('Y-m-d'))
+                ->map(
+                    fn ($pinsOnDay) => $pinsOnDay
+                    ->filter(fn ($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)))
+                    ->groupBy(fn ($pin) => (int)$pin->user->area)
                     ->map->count()
                 );
 
@@ -341,10 +342,10 @@ class PinController extends Controller
             }
 
             $pins = $query->get()
-                ->filter(fn($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)));
+                ->filter(fn ($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)));
 
-            $areaCountsRaw = $pins->groupBy(fn($pin) => (int) $pin->user->area)
-                ->map(fn($pins) => $pins->count());
+            $areaCountsRaw = $pins->groupBy(fn ($pin) => (int) $pin->user->area)
+                ->map(fn ($pins) => $pins->count());
 
             $areaCounts = [];
             foreach (range(1, 6) as $areaId) {
