@@ -26,9 +26,16 @@
                     </a>
 
                     @admin
+                    <!-- Horizon (Laravel Queue Monitor) -->
                     <a class="dropdown-item" href="/horizon" target="_blank">
-                        <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                        <i class="fas fa-tachometer-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                         Horizon
+                    </a>
+
+                    <!-- Settings -->
+                    <a class="dropdown-item" href="/admin/settings/manage">
+                        <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                        Settings
                     </a>
                     @endadmin
                     <div class="dropdown-divider"></div>
