@@ -62,8 +62,8 @@
                             @foreach($areasData as $area => $count)
                                 <tr>
                                     <td>Area{{ $area }}</td>
-                                    <td>{{ number_format($count['percentage'], 2) }}%</td>
-                                    <td>{{ number_format($count['count']) }}</td>
+                                    <td>{{ number_format($count['percentage']) }}%</td>
+                                    <td>{{ number_format($count['pin_count']) }}</td>
                                 </tr>
 
                             @endforeach
