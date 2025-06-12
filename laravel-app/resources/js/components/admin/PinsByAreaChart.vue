@@ -76,12 +76,12 @@ export default {
                 label: `Area ${areaId}`,
                 data: areas[areaId],
                 fill: true,
-                backgroundColor: areaColors[index].replace('1)', '0.1)'),
-                borderColor: areaColors[index],
+                backgroundColor: areaColors[index % areaColors.length].replace('1)', '0.1)'),
+                borderColor: areaColors[index % areaColors.length],
                 tension: 0.4,
                 pointRadius: 3,
-                pointBackgroundColor: areaColors[index],
-                pointBorderColor: areaColors[index],
+                pointBackgroundColor: areaColors[index % areaColors.length],
+                pointBorderColor: areaColors[index % areaColors.length],
                 borderWidth: 2,
             }));
 
@@ -95,6 +95,16 @@ export default {
                     maintainAspectRatio: false,
                     scales: {
                         x: {
+                            ticks: {
+                                callback: function(value, index) {
+                                    const rawLabel = labels[index];
+                                    const date = new Date(rawLabel);
+                                    if (isNaN(date)) return rawLabel; // fallback
+                                    const options = { month: 'short', day: '2-digit', weekday: 'short' };
+                                    const parts = date.toLocaleDateString('en-US', options).split(', ');
+                                    return `${parts[1]} ${parts[0]}`; // e.g., "12 Jan Mon"
+                                }
+                            },
                             grid: {
                                 display: false
                             }
@@ -111,7 +121,7 @@ export default {
                             display: true,
                             labels: {
                                 color: '#4e73df',
-                                font: {weight: 'bold'}
+                                font: { weight: 'bold' }
                             }
                         }
                     }

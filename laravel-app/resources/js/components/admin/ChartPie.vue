@@ -2,7 +2,12 @@
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
-            <select v-model="selectedPeriod" @change="onPeriodChange" class="form-control form-control-sm" style="width: auto;">
+            <select
+                v-model="selectedPeriod"
+                @change="onPeriodChange"
+                class="form-control form-control-sm"
+                style="width: auto;"
+            >
                 <option value="">All</option>
                 <option value="7">Last 7 days</option>
                 <option value="15">Last 15 days</option>
@@ -14,8 +19,9 @@
                 <canvas ref="canvas" width="100%" height="100"></canvas>
             </div>
             <div class="mt-4 text-center small">
-        <span v-for="(label, index) in labels" :key="index" class="mr-2">
-          <i class="fas fa-circle" :style="{ color: backgroundColors[index] }"></i> {{ label }}
+        <span v-for="(label, index) in labels" :key="index" class="mr-3">
+          <i class="fas fa-circle" :style="{ color: backgroundColors[index] }"></i>
+          {{ label }} - {{ data[index] }}
         </span>
             </div>
         </div>
@@ -94,7 +100,7 @@ export default {
                             borderWidth: 1,
                         },
                         legend: {
-                            display: false,
+                            display: false, // we use custom legend below chart
                         }
                     },
                     cutout: '80%',

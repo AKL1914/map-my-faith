@@ -105,29 +105,46 @@ class DashboardController extends Controller
                 ->get();
         });
 
-        // Cache area distribution data for 1 hour
         $areasData = Cache::remember('foyer_areas_data', 3600, function () {
-            $pins = Pin::with('user')
-                ->get()
-                ->filter(fn ($pin) => isset($pin->user->area));
+            // Get users with an area
+            $users = \App\Models\User::whereNotNull('area')->get();
 
-            $areaCountsRaw = $pins->groupBy(fn ($pin) => (int) $pin->user->area)
+            // Count users per area
+            $userCountsRaw = $users->groupBy(fn ($user) => (int) $user->area)
+                ->map(fn ($users) => $users->count());
+
+            $userCounts = $userCountsRaw->sortKeys()->toArray();
+
+            // Get pins with users who have areas
+            $pins = \App\Models\Pin::with('user')
+                ->get()
+                ->filter(fn ($pin) => isset($pin->user?->area));
+
+            // Count pins per area (based on the user's area)
+            $pinCountsRaw = $pins->groupBy(fn ($pin) => (int) $pin->user->area)
                 ->map(fn ($pins) => $pins->count());
 
-            $areaCounts = $areaCountsRaw->sortKeys()->toArray();
+            $pinCounts = $pinCountsRaw->sortKeys()->toArray();
 
+            // Get area setting values (targets)
             $settings = \App\Models\Setting::where('name', 'LIKE', 'AREA_%')
                 ->pluck('value', 'name')
                 ->toArray();
 
+            // Build the final result per area
+            $allAreaIds = array_unique(array_merge(array_keys($userCounts), array_keys($pinCounts)));
+
             $result = [];
-            foreach ($areaCounts as $areaId => $count) {
+            foreach ($allAreaIds as $areaId) {
+                $userCount = $userCounts[$areaId] ?? 0;
+                $pinCount = $pinCounts[$areaId] ?? 0;
                 $key = "AREA_{$areaId}";
                 $settingValue = isset($settings[$key]) ? (int) $settings[$key] : 0;
-                $percentage = ($settingValue > 0) ? round(($count / $settingValue) * 100, 2) : 0;
+                $percentage = ($settingValue > 0) ? round(($userCount / $settingValue) * 100) : 0;
 
                 $result[$areaId] = [
-                    'count' => $count,
+                    'user_count' => $userCount,
+                    'pin_count' => $pinCount,
                     'setting_value' => $settingValue,
                     'percentage' => $percentage,
                 ];
