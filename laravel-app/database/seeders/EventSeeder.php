@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Event;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class EventSeeder extends Seeder
@@ -13,6 +12,6 @@ class EventSeeder extends Seeder
      */
     public function run(): void
     {
-        Event::create(['name' => 'PIN HUNT' , 'description' => 'PIN HUNT' , 'is_active' => false]);
+        Event::create(['name' => 'PIN HUNT', 'description' => 'PIN HUNT', 'is_active' => false]);
     }
 }

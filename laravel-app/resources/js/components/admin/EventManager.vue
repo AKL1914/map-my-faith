@@ -1,110 +1,113 @@
 <template>
-    <div class="container my-4">
-        <h2 class="mb-4">Event Manager</h2>
+    <h1 class="h3 mb-4 text-gray-800">Event Manager</h1>
 
-        <!-- Add / Edit Form -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">{{ editMode ? 'Edit' : 'Add' }} Event</h5>
-                <form @submit.prevent="submitForm">
-                    <div class="mb-3">
-                        <label for="eventName" class="form-label">Event Name</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="eventName"
-                            v-model="form.name"
-                            required
-                        />
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="eventDescription" class="form-label">Description</label>
-                        <textarea
-                            class="form-control"
-                            id="eventDescription"
-                            v-model="form.description"
-                            rows="3"
-                            required
-                        ></textarea>
-                    </div>
-
-                    <div class="form-check form-switch mb-3">
-                        <input
-                            class="form-check-input"
-                            type="checkbox"
-                            id="isActive"
-                            v-model="form.is_active"
-                        />
-                        <label class="form-check-label" for="isActive">Active</label>
-                    </div>
-
-                    <div class="d-grid d-md-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            {{ editMode ? 'Update' : 'Create' }}
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            v-if="editMode"
-                            @click="resetForm"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
+    <!-- Event Form -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                {{ editMode ? 'Edit Event' : 'Add Event' }}
+            </h6>
         </div>
-
-        <!-- Events Table -->
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Existing Events</h5>
-
-                <div class="table-responsive">
-                    <table class="table table-striped align-middle">
-                        <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Status</th>
-                            <th style="min-width: 280px;">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr v-for="event in events" :key="event.id">
-                            <td>{{ event.id }}</td>
-                            <td>{{ event.name }}</td>
-                            <td>{{ event.description }}</td>
-                            <td>
-                                    <span class="badge" :class="event.is_active ? 'bg-success' : 'bg-secondary'">
-                                        {{ event.is_active ? 'Active' : 'Inactive' }}
-                                    </span>
-                            </td>
-                            <td>
-                                <div class="d-flex flex-wrap gap-1">
-                                    <button class="btn btn-sm btn-warning" @click="editEvent(event)">
-                                        Edit
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" @click="deleteEvent(event.id)">
-                                        Delete
-                                    </button>
-                                    <a :href="`/admin/event/${event.id}/pins`" class="btn btn-sm btn-info text-white">
-                                        View
-                                    </a>
-                                    <a :href="`/admin/event/${event.id}/participants`" class="btn btn-sm btn-outline-primary">
-                                        Participants
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr v-if="events.length === 0">
-                            <td colspan="5" class="text-center">No events found.</td>
-                        </tr>
-                        </tbody>
-                    </table>
+        <div class="card-body">
+            <form @submit.prevent="submitForm">
+                <div class="form-group mb-3">
+                    <label for="eventName">Event Name</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="eventName"
+                        v-model="form.name"
+                        required
+                    />
                 </div>
+
+                <div class="form-group mb-3">
+                    <label for="eventDescription">Description</label>
+                    <textarea
+                        class="form-control"
+                        id="eventDescription"
+                        v-model="form.description"
+                        rows="3"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-check form-switch mb-4">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="isActive"
+                        v-model="form.is_active"
+                    />
+                    <label class="form-check-label" for="isActive">Active</label>
+                </div>
+
+                <div class="d-grid d-md-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        {{ editMode ? 'Update' : 'Create' }}
+                    </button>
+                    <button
+                        v-if="editMode"
+                        type="button"
+                        class="btn btn-secondary"
+                        @click="resetForm"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Events Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Events</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th class="text-center" style="min-width: 280px;">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="event in events" :key="event.id">
+                        <td>{{ event.id }}</td>
+                        <td>{{ event.name }}</td>
+                        <td>{{ event.description }}</td>
+                        <td>
+                                <span class="badge px-2 py-1 text-white" :class="event.is_active ? 'bg-success' : 'bg-secondary'">
+                                    {{ event.is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                <button class="btn btn-sm btn-warning" @click="editEvent(event)">
+                                    Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger" @click="deleteEvent(event.id)">
+                                    Delete
+                                </button>
+                                <a :href="`/admin/event/${event.id}/pins`" class="btn btn-sm btn-info text-white">
+                                    View
+                                </a>
+                                <a :href="`/admin/event/${event.id}/participants`" class="btn btn-sm btn-outline-primary">
+                                    Participants
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr v-if="events.length === 0">
+                        <td colspan="5" class="text-center text-muted">No events found.</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

@@ -18,11 +18,7 @@
                         <i class="fas fa-tachometer-alt"></i> <span class="d-none d-sm-inline">Dashboard</span>
                     </a>
                 </li>
-                <li class="nav-item mx-2">
-                    <a class="nav-link {{ request()->is('admin/leaderboard') ? 'active' : '' }}" href="{{ url('/admin/leaderboard') }}">
-                        <i class="fas fa-award"></i> <span class="d-none d-sm-inline">Leaderboard</span>
-                    </a>
-                </li>
+
                 <li class="nav-item mx-2">
                     <a class="nav-link {{ request()->is('admin/campaigns') ? 'active' : '' }}" href="{{ url('/admin/campaigns') }}">
                         <i class="fas fa-bullhorn"></i> <span class="d-none d-sm-inline">Campaigns</span>
@@ -63,6 +59,17 @@
                 <li class="nav-item mx-2">
                     <a class="nav-link {{ request()->is('maps') ? 'active' : '' }}" href="{{ url('/maps') }}">
                         <i class="fas fa-map"></i> <span class="d-none d-sm-inline">Maps</span>
+                    </a>
+                </li>
+                <li class="nav-item mx-2">
+                    <a class="nav-link {{ request()->is('user/' . auth()->id() . '/pins') ? 'active' : '' }}" href="{{ url('/user/' . auth()->id() . '/pins') }}">
+                        <i class="fas fa-map-pin"></i> <span class="d-none d-sm-inline">My Pins</span>
+                    </a>
+                </li>
+
+                <li class="nav-item mx-2">
+                    <a class="nav-link {{ request()->is('leaderboard') ? 'active' : '' }}" href="{{ url('/leaderboard') }}">
+                        <i class="fas fa-award"></i> <span class="d-none d-sm-inline">Leaderboard</span>
                     </a>
                 </li>
             </ul>

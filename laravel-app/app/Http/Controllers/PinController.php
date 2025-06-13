@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PinStoreRequest;
 use App\Jobs\FetchSuburbFromCoordinates;
-use Illuminate\Http\Request;
 use App\Models\Pin;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
@@ -33,7 +35,7 @@ class PinController extends Controller
      * This method validates the request data, creates a new pin, and dispatches a job
      * to fetch the suburb from the pin's coordinates.
      *
-     * @param \App\Http\Requests\PinStoreRequest $request The validated request containing pin data.
+     * @param  \App\Http\Requests\PinStoreRequest  $request  The validated request containing pin data.
      * @return \Illuminate\Http\JsonResponse A JSON response with the created pin.
      */
     public function store(PinStoreRequest $request)
@@ -57,7 +59,7 @@ class PinController extends Controller
      *
      * This method supports filtering by search term, date range, and pagination.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing query parameters.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing query parameters.
      * @return \Illuminate\Http\JsonResponse A JSON response with the list of pins.
      */
     public function index(Request $request)
@@ -96,42 +98,70 @@ class PinController extends Controller
     /**
      * Retrieve and return all pins associated with a specific campaign.
      *
-     * @param int $campaignId The ID of the campaign.
+     * @param  int  $campaignId  The ID of the campaign.
      * @return \Illuminate\Http\JsonResponse A JSON response with the list of pins.
      */
     public function indexByCampaign($campaignId, Request $request)
     {
         $cacheKey = "pins_campaign_{$campaignId}";
 
-        // Check if date filters exist and skip cache if so
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
+        $area = $request->query('area');
+        $limit = $request->query('limit');
 
-        if ($dateFrom || $dateTo) {
-            $query = Pin::where('campaign_id', $campaignId);
+        $pinFields = ['id', 'user_id', 'latitude', 'longitude', 'notes', 'is_accepted', 'suburb', 'created_at', 'campaign_id'];
 
-            if ($dateFrom) {
-                $query->whereDate('created_at', '>=', $dateFrom);
-            }
-            if ($dateTo) {
-                $query->whereDate('created_at', '<=', $dateTo);
-            }
+        $useFilters = $dateFrom || $dateTo || $area;
 
-            return response()->json($query->get());
+        $query = Pin::select($pinFields)
+            ->with(['user:id,name,area'])
+            ->where('campaign_id', $campaignId);
+
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
         }
 
-        // Use cache only when no filters
-        $pins = Cache::rememberForever($cacheKey, function () use ($campaignId) {
-            return Pin::where('campaign_id', $campaignId)->get();
-        });
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
 
-        return response()->json($pins);
+        if ($area) {
+            $query->whereHas('user', function ($q) use ($area) {
+                $q->where('area', $area);
+            });
+        }
+
+        if ($useFilters) {
+            $pins = $query->get();
+        } else {
+            $pins = Cache::rememberForever($cacheKey, function () use ($campaignId, $pinFields) {
+                return Pin::select($pinFields)
+                    ->with(['user:id,name,area'])
+                    ->where('campaign_id', $campaignId)
+                    ->get();
+            });
+        }
+
+        $totalPins = $pins->count();
+        $totalUsers = $pins->pluck('user_id')->unique()->count();
+
+        // Only limit displayed data — totals remain full
+        if (! $useFilters && is_numeric($limit)) {
+            $pins = $pins->take((int) $limit)->values();
+        }
+
+        return response()->json([
+            'data' => $pins,
+            'total_pins' => $totalPins,
+            'total_users' => $totalUsers,
+        ]);
     }
 
     /**
      * Retrieve and return all pins associated with a specific user.
      *
-     * @param int $userId The ID of the user.
+     * @param  int  $userId  The ID of the user.
      * @return \Illuminate\Http\JsonResponse A JSON response with the list of pins.
      */
     public function indexByUser($userId)
@@ -150,7 +180,7 @@ class PinController extends Controller
      *
      * This method validates the bounds and caches the results for future requests.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing geographic bounds.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing geographic bounds.
      * @return \Illuminate\Http\JsonResponse A JSON response with the list of pins.
      */
     public function indexByBounds(Request $request)
@@ -162,7 +192,7 @@ class PinController extends Controller
             'west' => 'required|numeric',
         ]);
 
-        $cacheKey = 'pins_bounds_' . md5(json_encode([
+        $cacheKey = 'pins_bounds_'.md5(json_encode([
             $request->north,
             $request->south,
             $request->east,
@@ -170,7 +200,7 @@ class PinController extends Controller
         ]));
 
         $allBoundsKeys = Cache::get('pins_bounds_keys', []);
-        if (!in_array($cacheKey, $allBoundsKeys)) {
+        if (! in_array($cacheKey, $allBoundsKeys)) {
             $allBoundsKeys[] = $cacheKey;
             Cache::forever('pins_bounds_keys', $allBoundsKeys);
         }
@@ -195,15 +225,15 @@ class PinController extends Controller
      *
      * This method ensures that only the owner of the pin can delete it.
      *
-     * @param int $id The ID of the pin to delete.
+     * @param  int  $id  The ID of the pin to delete.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function destroy($id)
     {
         $pin = Pin::findOrFail($id);
 
-        //if user is admin, allow deletion of any pin
-        if ($pin->user_id !== auth()->id() && !auth()->user()->is_admin) {
+        // if user is admin, allow deletion of any pin
+        if ($pin->user_id !== auth()->id() && ! auth()->user()->is_admin) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -217,18 +247,120 @@ class PinController extends Controller
      *
      * This method loads the associated user and returns the pin details view.
      *
-     * @param \App\Models\Pin $pin The pin to display.
+     * @param  \App\Models\Pin  $pin  The pin to display.
      * @return \Illuminate\View\View The view displaying the pin details.
      */
     public function show(Pin $pin)
     {
         $pin->load('user');
+
         return view('pins.show', compact('pin'));
     }
 
-    public function update(Pin $pin,Request $request)
+    public function pinsByUser(User $user, Request $request)
+    {
+        $cacheKey = "user_pins_{$user->id}";
+
+        $userPins = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
+            return $user->pins()->get();
+        });
+
+        return response()->json([
+            'pins' => $userPins,
+            'user_name' => $user->name,
+            'total_pins' => $userPins->count(),
+        ]);
+    }
+
+    public function update(Pin $pin, Request $request)
     {
         $pin->update($request->all());
+
         return response()->json(['message' => 'Pin updated successfully']);
     }
+    public function pinsByArea(Request $request)
+    {
+        $days = (int) $request->input('days', 7);
+
+        $cacheKey = "pins_by_area_{$days}";
+        $cacheDuration = now()->addHour(); // 1 hour
+
+        return Cache::remember($cacheKey, $cacheDuration, function () use ($days) {
+            $startDate = Carbon::now()->subDays($days - 1)->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+
+            $pins = Pin::with('user')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get()
+                ->groupBy(fn ($pin) => $pin->created_at->format('Y-m-d'))
+                ->map(
+                    fn ($pinsOnDay) => $pinsOnDay
+                    ->filter(fn ($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)))
+                    ->groupBy(fn ($pin) => (int)$pin->user->area)
+                    ->map->count()
+                );
+
+            $labels = [];
+            $areas = [];
+
+            foreach (range(1, 6) as $areaId) {
+                $areas[$areaId] = array_fill(0, $days, 0);
+            }
+
+            foreach (range(0, $days - 1) as $i) {
+                $date = Carbon::now()->subDays($days - 1 - $i)->format('Y-m-d');
+                $labels[] = $date;
+
+                if (isset($pins[$date])) {
+                    foreach ($pins[$date] as $areaId => $count) {
+                        $areaId = (int) $areaId;
+                        if (isset($areas[$areaId])) {
+                            $areas[$areaId][$i] = $count;
+                        }
+                    }
+                }
+            }
+
+            return [
+                'labels' => $labels,
+                'areas' => $areas,
+            ];
+        });
+    }
+
+    public function pinsDistributionByArea(Request $request)
+    {
+        $days = $request->query('days');
+        $cacheKey = 'pins_distribution_by_area_' . ($days ?? 'all');
+
+        $areaCounts = Cache::remember($cacheKey, 3600, function () use ($days) {
+            $query = Pin::with('user');
+
+            if (in_array($days, [7, 15, 30])) {
+                $fromDate = Carbon::now()->subDays($days);
+                $query->where('created_at', '>=', $fromDate);
+            }
+
+            $pins = $query->get()
+                ->filter(fn ($pin) => isset($pin->user->area) && in_array($pin->user->area, range(1, 6)));
+
+            $areaCountsRaw = $pins->groupBy(fn ($pin) => (int) $pin->user->area)
+                ->map(fn ($pins) => $pins->count());
+
+            $areaCounts = [];
+            foreach (range(1, 6) as $areaId) {
+                $areaCounts[$areaId] = $areaCountsRaw->get($areaId, 0);
+            }
+
+            return $areaCounts;
+        });
+
+        return response()->json([
+            'area_counts' => $areaCounts,
+        ]);
+    }
+
+
+
+
 }

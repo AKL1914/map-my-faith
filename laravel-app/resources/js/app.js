@@ -21,6 +21,10 @@ import EventParticipants from "./components/admin/EventParticipants.vue";
 import EventPins from "./components/admin/EventPins.vue";
 import GamePinManager from "./components/admin/GamePinManager.vue";
 import ProfileViewer from "./components/ProfileViewer.vue";
+import UserPinsViewer from "./components/UserPinsViewer.vue";
+import ChartPie from "./components/admin/ChartPie.vue";
+import ChartArea from "./components/admin/PinsByAreaChart.vue";
+import SettingManager from "./components/admin/SettingManager.vue";
 
 // Vue Toastification
 import Toast, { POSITION, useToast } from 'vue-toastification';
@@ -46,6 +50,10 @@ app.component('admin-event-manager', EventManager);
 app.component('admin-event-participants', EventParticipants);
 app.component('admin-event-pins', EventPins);
 app.component('admin-game-pin-manager', GamePinManager);
+app.component('user-pins-viewer', UserPinsViewer);
+app.component('admin-chart-pie', ChartPie);
+app.component('admin-chart-area', ChartArea);
+app.component('admin-setting-manager', SettingManager);
 
 // 🔔 Push subscription logic
 const subscribeUserIfNeeded = async () => {

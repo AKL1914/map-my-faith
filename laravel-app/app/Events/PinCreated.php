@@ -8,14 +8,14 @@ use Illuminate\Queue\SerializesModels;
 
 class PinCreated
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public $pin;
 
     /**
      * Create a new event instance.
      *
-     * @param  \App\Models\Pin  $pin
      * @return void
      */
     public function __construct(Pin $pin)

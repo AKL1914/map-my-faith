@@ -125,6 +125,7 @@ return [
     'admin_email' => 'admin@map-share-me.co.nz',
     'admin_name' => 'Admin',
     'game_pin_distance' => 10,
+    'los_email' => env('LOS_EMAIL', 'villamornatonio@gmail.com'),
 
     'area_groups' => [
         '1' => [
@@ -158,6 +159,6 @@ return [
             '3',
         ],
 
-    ]
+    ],
 
 ];

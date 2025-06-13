@@ -1,9 +1,11 @@
 <template>
-    <div class="container my-4">
-        <h2 class="mb-3">Pin Manager</h2>
-
-        <!-- Search Input -->
-        <div class="card mb-4">
+    <div>
+        <h1 class="h3 mb-4 text-gray-800">Pins</h1>
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Filters
+                </h6>
+            </div>
             <div class="card-body">
                 <div class="input-group mb-3">
                     <input
@@ -41,16 +43,14 @@
                 </div>
             </div>
         </div>
-
-        <!-- Pins Table -->
-        <div class="card">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Pins
+                </h6>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Pins</h5>
-
                 <div v-if="isLoading" class="text-center my-3">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
+
                 </div>
 
                 <div v-else-if="error" class="alert alert-danger">
@@ -81,7 +81,7 @@
                                 <td class="d-block d-md-table-cell"><strong>Notes:</strong> {{ pin.notes || '-' }}</td>
                                 <td class="d-block d-md-table-cell">
                                     <strong>Status:</strong>
-                                    <span class="badge" :class="pin.is_accepted ? 'bg-success' : 'bg-secondary'">
+                                    <span class="badge text-white" :class="pin.is_accepted ? 'bg-success' : 'bg-secondary'">
                       {{ pin.is_accepted ? 'Accepted' : 'Pending' }}
                     </span>
                                 </td>
@@ -203,10 +203,8 @@ export default {
                     to_date: this.toDate
                 };
                 const response = await axios.get('/api/pins', { params });
-                console.log('API Response:', response.data); // For debugging
                 this.pins = response.data;
             } catch (error) {
-                console.error('Error fetching pins:', error);
                 this.error = 'Failed to load pins. Please try again.';
             } finally {
                 this.isLoading = false;
@@ -230,7 +228,6 @@ export default {
                 });
                 this.fetchPins(this.pins.current_page);
             } catch (error) {
-                console.error('Error updating pin:', error);
                 this.error = 'Failed to update pin. Please try again.';
             } finally {
                 this.isLoading = false;
@@ -244,7 +241,6 @@ export default {
                     await axios.delete(`/api/pin/${id}`);
                     this.fetchPins(this.pins.current_page);
                 } catch (error) {
-                    console.error('Error deleting pin:', error);
                     this.error = 'Failed to delete pin. Please try again.';
                 } finally {
                     this.isLoading = false;

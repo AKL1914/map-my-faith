@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Campaign;
+use Illuminate\Database\Seeder;
 
 class CampaignSeeder extends Seeder
 {
@@ -13,6 +12,6 @@ class CampaignSeeder extends Seeder
      */
     public function run(): void
     {
-        Campaign::create(['name' => 'AUCKLAND PROPAGATION' , 'description' => 'Auckland Propagation' , 'is_active' => true]);
+        Campaign::create(['name' => 'AUCKLAND PROPAGATION', 'description' => 'Auckland Propagation', 'is_active' => true]);
     }
 }

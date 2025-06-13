@@ -1,6 +1,9 @@
 <template>
-    <div class="container mt-4">
-        <div class="map-container">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center text-center">
+            <h6 class="m-0 font-weight-bold text-primary text-center">{{ campaignName }}</h6>
+        </div>
+        <div class="card-body map-container">
             <div id="map" class="map mb-3"></div>
 
             <div class="button-group d-flex gap-3 mb-4">
@@ -35,45 +38,52 @@ let lastSubmitTime = 0;
 let pinLayerGroup = null;
 let gamePinLayerGroup = null;
 const loading = ref(false);
+const campaignName = ref(window.campaign?.name || 'Map Manager');
+
 
 const currentUserId = window.authUser?.id || null;
+
+// Smaller icons for pins (from 25x41 to 15x25)
+const smallIconSize = [15, 25];
+const smallIconAnchor = [7, 25];
+const smallPopupAnchor = [1, -20];
+const smallShadowSize = [25, 25];
 
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: smallIconSize,
+    iconAnchor: smallIconAnchor,
+    popupAnchor: smallPopupAnchor,
+    shadowSize: smallShadowSize
 });
 
 const greenIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: smallIconSize,
+    iconAnchor: smallIconAnchor,
+    popupAnchor: smallPopupAnchor,
+    shadowSize: smallShadowSize
 });
 
 const blueIcon = new L.Icon({
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: smallIconSize,
+    iconAnchor: smallIconAnchor,
+    popupAnchor: smallPopupAnchor,
+    shadowSize: smallShadowSize
 });
 
 const orangeIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: smallIconSize,
+    iconAnchor: smallIconAnchor,
+    popupAnchor: smallPopupAnchor,
+    shadowSize: smallShadowSize
 });
-
 
 const treasureChestIcon = new L.Icon({
     iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854866.png', // treasure chest image
@@ -159,7 +169,7 @@ async function fetchGamePins() {
                     }
 
                     navigator.geolocation.getCurrentPosition(async (position) => {
-                        const { latitude, longitude } = position.coords;
+                        const {latitude, longitude} = position.coords;
 
                         try {
                             await axios.post(`/api/game-pins/${game.id}/participate`, {
@@ -235,8 +245,8 @@ onMounted(() => {
         } else {
             currentPinMarker = L.marker([lat, lng], {icon: blueIcon}).addTo(map);
         }
-
-        currentPinMarker.bindPopup('New location').openPopup();
+        //disable the popup for now
+        // currentPinMarker.bindPopup('New').openPopup();
     });
 });
 
@@ -330,39 +340,30 @@ async function deletePin(pinId) {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.75rem;
-    width: 100%;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    text-decoration: none;
-    transition: background-color 0.3s ease;
 }
 
-.google-btn:hover {
-    background-color: #357ae8;
-}
-
-.google-btn i {
+.google-btn-pin i {
+    margin-right: 0.75rem;
     font-size: 1.5rem;
 }
 
+.google-btn-pin:disabled {
+    background-color: #99b3f9;
+    cursor: not-allowed;
+}
+
 .notes-textarea {
-    width: 100%;
-    font-size: 16px;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+    //font-size: 1.125rem;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 2px solid #eee;
     resize: vertical;
+    width: 100%;
 }
 
-.delete-btn {
-    margin-top: 8px;
-    font-size: 14px;
+.map-container{
+    padding: 0.25rem !important;
 }
 
-.participate-btn {
-    font-size: 14px;
-    padding: 5px 10px;
-    border-radius: 6px;
-}
+
 </style>

@@ -19,7 +19,7 @@ class UpdatePinCache
      * for the pins associated with the campaign of the created pin and updates the cache
      * with the latest pins for the campaign.
      *
-     * @param  \App\Events\PinCreated  $event The event instance containing the created pin.
+     * @param  \App\Events\PinCreated  $event  The event instance containing the created pin.
      * @return void
      */
     public function handle(PinCreated $event)
@@ -27,7 +27,7 @@ class UpdatePinCache
         $pin = $event->pin; // The pin instance from the event.
 
         // Define a cache key for the pins of the campaign.
-        $cacheKey = 'pins_for_campaign_' . $pin->campaign_id;
+        $cacheKey = 'pins_for_campaign_'.$pin->campaign_id;
 
         // Invalidate the cache for the campaign's pins if it exists.
         Cache::forget($cacheKey);

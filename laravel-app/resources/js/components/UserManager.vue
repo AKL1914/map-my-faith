@@ -1,18 +1,27 @@
 <template>
-    <div class="container my-4">
-        <!-- Toast notification -->
-        <Toast />
-        <h2 class="mb-3">User Manager</h2>
+    <div>
+        <h1 class="h3 mb-4 text-gray-800">Users</h1>
 
-        <div class="card">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Users</h5>
-
-                <!-- Actions & Search -->
                 <div class="row gy-2 gx-3 align-items-center mb-3">
                     <div class="col-12 col-md-auto d-flex flex-wrap gap-2">
-                        <button class="btn btn-success" @click="activateAll">Activate All</button>
-                        <button class="btn btn-danger" @click="deactivateAll">Deactivate All</button>
+                        <button class="btn btn-success btn-sm" @click="activateAll" title="Activate all users">
+                            <i class="bi bi-check-circle"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" @click="deactivateAll" title="Deactivate all users">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+
+                    <div class="col-md-2">
+                        <select v-model="selectedArea" class="form-control">
+                            <option value="">All</option>
+                            <option v-for="area in [1, 2, 3, 4, 5, 6]" :key="area" :value="area">{{ area }}</option>
+                        </select>
                     </div>
 
                     <div class="col-12 col-md">
@@ -27,8 +36,14 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Responsive Table -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Users</h6>
+            </div>
+            <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-striped align-middle">
                         <thead class="table-light">
@@ -36,94 +51,86 @@
                             <th>ID</th>
                             <th>Name</th>
                             <th>Email</th>
+                            <th>Pins</th>
                             <th>Admin</th>
                             <th>Activated</th>
                             <th>Area</th>
                             <th>Group</th>
-                            <th style="min-width: 260px;">Actions</th>
+                            <th>CFO</th>
+                            <th style="min-width: 200px;">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr v-for="user in users" :key="user.id">
                             <td>{{ user.id }}</td>
-                            <td>{{ user.name }}</td>
+                            <td>
+                                <input type="text" v-model="user.name" class="form-control form-control-sm w-100" style="min-width: 200px;" placeholder="Name" />
+                            </td>
                             <td>{{ user.email }}</td>
+                            <td class="text-center text-info">{{ user.pins_count }}</td>
                             <td>
-                  <span class="badge" :class="user.is_admin ? 'bg-success' : 'bg-secondary'">
-                    {{ user.is_admin ? 'Yes' : 'No' }}
-                  </span>
+                                <span class="badge text-white" :class="user.is_admin ? 'bg-success' : 'bg-secondary'">
+                                    {{ user.is_admin ? 'Yes' : 'No' }}
+                                </span>
                             </td>
                             <td>
-                  <span class="badge" :class="user.is_activated ? 'bg-success' : 'bg-secondary'">
-                    {{ user.is_activated ? 'Yes' : 'No' }}
-                  </span>
+                                <span class="badge text-white" :class="user.is_activated ? 'bg-success' : 'bg-secondary'">
+                                    {{ user.is_activated ? 'Yes' : 'No' }}
+                                </span>
                             </td>
                             <td>
-                                <input
-                                    type="text"
-                                    v-model="user.area"
-                                    class="form-control form-control-sm"
-                                    placeholder="Area"
-                                />
+                                <input type="text" v-model="user.area" class="form-control form-control-sm" placeholder="Area" />
                             </td>
                             <td>
-                                <input
-                                    type="text"
-                                    v-model="user.group"
-                                    class="form-control form-control-sm"
-                                    placeholder="Group"
-                                />
+                                <input type="text" v-model="user.group" class="form-control form-control-sm" placeholder="Group" />
+                            </td>
+                            <td>
+                                <select v-model="user.cfo" class="custom-select custom-select-sm" style="min-width: 120px;">
+                                    <option value="" disabled>Select CFO</option>
+                                    <option value="BUKLOD">BUKLOD</option>
+                                    <option value="KADIWA">KADIWA</option>
+                                    <option value="BINHI">BINHI</option>
+                                </select>
                             </td>
                             <td>
                                 <div class="d-flex flex-wrap gap-1 align-items-center">
-                                    <button
-                                        class="btn btn-sm"
-                                        :class="user.is_admin ? 'btn-secondary' : 'btn-warning'"
-                                        @click="toggleAdmin(user)"
-                                    >
-                                        {{ user.is_admin ? 'Revoke Admin' : 'Make Admin' }}
+                                    <button class="btn btn-sm" :class="user.is_admin ? 'btn-secondary' : 'btn-warning'" @click="toggleAdmin(user)" :title="user.is_admin ? 'Revoke admin access' : 'Grant admin access'">
+                                        <i :class="user.is_admin ? 'bi bi-person-x' : 'bi bi-person-check'"></i>
                                     </button>
-                                    <button
-                                        class="btn btn-sm"
-                                        :class="user.is_activated ? 'btn-danger' : 'btn-success'"
-                                        @click="toggleActivation(user)"
-                                    >
-                                        {{ user.is_activated ? 'Deactivate' : 'Activate' }}
+                                    <button class="btn btn-sm" :class="user.is_activated ? 'btn-danger' : 'btn-success'" @click="toggleActivation(user)" :title="user.is_activated ? 'Deactivate user' : 'Activate user'">
+                                        <i :class="user.is_activated ? 'bi bi-toggle-off' : 'bi bi-toggle-on'"></i>
                                     </button>
-                                    <button
-                                        class="btn btn-primary btn-sm"
-                                        @click="updateAreaGroup(user)"
-                                    >
-                                        Save Area/Group
+                                    <button class="btn btn-primary btn-sm" @click="updateUser(user)" title="Save changes">
+                                        <i class="bi bi-save"></i>
                                     </button>
+                                    <a :href="`/user/${user.id}/pins`" class="btn btn-info btn-sm" title="View pins" target="_blank">
+                                        <i class="bi bi-map"></i>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
                         <tr v-if="users.length === 0">
-                            <td colspan="8" class="text-center">No users found.</td>
+                            <td colspan="9" class="text-center">No users found.</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Pagination & Per Page -->
                 <div class="row align-items-center mt-3 gy-2">
                     <div class="col">
                         <nav aria-label="Page navigation">
                             <ul class="pagination justify-content-center">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                    <button class="page-link" @click="prevPage">Previous</button>
+                                    <button class="page-link" @click="prevPage">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </button>
                                 </li>
-                                <li
-                                    class="page-item"
-                                    v-for="page in totalPages"
-                                    :key="page"
-                                    :class="{ active: currentPage === page }"
-                                >
+                                <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }">
                                     <button class="page-link" @click="goToPage(page)">{{ page }}</button>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <button class="page-link" @click="nextPage">Next</button>
+                                    <button class="page-link" @click="nextPage">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </button>
                                 </li>
                             </ul>
                         </nav>
@@ -135,10 +142,11 @@
 </template>
 
 <script>
-import { useToast, POSITION } from 'vue-toastification'; // Import Toast and POSITION
-import 'vue-toastification/dist/index.css'; // Import Toast CSS
-// Initialize toast
-const toast = useToast()
+import { useToast, POSITION } from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
+
+const toast = useToast();
+
 export default {
     name: 'UserManager',
     data() {
@@ -148,10 +156,18 @@ export default {
             currentPage: 1,
             perPage: 10,
             totalPages: 1,
+            areaFilter: 'all',
+            selectedArea: '',
         };
     },
+    watch: {
+        selectedArea(val) {
+            this.areaFilter = val || 'all';
+            this.currentPage = 1;
+            this.fetchUsers();
+        }
+    },
     created() {
-        // Create debounced version of fetchUsers (make sure you have a debounce function globally or import one)
         this.debouncedFetchUsers = window.debounce(this.fetchUsers, 300);
     },
     mounted() {
@@ -163,6 +179,7 @@ export default {
                 page: this.currentPage,
                 per_page: this.perPage,
                 search: this.searchQuery || undefined,
+                area: this.areaFilter !== 'all' ? this.areaFilter : undefined,
             };
             axios
                 .get('/api/users', { params })
@@ -171,43 +188,40 @@ export default {
                     this.currentPage = response.data.current_page;
                     this.perPage = response.data.per_page;
                     this.totalPages = response.data.last_page;
-
-                    // Ensure area and group have values (in case API returns null)
                     this.users.forEach((user) => {
-                        if (!user.area) user.area = '';
-                        if (!user.group) user.group = '';
+                        user.area = user.area || '';
+                        user.group = user.group || '';
+                        user.name = user.name || '';
                     });
                 })
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
-                        position: POSITION.TOP_CENTER, // Center the toast at the top
-                        timeout: 5000
+                    toast.error(error.response?.data?.message || 'Failed to fetch users.', {
+                        position: POSITION.TOP_CENTER,
+                        timeout: 5000,
                     });
                     this.users = [];
                     this.totalPages = 1;
                 });
         },
         toggleAdmin(user) {
-            const newStatus = !user.is_admin;
             axios
-                .put(`/api/users/${user.id}/admin`, { is_admin: newStatus })
+                .put(`/api/users/${user.id}/admin`, { is_admin: !user.is_admin })
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
-                        position: POSITION.TOP_CENTER, // Center the toast at the top
-                        timeout: 5000
+                    toast.error(error.response?.data?.message || 'Failed to update admin status.', {
+                        position: POSITION.TOP_CENTER,
+                        timeout: 5000,
                     });
                 });
         },
         toggleActivation(user) {
-            const newStatus = !user.is_activated;
             axios
-                .put(`/api/users/${user.id}/activation`, { is_activated: newStatus })
+                .put(`/api/users/${user.id}/activation`, { is_activated: !user.is_activated })
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
-                        position: POSITION.TOP_CENTER, // Center the toast at the top
-                        timeout: 5000
+                    toast.error(error.response?.data?.message || 'Failed to update activation status.', {
+                        position: POSITION.TOP_CENTER,
+                        timeout: 5000,
                     });
                 });
         },
@@ -216,9 +230,9 @@ export default {
                 .post('/api/users/activate-all')
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
-                        position: POSITION.TOP_CENTER, // Center the toast at the top
-                        timeout: 5000
+                    toast.error(error.response?.data?.message || 'Failed to activate all users.', {
+                        position: POSITION.TOP_CENTER,
+                        timeout: 5000,
                     });
                 });
         },
@@ -227,30 +241,31 @@ export default {
                 .post('/api/users/deactivate-all')
                 .then(() => this.fetchUsers())
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
-                        position: POSITION.TOP_CENTER, // Center the toast at the top
-                        timeout: 5000
+                    toast.error(error.response?.data?.message || 'Failed to deactivate all users.', {
+                        position: POSITION.TOP_CENTER,
+                        timeout: 5000,
                     });
                 });
         },
-        updateAreaGroup(user) {
+        updateUser(user) {
             axios
-                .put(`/api/users/${user.id}/area-group`, {
+                .put(`/api/users/${user.id}`, {
+                    name: user.name,
                     area: user.area,
                     group: user.group,
+                    cfo: user.cfo,
                 })
                 .then(() => {
-                    toast.success('User area and group updated.', {
-                        position: POSITION.TOP_CENTER, // Center the toast at the top
-                        timeout: 5000
+                    toast.success('User info updated.', {
+                        position: POSITION.TOP_CENTER,
+                        timeout: 5000,
                     });
-                    // alert('User area and group updated.');
                     this.fetchUsers();
                 })
                 .catch((error) => {
-                    toast.error(error.response.data.message, {
-                        position: POSITION.TOP_CENTER, // Center the toast at the top
-                        timeout: 5000
+                    toast.error(error.response?.data?.message || 'Failed to update user.', {
+                        position: POSITION.TOP_CENTER,
+                        timeout: 5000,
                     });
                 });
         },
@@ -275,3 +290,18 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+table input.form-control-sm {
+    min-width: 100px;
+}
+.btn i {
+    pointer-events: none;
+    vertical-align: middle;
+}
+</style>

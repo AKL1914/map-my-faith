@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Jobs\SendUserActivatedEmail;
+use App\Models\Pin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -23,31 +24,31 @@ class UserController extends Controller
      * This method fetches users from the database with optional search functionality
      * and caches the results for 10 minutes.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing pagination and search parameters.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing pagination and search parameters.
      * @return \Illuminate\Http\JsonResponse A JSON response containing the paginated list of users.
      */
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', 10); // Default to 10 items per page
-        $page = $request->input('page', 1); // Default to page 1
         $search = $request->input('search');
+        $area = $request->input('area');
 
-        // Generate a unique cache key based on page, per_page, and search
-        $cacheKey = "users_paginated_page_{$page}_perpage_{$perPage}_search_" . md5($search ?? '');
+        $query = User::select('id', 'name', 'email', 'is_admin', 'is_activated', 'area', 'group', 'cfo')
+            ->withCount('pins') // 👈 adds pins_count field
+            ->orderByDesc('created_at');
 
-        // Cache the results for 10 minutes
-        $users = Cache::tags('users_paginated')->remember($cacheKey, now()->addMinutes(10), function () use ($perPage, $search) {
-            $query = User::select('id', 'name', 'email', 'is_admin', 'is_activated', 'area', 'group');
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
 
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
-            }
+        if ($area && $area !== 'all') {
+            $query->where('area', $area);
+        }
 
-            return $query->paginate($perPage);
-        });
+        $users = $query->paginate($perPage);
 
         return response()->json($users);
     }
@@ -69,15 +70,15 @@ class UserController extends Controller
      *
      * This method updates the `is_admin` attribute of the specified user and clears the cache.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing the new admin status.
-     * @param \App\Models\User $user The user whose admin status is to be updated.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing the new admin status.
+     * @param  \App\Models\User  $user  The user whose admin status is to be updated.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function updateAdminStatus(Request $request, User $user)
     {
         $user->is_admin = $request->boolean('is_admin');
         $user->save();
-        Cache::tags('users_paginated')->flush();
+
         return response()->json(['message' => 'Admin status updated.']);
     }
 
@@ -86,8 +87,8 @@ class UserController extends Controller
      *
      * This method updates the `is_activated` attribute of the specified user and clears the cache.
      *
-     * @param \Illuminate\Http\Request $request The HTTP request containing the new activation status.
-     * @param \App\Models\User $user The user whose activation status is to be updated.
+     * @param  \Illuminate\Http\Request  $request  The HTTP request containing the new activation status.
+     * @param  \App\Models\User  $user  The user whose activation status is to be updated.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function updateActivationStatus(Request $request, User $user)
@@ -98,8 +99,6 @@ class UserController extends Controller
         if ($user->is_activated) { // Only send email if activated
             SendUserActivatedEmail::dispatch($user);
         }
-
-        Cache::tags('users_paginated')->flush();
 
         return response()->json(['message' => 'Activation status updated.']);
     }
@@ -128,8 +127,6 @@ class UserController extends Controller
             SendUserActivatedEmail::dispatch($user);
         }
 
-        Cache::tags('users_paginated')->flush();
-
         return response()->json(['message' => 'All users activated and notified.']);
     }
 
@@ -144,7 +141,7 @@ class UserController extends Controller
     public function deactivateAll()
     {
         User::query()->where('is_admin', false)->update(['is_activated' => false]);
-        Cache::tags('users_paginated')->flush();
+
         return response()->json(['message' => 'All users deactivated.']);
     }
 
@@ -154,8 +151,8 @@ class UserController extends Controller
      * This method updates the `area` and `group` attributes of the specified user
      * and clears the cache.
      *
-     * @param \App\Http\Requests\UpdateProfileRequest $request The HTTP request containing the new area and group data.
-     * @param \App\Models\User $user The user whose area and group are to be updated.
+     * @param  \App\Http\Requests\UpdateProfileRequest  $request  The HTTP request containing the new area and group data.
+     * @param  \App\Models\User  $user  The user whose area and group are to be updated.
      * @return \Illuminate\Http\JsonResponse A JSON response indicating the result of the operation.
      */
     public function updateAreaGroup(UpdateProfileRequest $request, User $user)
@@ -164,8 +161,53 @@ class UserController extends Controller
         $user->group = $request->input('group');
         $user->save();
 
-        Cache::tags('users_paginated')->flush();
-
         return response()->json(['message' => 'User area and group updated.']);
+    }
+
+    public function update(UpdateProfileRequest $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update($request->validated());
+
+        return response()->json([
+            'message' => 'User updated successfully.',
+            'user' => $user,
+        ]);
+    }
+
+    public function userParticipationByArea(Request $request)
+    {
+        $cacheKey = 'user_participation_by_area';
+
+        // Try to get from cache, if not present compute and store for 1 hour
+        $participation = Cache::remember($cacheKey, now()->addHour(), function () {
+            $areas = range(1, 6);
+
+            return collect($areas)->map(function ($areaId) {
+                $usersInArea = User::where('area', $areaId)->pluck('id');
+
+                // Count users with pins
+                $withPins = Pin::whereIn('user_id', $usersInArea)
+                    ->distinct('user_id')
+                    ->count('user_id');
+
+                // Total users in the area
+                $totalUsers = $usersInArea->count();
+
+                // Users with no pins = total - with pins
+                $noPins = max(0, $totalUsers - $withPins); // safety check
+
+                return [
+                    'area' => $areaId,
+                    'with_pins' => $withPins,
+                    'no_pins' => $noPins,
+                ];
+            });
+        });
+
+        return response()->json([
+            'participation' => $participation,
+        ]);
     }
 }
