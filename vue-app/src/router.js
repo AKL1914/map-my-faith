@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import PublicLayout from './layouts/PublicLayout.vue';
+import AuthLayout from './layouts/AuthLayout.vue';
 import HomePage from './pages/HomePage.vue';
 import LoginPage from './pages/LoginPage.vue';
 import ActivatePage from './pages/ActivatePage.vue';
@@ -16,16 +18,27 @@ function isActivated() {
     }
 }
 
+
 const routes = [
-    { path: '/', component: HomePage },
-    { path: '/login-success', component: LoginPage },
-    { path: '/activate', component: ActivatePage },
+    {
+        path: '/',
+        component: PublicLayout,
+        children: [
+            { path: '', component: HomePage },
+            { path: 'login-success', component: LoginPage },
+            { path: 'activate', component: ActivatePage },
+        ]
+    },
     {
         path: '/maps',
-        component: MapManager,
+        component: AuthLayout,
         meta: { requiresAuth: true },
-    },
+        children: [
+            { path: '', component: MapManager }
+        ]
+    }
 ];
+
 
 const router = createRouter({
     history: createWebHistory(),
