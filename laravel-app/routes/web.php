@@ -22,6 +22,7 @@ Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('
 Route::get('/auth/callback/google', [LoginController::class, 'handleGoogleCallback']);
 Route::get('/login/google', [\App\Http\Controllers\Api\V1\AuthController::class, 'redirectToGoogle']);
 Route::get('/login/google/callback', [\App\Http\Controllers\Api\V1\AuthController::class, 'handleGoogleCallback']);
+Route::get('/foyer', [DashboardController::class, 'foyer']);
 Route::post('/logout', function () {
     Auth::logout();
 

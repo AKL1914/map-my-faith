@@ -1,7 +1,13 @@
 <template>
     <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center text-center">
-            <h6 class="m-0 font-weight-bold text-primary text-center">{{ campaignName }}</h6>
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">{{ campaignName }}</h6>
+            <button
+                @click="refreshPage"
+                class="btn btn-sm btn-secondary"
+                title="Refresh Page">
+                <i class="bi bi-arrow-clockwise"></i>Refresh
+            </button>
         </div>
         <div class="card-body map-container">
             <div id="map" class="map mb-3"></div>
@@ -10,7 +16,7 @@
                 <button
                     :disabled="loading"
                     @click="pinMyLocation('accepted')"
-                    class="btn google-btn-pin">
+                    class="btn btn-google google-btn-pin">
                     <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     <span v-else><i class="bi bi-geo-alt-fill"></i> Pin Location</span>
                 </button>
@@ -298,6 +304,10 @@ async function deletePin(pinId) {
         await fetchPinsWithinBounds();
     }
 }
+
+function refreshPage() {
+    window.location.reload();
+}
 </script>
 
 <style scoped>
@@ -320,7 +330,7 @@ async function deletePin(pinId) {
     justify-content: space-between;
 }
 
-.btn {
+.btn-google {
     padding: 15px;
     font-size: 18px;
     font-weight: bold;
