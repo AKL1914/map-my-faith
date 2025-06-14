@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendAccessRequestNotificationToAdmins;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
 /**
@@ -15,45 +17,46 @@ use Laravel\Socialite\Facades\Socialite;
  */
 class AuthController extends Controller
 {
-    /**
-     * Redirect to Google's OAuth page.
-     *
-     * This method generates a URL for Google's OAuth page and returns it
-     * as a JSON response.
-     *
-     * @return \Illuminate\Http\JsonResponse A JSON response containing the Google OAuth URL.
-     */
     public function redirectToGoogle()
     {
-        return response()->json([
-            'url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl(),
-        ]);
+        return Socialite::driver('google')
+            ->stateless()
+            ->redirectUrl('http://localhost:8080/login/google/callback') // 👈 or any custom URI
+            ->redirect();
     }
 
-    /**
-     * Handle the callback from Google OAuth.
-     *
-     * This method retrieves the authenticated user's information from Google,
-     * creates or updates the user in the database, and generates an API token.
-     *
-     * @return \Illuminate\Http\JsonResponse A JSON response containing the API token and user information.
-     */
     public function handleGoogleCallback()
     {
-        $googleUser = Socialite::driver('google')->stateless()->user();
+        $spaUrl = 'http://localhost:5174'; // URL of your SPA
+        $appUrl = 'http://localhost:8080'; // URL of your Laravel app
+        $googleUser = Socialite::driver('google')->stateless()
+            ->redirectUrl($appUrl . '/login/google/callback')->user();
 
-        $user = User::updateOrCreate(
-            ['email' => $googleUser->getEmail()],
-            [
+        $query = '';
+        if (User::where('email', $googleUser->getEmail())->exists()) {
+            if(User::where('email', $googleUser->getEmail())->first()->is_activated) {
+                $user = User::where('email', $googleUser->getEmail())->first();
+                $token = $user->createToken('spa')->plainTextToken;
+
+                $query = http_build_query([
+                    'token' => $token,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_activated' => $user->is_activated ? 'true' : 'false',
+                ]);
+            }
+
+        } else {
+            // Create a new user if it doesn't exist
+            $user = User::create([
                 'name' => $googleUser->getName(),
-            ]
-        );
+                'email' => $googleUser->getEmail(),
+                'is_activated' => false,
+            ]);
+            // Dispatch a job to notify admins about the new user requesting access
+//            SendAccessRequestNotificationToAdmins::dispatch($user);
+        }
 
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'token' => $token,
-            'user' => $user,
-        ]);
+        return redirect()->away("{$spaUrl}/login-success?{$query}");
     }
 }

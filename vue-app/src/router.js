@@ -3,15 +3,22 @@ import HomePage from './pages/HomePage.vue';
 import LoginPage from './pages/LoginPage.vue';
 import ActivatePage from './pages/ActivatePage.vue';
 import MapManager from './components/MapManager.vue';
-
-// Simulated auth check
 function isAuthenticated() {
-    return localStorage.getItem('user') !== null;
+    return localStorage.getItem('token') !== null;
+}
+
+function isActivated() {
+    try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        return user?.is_activated === 'true' || user?.is_activated === true;
+    } catch {
+        return false;
+    }
 }
 
 const routes = [
     { path: '/', component: HomePage },
-    { path: '/login', component: LoginPage },
+    { path: '/login-success', component: LoginPage },
     { path: '/activate', component: ActivatePage },
     {
         path: '/maps',
@@ -25,13 +32,16 @@ const router = createRouter({
     routes,
 });
 
-// Global route guard
-router.beforeEach((to, from, next) => {
-    if (to.meta.requiresAuth && !isAuthenticated()) {
-        next('/login');
-    } else {
+    router.beforeEach((to, from, next) => {
+        if (to.meta.requiresAuth && !isAuthenticated()) {
+            return next('/login-success');
+        }
+
+        if (to.meta.requiresActivation && !isActivated()) {
+            return next('/activate');
+        }
+
         next();
-    }
-});
+    });
 
 export default router;

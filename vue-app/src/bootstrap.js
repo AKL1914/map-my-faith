@@ -7,26 +7,22 @@ window.debounce = debounce;
 window.axios = axios;
 window.L = L;
 
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-
-// Add CSRF token from <meta> tag
-const token = document.querySelector('meta[name="csrf-token"]');
+// Set Authorization header if token exists in localStorage
+const token = localStorage.getItem('token');
 if (token) {
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
-} else {
-    console.error('CSRF token not found: Please make sure <meta name="csrf-token"> is in your HTML head.');
+    window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 }
 
-// Axios interceptor to catch CSRF/session errors
+// Optional: Axios interceptor to handle 401 unauthorized errors globally
 axios.interceptors.response.use(
     response => response,
     error => {
         const { response } = error;
 
-        if (response && response.status === 419) {
-            // CSRF token mismatch or session expired
-            window.location.href = '/';
-        }
+        // if (response && response.status === 401) {
+        //     // Token expired or invalid - redirect to login or activation page
+        //     window.location.href = '/activate';
+        // }
 
         return Promise.reject(error);
     }

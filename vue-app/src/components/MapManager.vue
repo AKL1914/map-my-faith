@@ -88,7 +88,7 @@ async function fetchPinsWithinBounds() {
     if (!map) return;
 
     const bounds = map.getBounds();
-    const {data} = await axios.get('/api/pins/bounds', {
+    const {data} = await axios.get('/api/v1/pins/bounds', {
         params: {
             north: bounds.getNorth(),
             south: bounds.getSouth(),

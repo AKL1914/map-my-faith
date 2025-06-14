@@ -28,14 +28,14 @@
 </template>
 
 <script setup>
-import Navigation from '@/components/Navigation.vue'
-import Footer from '@/components/Footer.vue'
-import { computed } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+// import Navigation from '@/components/Navigation.vue'
+// import Footer from '@/components/Footer.vue'
+// import { computed } from 'vue'
+// import { useAuthStore } from '@/stores/auth'
 
-const authStore = useAuthStore()
-const isLoggedIn = computed(() => authStore.user !== null)
-const googleLoginUrl = '/login/google'
+// const authStore = useAuthStore()
+// const isLoggedIn = computed(() => authStore.user !== null)
+const googleLoginUrl = 'http://localhost:8080/login/google'
 </script>
 
 <style scoped>
