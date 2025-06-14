@@ -2,6 +2,12 @@
 
 @section('head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        // Refresh the page every 5 minutes (300,000 milliseconds)
+        setTimeout(() => {
+            window.location.reload();
+        }, 300000); // 5 minutes
+    </script>
 @endsection
 
 @section('content')
