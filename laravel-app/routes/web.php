@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('login.google');
 Route::get('/auth/callback/google', [LoginController::class, 'handleGoogleCallback']);
+Route::get('/foyer', [DashboardController::class, 'foyer']);
 Route::post('/logout', function () {
     Auth::logout();
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Jobs\GeneratePinReport;
 use App\Models\Pin;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -82,6 +83,16 @@ class DashboardController extends Controller
 
     public function foyer(Request $request)
     {
+        // check if the user is authenticated and has admin privileges
+        if (!auth()->check()) {
+            $key = $request->query('key');
+            $showFoyer = Setting::where('name', 'SHOW_FOYER')->where('enabled', 1)->value('value');
+
+            if ($key !== $showFoyer || !$showFoyer) {
+                abort(404, 'Foyer is not available!');
+            }
+        }
+
         // Cache total number of pins for 1 hour
         $totalPins = Cache::remember('foyer_total_pins', 3600, function () {
             return Pin::count();
