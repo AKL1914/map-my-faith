@@ -1,31 +1,39 @@
-<template>
-  <div class="container mt-5">
-    <h2>Login Page</h2>
-    <!-- You can add a login form here if needed -->
-  </div>
-</template>
-
 <script setup>
 import {onMounted} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {useToast} from 'vue-toastification';
+import {useAuthStore} from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const authStore = useAuthStore();
 
 onMounted(() => {
-  const {token, name, email, is_activated} = route.query;
+  const {token, name, email, is_activated, cfo, area, group, campaign_id, id, campaign} = route.query;
 
   if (!token) {
     toast.error('Redirecting to account activation.');
     return router.push('/activate');
   }
-  // Save token and user data to localStorage
-  localStorage.setItem('token', token);
-  localStorage.setItem('user', JSON.stringify({name, email, is_activated}));
+
+  authStore.setUser(
+      {
+        id,
+        name,
+        email,
+        is_activated,
+        cfo: cfo || '',
+        area: area || '',
+        group: group || ''
+      },
+      token
+  );
+
+  localStorage.setItem('campaign_id', campaign_id || '');
+  localStorage.setItem('campaign', campaign || '');
+
   toast.success(`Welcome, ${name}!`);
   router.push('/maps');
-
 });
 </script>

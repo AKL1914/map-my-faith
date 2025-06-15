@@ -5,6 +5,9 @@ import HomePage from './pages/HomePage.vue';
 import LoginPage from './pages/LoginPage.vue';
 import ActivatePage from './pages/ActivatePage.vue';
 import MapManager from './components/MapManager.vue';
+import UserPinsViewer from "@/components/UserPinsViewer.vue";
+import ProfileViewer from "@/components/ProfileViewer.vue";
+import Leaderboard from "@/components/Leaderboard.vue";
 function isAuthenticated() {
     return localStorage.getItem('token') !== null;
 }
@@ -35,6 +38,30 @@ const routes = [
         meta: { requiresAuth: true },
         children: [
             { path: '', component: MapManager }
+        ]
+    },
+    {
+        path: '/leaderboard',
+        component: AuthLayout,
+        meta: { requiresAuth: true },
+        children: [
+            { path: '', component: Leaderboard }
+        ]
+    },
+    {
+        path: '/user/pins',
+        component: AuthLayout,
+        meta: { requiresAuth: true },
+        children: [
+            { path: '', component: UserPinsViewer }
+        ]
+    },
+    {
+        path: '/profile/edit',
+        component: AuthLayout,
+        meta: { requiresAuth: true },
+        children: [
+            { path: '', component: ProfileViewer }
         ]
     }
 ];

@@ -7,12 +7,6 @@ window.debounce = debounce;
 window.axios = axios;
 window.L = L;
 
-// Set Authorization header if token exists in localStorage
-const token = localStorage.getItem('token');
-if (token) {
-    window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
-
 // Optional: Axios interceptor to handle 401 unauthorized errors globally
 axios.interceptors.response.use(
     response => response,

@@ -29,4 +29,4 @@ const authStore = useAuthStore();
 authStore.loadUserFromStorage();
 
 // Finally mount the app
-app.mount('#app');
+app.mount('#wrapper');

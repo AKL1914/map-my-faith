@@ -1,7 +1,5 @@
 <!-- src/layouts/AuthLayout.vue -->
 <template>
-  <!-- Page Wrapper -->
-  <div id="wrapper">
     <!-- Sidebar -->
     <Sidebar />
 
@@ -10,10 +8,10 @@
       <!-- Main Content -->
       <div id="content">
         <!-- Topbar -->
-        <Topbar />
+        <Topbar @toggle-sidebar="toggleSidebar" />
 
         <!-- Begin Page Content -->
-        <div class="container-fluid map-outer-container">
+        <div :class="['container-fluid', { 'map-outer-container': isMapsRoute }]">
           <main>
             <router-view />
           </main>
@@ -24,7 +22,6 @@
       <!-- Footer -->
       <Footer />
     </div>
-  </div>
 
   <!-- Scroll to Top Button-->
   <a class="scroll-to-top rounded" href="#page-top">
@@ -33,7 +30,20 @@
 </template>
 
 <script setup>
-import Sidebar from '@/components/Sidebar.vue'
-import Topbar from '@/components/Topbar.vue'
-import Footer from '@/components/Footer.vue'
+import { ref, provide } from 'vue'
+import Sidebar from '@/partials/Sidebar.vue'
+import Topbar from '@/partials/Topbar.vue'
+import Footer from '@/partials/Footer.vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+const route = useRoute()
+
+const isMapsRoute = computed(() => route.path === '/maps')
+
+const isSidebarToggled = ref(true)
+provide('isSidebarToggled', isSidebarToggled)
+
+function toggleSidebar() {
+  isSidebarToggled.value = !isSidebarToggled.value
+}
 </script>

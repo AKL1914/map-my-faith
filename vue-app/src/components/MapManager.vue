@@ -44,7 +44,7 @@ let lastSubmitTime = 0;
 let pinLayerGroup = null;
 let gamePinLayerGroup = null;
 const loading = ref(false);
-const campaignName = ref(window.campaign?.name || 'Map Manager');
+const campaignName = localStorage.getItem('campaign') || 'Default Campaign';
 
 
 const currentUserId = window.authUser?.id || null;
@@ -264,7 +264,7 @@ async function pinMyLocation(status) {
   const lat = currentPinMarker.getLatLng().lat;
   const lng = currentPinMarker.getLatLng().lng;
   const isAccepted = status === 'accepted' ? 1 : 0;
-  let activeCampaign = 1;
+  let activeCampaign = localStorage.getItem('campaign_id') || '';
 
   try {
     await axios.post('/api/v1/pin', {

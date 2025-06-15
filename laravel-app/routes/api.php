@@ -33,5 +33,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
         Route::get('/pins/bounds', [PinController::class, 'indexByBounds']);
         Route::get('/game-pins', [GamePinController::class, 'index']);
+        Route::get('/user/{user}/pins', [PinController::class, 'pinsByUser']);
     });
 });

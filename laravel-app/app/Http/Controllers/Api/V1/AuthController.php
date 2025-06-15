@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendAccessRequestNotificationToAdmins;
+use App\Models\Campaign;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -37,12 +38,19 @@ class AuthController extends Controller
             if(User::where('email', $googleUser->getEmail())->first()->is_activated) {
                 $user = User::where('email', $googleUser->getEmail())->first();
                 $token = $user->createToken('spa')->plainTextToken;
+                $campaign = Campaign::where('is_active', true)->first();
 
                 $query = http_build_query([
                     'token' => $token,
+                    'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
                     'is_activated' => $user->is_activated ? 'true' : 'false',
+                    'cfo' => $user->cfo ?? '',
+                    'area' => $user->area ?? '',
+                    'group' => $user->group ?? '',
+                    'campaign_id' => $campaign->id ,
+                    'campaign' => $campaign->name,
                 ]);
             }
 
