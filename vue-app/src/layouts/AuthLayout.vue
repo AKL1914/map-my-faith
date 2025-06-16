@@ -30,10 +30,11 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { ref, provide } from 'vue'
-import Sidebar from '@/partials/Sidebar.vue'
-import Topbar from '@/partials/Topbar.vue'
-import Footer from '@/partials/Footer.vue'
+import Sidebar from '@/partials/theme/Sidebar.vue'
+import Topbar from '@/partials/theme/Topbar.vue'
+import Footer from '@/partials/theme/Footer.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 const route = useRoute()
@@ -46,4 +47,16 @@ provide('isSidebarToggled', isSidebarToggled)
 function toggleSidebar() {
   isSidebarToggled.value = !isSidebarToggled.value
 }
+
+onMounted(() => {
+  const id = 'layout-css'
+  const existing = document.getElementById(id)
+  if (existing) existing.remove()
+
+  const link = document.createElement('link')
+  link.id = id
+  link.rel = 'stylesheet'
+  link.href = '/theme/css/sb-admin-2.min.css'
+  document.head.appendChild(link)
+})
 </script>

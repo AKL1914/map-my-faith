@@ -1,10 +1,7 @@
-<!-- src/components/Footer.vue -->
 <template>
-  <footer class="sticky-footer bg-white">
-    <div class="container my-auto">
-      <div class="copyright text-center my-auto">
-        <span>&copy; {{ year }} Maps. All rights reserved.</span>
-      </div>
+  <footer class="bg-blue text-white text-center py-3 mt-auto">
+    <div class="container">
+      <small>&copy; {{ year }} Maps. All rights reserved.</small>
     </div>
   </footer>
 </template>

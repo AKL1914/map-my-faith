@@ -1,11 +1,13 @@
 <!-- src/pages/HomePage.vue -->
 <template>
   <div class="d-flex flex-column min-vh-100">
-    <Navigation />
-
     <main class="container text-center flex-grow-1 d-flex flex-column justify-content-center align-items-center">
-<!--      <img src="/images/logo.png" alt="Logo" class="mb-4 rounded-3" style="max-width: 200px;" />-->
-
+      <img
+          src="/images/logo.png"
+          alt="Logo"
+          class="mb-4 rounded-3"
+          style="max-width: 200px;"
+      />
       <h1 class="mb-4 text-secondary">Welcome to Maps</h1>
 
       <div v-if="isLoggedIn" class="mb-3 w-100 d-flex justify-content-center">
@@ -23,21 +25,16 @@
       </div>
     </main>
 
-    <Footer />
   </div>
 </template>
-
 <script setup>
-// import Navigation from '@/components/Navigation.vue'
-// import Footer from '@/components/Footer.vue'
-// import { computed } from 'vue'
-// import { useAuthStore } from '@/stores/auth'
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 
-// const authStore = useAuthStore()
-// const isLoggedIn = computed(() => authStore.user !== null)
+const auth = useAuthStore()
+const isLoggedIn = computed(() => !!auth.token)
 const googleLoginUrl = 'http://localhost:8080/login/google'
 </script>
-
 <style scoped>
 .google-btn {
   background-color: #4285f4;
