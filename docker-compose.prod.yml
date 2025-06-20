@@ -3,8 +3,8 @@ version: '3.8'
 services:
   app:
     build:
-      context: ./docker/php
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
     container_name: map_my_faith_app
     environment:
       - APP_ENV=production
