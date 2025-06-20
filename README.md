@@ -178,3 +178,4 @@ axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
 This project is open source and available under the [MIT License](LICENSE).
 Test deploy trigger
+test deploy 🚀
