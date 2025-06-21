@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile # This is your DEV Dockerfile!
+    container_name: map_my_faith_app
     volumes:
       - ./laravel-app:/var/www/html
     depends_on:

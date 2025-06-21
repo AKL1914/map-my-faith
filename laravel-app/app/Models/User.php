@@ -69,4 +69,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Pin::class);
     }
+
+    /**
+     * Determine if the user has administrative privileges.
+     *
+     * @return bool True if the user is an admin, false otherwise.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->is_admin == 1;
+    }
 }
