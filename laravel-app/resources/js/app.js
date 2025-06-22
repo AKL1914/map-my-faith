@@ -25,6 +25,8 @@ import UserPinsViewer from "./components/UserPinsViewer.vue";
 import ChartPie from "./components/admin/ChartPie.vue";
 import ChartArea from "./components/admin/PinsByAreaChart.vue";
 import SettingManager from "./components/admin/SettingManager.vue";
+import Leaderboard from './components/Leaderboard.vue';
+import UserLeaderboard from './components/UserLeaderboard.vue';
 
 // Vue Toastification
 import Toast, { POSITION, useToast } from 'vue-toastification';
@@ -54,6 +56,7 @@ app.component('user-pins-viewer', UserPinsViewer);
 app.component('admin-chart-pie', ChartPie);
 app.component('admin-chart-area', ChartArea);
 app.component('admin-setting-manager', SettingManager);
+app.component('user-leaderboard', UserLeaderboard);
 
 // 🔔 Push subscription logic
 const subscribeUserIfNeeded = async () => {

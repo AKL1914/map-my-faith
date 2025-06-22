@@ -33,6 +33,7 @@ Route::get('/login', function () {
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Move leaderboard-data endpoint to /api/leaderboard-data
 Route::middleware(['auth'])->group(function () {
     Route::get('/maps', [MapsController::class, 'index'])->name('maps.index')->middleware(EnsureUserHasAreaAndGroup::class);
     Route::get('/leaderboard', [LeaderBoardController::class, 'index']);
@@ -42,14 +43,14 @@ Route::middleware(['auth'])->group(function () {
 
     // will transfer this bit of route when its needed to restful use
     Route::group(['prefix' => 'api'], function () {
-
+        Route::get('/leaderboard-data', [LeaderBoardController::class, 'apiIndex']);
         Route::get('/game-pins', [GamePinController::class, 'index']);
         Route::post('/game-pins/{gamePin}/participate', [GamePinController::class, 'participate']);
         Route::post('/pin', [PinController::class, 'store']);
         Route::get('/pins', [PinController::class, 'index']);
         Route::patch('/pins/{pin}', [PinController::class, 'update']);
         Route::delete('/pin/{id}', [PinController::class, 'destroy']);
-        Route::get('/user/{user}/pins', [PinController::class, 'pinsByUser']);
+        Route::get('/user/{user}/pins', [ProfileController::class, 'pinsByUser']);
 
         Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
         Route::get('/pins/bounds', [PinController::class, 'indexByBounds']);
