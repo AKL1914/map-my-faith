@@ -178,6 +178,24 @@
                                 <i class="fas fa-user-check fa-2x text-gray-300"></i>
                             </div>
                         </div>
+                        <div class="row no-gutters align-items-center mt-3">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1 text-info">
+                                    Top 3 Online Users
+                                </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800">
+                                    <span v-if="topOnlineUsers.length === 0 || (topOnlineUsers.length === 1 && !topOnlineUsers[0])">None</span>
+                                    <span v-else>
+                                        <span v-for="(name, idx) in topOnlineUsers" :key="name">
+                                            {{ name }}<span v-if="idx < topOnlineUsers.length - 1">, </span>
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-user-friends fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -291,6 +309,7 @@ export default {
             pinsData: {},
             selectedDays: 7,
             participation: [],
+            topOnlineUsers: [],
         };
     },
     computed: {
@@ -387,7 +406,11 @@ export default {
         fetchLoggedInUsers() {
             axios.get('/admin/active-users-count').then(r => {
                 this.loggedInUsers = r.data.count;
-            }).catch(() => this.loggedInUsers = 0);
+                this.topOnlineUsers = r.data.top3 || [];
+            }).catch(() => {
+                this.loggedInUsers = 0;
+                this.topOnlineUsers = [];
+            });
         },
         updateMapMarkers() {
             this.markers.forEach(m => this.map.removeLayer(m));
