@@ -50,7 +50,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pins', [PinController::class, 'index']);
         Route::patch('/pins/{pin}', [PinController::class, 'update']);
         Route::delete('/pin/{id}', [PinController::class, 'destroy']);
-        Route::get('/user/{user}/pins', [ProfileController::class, 'pinsByUser']);
+        Route::get('/user/{user}/pins', [PinController::class, 'pinsByUser']);
 
         Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
         Route::get('/pins/bounds', [PinController::class, 'indexByBounds']);
