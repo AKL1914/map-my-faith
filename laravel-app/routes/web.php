@@ -33,6 +33,7 @@ Route::get('/login', function () {
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Move leaderboard-data endpoint to /api/leaderboard-data
 Route::middleware(['auth'])->group(function () {
     Route::get('/maps', [MapsController::class, 'index'])->name('maps.index')->middleware(EnsureUserHasAreaAndGroup::class);
     Route::get('/leaderboard', [LeaderBoardController::class, 'index']);
@@ -42,7 +43,7 @@ Route::middleware(['auth'])->group(function () {
 
     // will transfer this bit of route when its needed to restful use
     Route::group(['prefix' => 'api'], function () {
-
+        Route::get('/leaderboard-data', [LeaderBoardController::class, 'apiIndex']);
         Route::get('/game-pins', [GamePinController::class, 'index']);
         Route::post('/game-pins/{gamePin}/participate', [GamePinController::class, 'participate']);
         Route::post('/pin', [PinController::class, 'store']);

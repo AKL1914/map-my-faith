@@ -40,6 +40,28 @@ class PinController extends Controller
      */
     public function store(PinStoreRequest $request)
     {
+        // Define proximity threshold (approximately 1 meter in degrees)
+        $proximityThreshold = 0.00001; // Roughly 1 meter
+        
+        // Check if a pin within the proximity threshold already exists for this user and campaign
+        $existingPin = Pin::where('user_id', Auth::id())
+            ->where('campaign_id', $request->campaign_id)
+            ->whereBetween('latitude', [
+                $request->latitude - $proximityThreshold, 
+                $request->latitude + $proximityThreshold
+            ])
+            ->whereBetween('longitude', [
+                $request->longitude - $proximityThreshold, 
+                $request->longitude + $proximityThreshold
+            ])
+            ->first();
+
+        if ($existingPin) {
+            return response()->json([
+                'message' => 'Cannot Pin on the same location'
+            ], 422);
+        }
+
         $pin = Pin::create([
             'user_id' => Auth::id(),
             'latitude' => $request->latitude,

@@ -47,6 +47,39 @@ class LeaderBoardController extends Controller
     }
 
     /**
+     * API: Get leaderboard data as JSON for Vue component.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function apiIndex(Request $request)
+    {
+        if ($request->user() && $request->user()->is_admin) {
+            $leaderboardData = $this->getLeaderboardData();
+            $topSuburbs = $this->getTopSuburbs();
+            $topAreas = $this->getTopAreas();
+        } else {
+            $leaderboardData = cache()->remember('leaderboardData', now()->addMinutes(30), function () {
+                return $this->getLeaderboardData();
+            });
+
+            $topSuburbs = cache()->remember('topSuburbs', now()->addMinutes(30), function () {
+                return $this->getTopSuburbs();
+            });
+
+            $topAreas = cache()->remember('topAreas', now()->addMinutes(30), function () {
+                return $this->getTopAreas();
+            });
+        }
+
+        return response()->json([
+            'leaderboardData' => $leaderboardData,
+            'topSuburbs' => $topSuburbs,
+            'topAreas' => $topAreas,
+        ]);
+    }
+
+    /**
      * Fetch leaderboard data.
      *
      * Retrieves the top 10 users based on the number of pins they have created,

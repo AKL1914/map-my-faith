@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd xml
 
 # Install phpredis extension
 RUN pecl install redis \
@@ -20,7 +20,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY default.conf /etc/nginx/conf.d/default.conf
 
 # Copy Supervisor config
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/php/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Copy html directory locally, not requiring to mount an NFS
 COPY laravel-app /var/www/html/

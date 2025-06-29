@@ -47,6 +47,8 @@ class DashboardController extends Controller
 
         $count = 0;
         $cursor = null;
+        $userNames = [];
+        $sessionKeys = [];
 
         // Use SCAN to iterate over keys with your session prefix
         do {
@@ -54,11 +56,57 @@ class DashboardController extends Controller
             [$cursor, $keys] = $redis->scan($cursor, ['MATCH' => 'maps_session_*', 'COUNT' => 100]);
             if ($keys) {
                 $count += count($keys);
+                $sessionKeys = array_merge($sessionKeys, $keys);
             }
         } while ($cursor != 0);
 
+        // Get user names from session data
+        foreach ($sessionKeys as $key) {
+            $session = $redis->get($key);
+            if ($session) {
+                $data = @unserialize($session);
+                $foundName = null;
+                if (is_array($data) && isset($data['login_web_' . auth()->getDefaultDriver()])) {
+                    $userArray = $data['login_web_' . auth()->getDefaultDriver()];
+                    if (is_array($userArray) && isset($userArray['name'])) {
+                        $foundName = $userArray['name'];
+                    }
+                } elseif (is_array($data) && isset($data['user'])) {
+                    $user = $data['user'];
+                    if (is_array($user) && isset($user['name'])) {
+                        $foundName = $user['name'];
+                    }
+                } else {
+                    // Try JSON decode
+                    $json = @json_decode($session, true);
+                    if (is_array($json)) {
+                        if (isset($json['user']['name'])) {
+                            $foundName = $json['user']['name'];
+                        } elseif (isset($json['name'])) {
+                            $foundName = $json['name'];
+                        }
+                    }
+                }
+                // Fallback: regex search for "name"
+                if (!$foundName && is_string($session)) {
+                    if (preg_match('/"name";s:\d+:"([^"]+)"/', $session, $matches)) {
+                        $foundName = $matches[1];
+                    } elseif (preg_match('/"name":"([^"]+)"/', $session, $matches)) {
+                        $foundName = $matches[1];
+                    }
+                }
+                if ($foundName) {
+                    $userNames[] = $foundName;
+                }
+            }
+        }
+
+        // Remove duplicates and get top 3 names (by order of appearance, allow duplicates)
+        $top3Names = array_slice($userNames, 0, 3);
+
         return response()->json([
             'count' => $count,
+            'top3' => $top3Names,
         ]);
     }
 
