@@ -17,7 +17,7 @@ RUN pecl install redis \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy Nginx config
-COPY default.conf /etc/nginx/conf.d/default.conf
+COPY docker/php/default.conf /etc/nginx/conf.d/default.conf
 
 # Copy Supervisor config
 COPY docker/php/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
