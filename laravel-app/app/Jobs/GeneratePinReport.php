@@ -59,6 +59,9 @@ class GeneratePinReport implements ShouldQueue
             $query->whereDate('created_at', '<=', Carbon::parse($this->filters['end_date']));
         }
 
+        // Order by latest first
+        $query->orderByDesc('created_at');
+
         $pins = $query->get();
 
         // Temporary file path for CSV
