@@ -26,6 +26,7 @@ import ChartPie from "./components/admin/ChartPie.vue";
 import ChartArea from "./components/admin/PinsByAreaChart.vue";
 import SettingManager from "./components/admin/SettingManager.vue";
 import Leaderboard from './components/Leaderboard.vue';
+import PhotoManager from './components/PhotoManager.vue';
 import UserLeaderboard from './components/UserLeaderboard.vue';
 
 // Vue Toastification
@@ -43,6 +44,7 @@ app.use(Toast, {
 // Register components
 app.component('admin-dashboard', AdminDashboard);
 app.component('campaign-manager', CampaignManager);
+app.component('admin-photo-manager', PhotoManager);
 app.component('map-manager', MapManager);
 app.component('user-manager', UserManager);
 app.component('pin-manager', PinManager);

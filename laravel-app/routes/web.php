@@ -60,6 +60,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/pins/campaign/{campaignId}', [PinController::class, 'indexByCampaign']);
             Route::apiResource('campaigns', CampaignController::class);
 
+            // Photo API routes
+            Route::apiResource('photos', \App\Http\Controllers\Admin\PhotoController::class)->except(['show', 'update']);
+            Route::post('photos/{photo}', [\App\Http\Controllers\Admin\PhotoController::class, 'update']);
+
             // User API routes
             Route::get('/users', [UserController::class, 'index']);
             Route::put('/users/{user}/admin', [UserController::class, 'updateAdminStatus']);
@@ -113,6 +117,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/settings', [SettingsController::class, 'store']);
         Route::put('/admin/settings/{setting}', [SettingsController::class, 'update']);
         Route::delete('/admin/settings/{setting}', [SettingsController::class, 'destroy']);
+
+        // Admin Photos page
+        Route::get('/admin/photos', [\App\Http\Controllers\Admin\PhotoController::class, 'manage'])->name('admin.photos.index');
 
 
     });
