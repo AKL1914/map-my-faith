@@ -212,11 +212,17 @@ class DashboardController extends Controller
             return $result;
         });
 
+        $carouselPhotos = \App\Models\Photo::where('visible', true)
+            ->orderByDesc('id')
+            ->take(5)
+            ->get();
+
         return view('admin.foyer', [
             'totalPins' => $totalPins,
             'totalParticipants' => $totalParticipants,
             'topPins' => $topPins,
             'areasData' => $areasData,
+            'carouselPhotos' => $carouselPhotos,
         ]);
     }
 }
