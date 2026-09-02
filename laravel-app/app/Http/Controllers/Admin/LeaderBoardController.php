@@ -91,7 +91,7 @@ class LeaderBoardController extends Controller
     {
         return DB::table('pins')
             ->join('users', 'pins.user_id', '=', 'users.id')
-            ->select('users.id', 'users.name', 'users.area', DB::raw('count(pins.id) as pinCount'))
+            ->select('users.id', 'users.name', 'users.area', DB::raw('count(pins.id) as "pinCount"'))
             ->where('users.email', '!=', config('app.admin_email'))
             ->where('users.name', '!=', 'Admin') // Exclude user with name 'Admin'
             ->groupBy('users.id', 'users.name', 'users.area')
@@ -110,30 +110,30 @@ class LeaderBoardController extends Controller
      */
     private function getTopSuburbs()
     {
-        return DB::table(DB::raw('
+        return DB::table(DB::raw("
                 (
                     SELECT
                         pins.suburb,
-                        COUNT(pins.id) AS totalPins
+                        COUNT(pins.id) AS \"totalPins\"
                     FROM pins
                     JOIN users ON pins.user_id = users.id
-                    WHERE users.name != "Admin"
+                    WHERE users.name != 'Admin'
                     GROUP BY pins.suburb
                 ) AS total
-            '))
-            ->join(DB::raw('
+            "))
+            ->join(DB::raw("
                 (
                     SELECT
                         pins.suburb,
-                        users.name AS user_name,
-                        COUNT(pins.id) AS userPins,
-                        ROW_NUMBER() OVER (PARTITION BY pins.suburb ORDER BY COUNT(pins.id) DESC) AS row_num
+                        users.name AS \"user_name\",
+                        COUNT(pins.id) AS \"userPins\",
+                        ROW_NUMBER() OVER (PARTITION BY pins.suburb ORDER BY COUNT(pins.id) DESC) AS \"row_num\"
                     FROM pins
                     JOIN users ON pins.user_id = users.id
-                    WHERE users.name != "Admin"
+                    WHERE users.name != 'Admin'
                     GROUP BY pins.suburb, users.name
                 ) AS topuser
-            '), 'total.suburb', '=', 'topuser.suburb')
+            "), 'total.suburb', '=', 'topuser.suburb')
             ->where('topuser.row_num', 1)
             ->orderByDesc('total.totalPins')
             ->limit(10)
@@ -154,7 +154,7 @@ class LeaderBoardController extends Controller
         return DB::table('pins')
             ->join('users', 'pins.user_id', '=', 'users.id')
             ->where('users.email', '!=', config('app.admin_email'))
-            ->select('users.area', DB::raw('count(pins.id) as pinCount'))
+            ->select('users.area', DB::raw('count(pins.id) as "pinCount"'))
             ->groupBy('users.area')
             ->orderByDesc('pinCount')
             ->limit(10)
