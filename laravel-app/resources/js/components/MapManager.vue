@@ -114,9 +114,9 @@ async function fetchPinsWithinBounds() {
     });
 
     if (pinLayerGroup) pinLayerGroup.clearLayers();
-    pinLayerGroup = window.L.layerGroup().addTo(map);
+    pinLayerGroup = window.L.markerClusterGroup();
 
-    data.forEach(pin => {
+    const markers = data.map(pin => {
         const icon = pin.user_id === currentUserId ? orangeIcon : (pin.is_accepted === 1 ? greenIcon : redIcon);
         const popupContent = `
             <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
@@ -127,7 +127,6 @@ async function fetchPinsWithinBounds() {
             : ''}
         `;
         const marker = L.marker([pin.latitude, pin.longitude], {icon})
-            .addTo(pinLayerGroup)
             .bindPopup(popupContent);
 
         marker.on('popupopen', () => {
@@ -138,7 +137,12 @@ async function fetchPinsWithinBounds() {
                 });
             }
         });
+
+        return marker;
     });
+
+    pinLayerGroup.addLayers(markers);
+    pinLayerGroup.addTo(map);
 }
 
 async function fetchGamePins() {
