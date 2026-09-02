@@ -31,3 +31,5 @@ yarn-error.log
 /reactjs-app/node_modules
 /reactjs-app/dist
 .DS_Store
+*.sql
+*.sql.gz
