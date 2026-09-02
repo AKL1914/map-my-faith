@@ -155,7 +155,7 @@ class DashboardController extends Controller
         $topPins = Cache::remember('foyer_top_pins', 3600, function () {
             return DB::table('pins')
                 ->join('users', 'pins.user_id', '=', 'users.id')
-                ->select('users.id', 'users.name', 'users.area', DB::raw('count(pins.id) as pinCount'))
+                ->select('users.id', 'users.name', 'users.area', DB::raw('count(pins.id) as "pinCount"'))
                 ->where('users.email', '!=', config('app.admin_email'))
                 ->where('users.name', '!=', 'Admin')
                 ->groupBy('users.id', 'users.name', 'users.area')

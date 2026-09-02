@@ -33,3 +33,6 @@ yarn-error.log
 .DS_Store
 *.sql
 *.sql.gz
+.env.laravelcloud
+.env.supabase
+.env.upstash
