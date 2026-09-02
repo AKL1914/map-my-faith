@@ -114,7 +114,9 @@ async function fetchPinsWithinBounds() {
     });
 
     if (pinLayerGroup) pinLayerGroup.clearLayers();
-    pinLayerGroup = window.L.markerClusterGroup();
+    pinLayerGroup = window.L.markerClusterGroup({
+        disableClusteringAtZoom: 18,
+    });
 
     const markers = data.map(pin => {
         const icon = pin.user_id === currentUserId ? orangeIcon : (pin.is_accepted === 1 ? greenIcon : redIcon);
