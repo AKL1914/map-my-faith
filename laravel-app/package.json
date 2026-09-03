@@ -18,6 +18,7 @@
     "dependencies": {
         "chart.js": "^4.4.9",
         "leaflet": "^1.9.4",
+        "leaflet.markercluster": "^1.5.3",
         "lodash": "^4.17.21"
     }
 }
