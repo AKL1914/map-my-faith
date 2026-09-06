@@ -2,9 +2,9 @@ FROM php:8.2-fpm
 
 # Install OS-level libraries & PHP build dependencies
 RUN apt-get update && apt-get install -y \
-    zip unzip curl libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev \
+    zip unzip curl libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libpq-dev \
     supervisor \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd xml
+    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd xml
 
 # Install and enable phpredis
 RUN pecl install redis && docker-php-ext-enable redis

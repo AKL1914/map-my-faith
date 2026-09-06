@@ -7,7 +7,7 @@ services:
     volumes:
       - ./laravel-app:/var/www/html
     depends_on:
-      - mysql
+      - postgres
       - redis
 
   nginx:
@@ -21,19 +21,18 @@ services:
     depends_on:
       - app
 
-  mysql:
-    image: mysql:8.0
-    container_name: map_my_faith_app_mysql
+  postgres:
+    image: postgres:16-alpine
+    container_name: map_my_faith_app_postgres
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - mysql-data:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql/data
     ports:
-      - "3306:3306"
+      - "5432:5432"
 
   redis:
     image: redis:alpine
@@ -59,5 +58,5 @@ services:
 #    command: npx expo start --tunnel
 
 volumes:
-  mysql-data:
+  postgres-data:
   redis-data:

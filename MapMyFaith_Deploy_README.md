@@ -98,7 +98,7 @@ scp backup.sql root@YOUR_SERVER_IP:/root/
 
 Import:
 
-docker exec -i map_my_faith_app_mysql mysql -u laravel_app_user -p laravel < /root/backup.sql
+docker exec -i map_my_faith_app_postgres psql -U laravel_app_user -d laravel < /root/backup.sql
 
 📌 9️⃣ CI/CD with Tests & Deploy
 
@@ -123,7 +123,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, bcmath, redis, pdo_mysql
+          extensions: mbstring, bcmath, redis, pdo_pgsql
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
@@ -185,6 +185,6 @@ docker compose up -d
 View Logs
 docker compose logs -f
 DB Shell
-docker exec -it map_my_faith_app_mysql mysql -u laravel_app_user -p laravel
+docker exec -it map_my_faith_app_postgres psql -U laravel_app_user -d laravel
 Redis CLI
 docker exec -it map_my_faith_app_redis redis-cli
