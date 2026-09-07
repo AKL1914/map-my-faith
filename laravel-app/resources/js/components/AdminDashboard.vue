@@ -266,9 +266,12 @@
 </template>
 
 <script>
+import { markRaw } from 'vue';
 import { useToast } from 'vue-toastification';
 
 const toast = useToast();
+const DASHBOARD_INITIAL_ZOOM = 13;
+const DASHBOARD_DISABLE_CLUSTERING_AT_ZOOM = 15;
 
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -298,9 +301,10 @@ export default {
             dateFrom: '',
             dateTo: '',
             selectedArea: '',
-            selectedLimit: 200,
+            selectedLimit: '',
             map: null,
-            markers: [],
+            markerLayer: null,
+            markerRenderToken: 0,
             totalUsers: 0,
             totalPins: 0,
             totalSuburbs: 0,
@@ -317,7 +321,7 @@ export default {
             return this.campaigns.find(c => c.id === this.selectedCampaignId)?.name || 'Select Campaign';
         },
         selectedLimitDisplay() {
-            return this.selectedLimit || 'Select Limit';
+            return this.selectedLimit === '' ? 'All' : this.selectedLimit;
         },
         selectedAreaDisplay() {
             return this.selectedArea ? `Area ${this.selectedArea}` : 'All Areas';
@@ -367,12 +371,26 @@ export default {
     },
     methods: {
         initMap() {
-            this.map = window.L.map('map').setView([-36.8485, 174.7633], 12);
+            this.map = markRaw(window.L.map('map').setView([-36.8485, 174.7633], DASHBOARD_INITIAL_ZOOM));
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 18,
                 minZoom: 10
             }).addTo(this.map);
+            this.markerLayer = markRaw(L.markerClusterGroup({
+                chunkedLoading: true,
+                chunkInterval: 50,
+                chunkDelay: 10,
+                maxClusterRadius: 50,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                disableClusteringAtZoom: DASHBOARD_DISABLE_CLUSTERING_AT_ZOOM,
+            }).addTo(this.map));
+            this.map.on('moveend zoomend', () => {
+                if (this.selectedLimit === '' && this.selectedCampaignId) {
+                    this.fetchPins();
+                }
+            });
         },
         fetchCampaigns() {
             axios.get('/api/campaigns').then(response => {
@@ -389,11 +407,24 @@ export default {
                 limit: this.selectedLimit || ''
             };
             const url = this.selectedCampaignId ? `/api/pins/campaign/${this.selectedCampaignId}` : '/api/pins';
+
+            if (this.selectedLimit === '' && this.selectedCampaignId) {
+                const bounds = this.map.getBounds();
+                Object.assign(params, {
+                    viewport: 1,
+                    north: bounds.getNorth(),
+                    south: bounds.getSouth(),
+                    east: bounds.getEast(),
+                    west: bounds.getWest(),
+                });
+            }
+
             axios.get(url, { params }).then(response => {
-                this.pins = response.data.data || [];
+                this.pins = markRaw(response.data.data || []);
                 this.totalPins = response.data.total_pins || this.pins.length;
                 this.totalUsers = response.data.total_users || 0;
-                this.totalSuburbs = new Set(this.pins.map(p => p.suburb?.toLowerCase()).filter(Boolean)).size;
+                this.totalSuburbs = response.data.total_suburbs
+                    ?? new Set(this.pins.map(p => p.suburb?.toLowerCase()).filter(Boolean)).size;
                 this.updateMapMarkers();
                 this.fetchLoggedInUsers();
             }).catch(() => {
@@ -413,22 +444,43 @@ export default {
             });
         },
         updateMapMarkers() {
-            this.markers.forEach(m => this.map.removeLayer(m));
-            this.markers = [];
-            this.pins.forEach(pin => {
-                if (pin.latitude && pin.longitude) {
+            this.markerLayer.clearLayers();
+            const renderToken = ++this.markerRenderToken;
+            const pins = this.pins;
+            let offset = 0;
+            const batchSize = 500;
+
+            const addMarkerBatch = () => {
+                if (renderToken !== this.markerRenderToken) return;
+
+                const batch = [];
+                const end = Math.min(offset + batchSize, pins.length);
+
+                for (; offset < end; offset += 1) {
+                    const pin = pins[offset];
+                    if (!pin.latitude || !pin.longitude) continue;
+
                     const icon = pin.is_accepted === 1 ? greenIcon : redIcon;
                     const popup = `<strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>${pin.notes ?? ''}`;
-                    const marker = L.marker([pin.latitude, pin.longitude], { icon })
-                        .addTo(this.map)
-                        .bindPopup(popup);
-                    this.markers.push(marker);
+                    batch.push(
+                        L.marker([pin.latitude, pin.longitude], {icon})
+                            .bindPopup(popup)
+                    );
                 }
-            });
-            if (this.markers.length) {
-                const group = new L.featureGroup(this.markers);
-                this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
-            }
+
+                if (batch.length) this.markerLayer.addLayers(batch);
+
+                if (offset < pins.length) {
+                    window.setTimeout(addMarkerBatch, 0);
+                    return;
+                }
+
+                if (batch.length && !(this.selectedLimit === '' && this.selectedCampaignId)) {
+                    this.map.fitBounds(this.markerLayer.getBounds(), {padding: [30, 30]});
+                }
+            };
+
+            addMarkerBatch();
         },
         downloadReport() {
             const params = {
@@ -489,6 +541,20 @@ export default {
     width: 100%;
     height: 500px;
 }
+
+:deep(.marker-cluster-small),
+:deep(.marker-cluster-medium),
+:deep(.marker-cluster-large) {
+    background-color: rgba(76, 175, 80, 0.35);
+}
+
+:deep(.marker-cluster-small div),
+:deep(.marker-cluster-medium div),
+:deep(.marker-cluster-large div) {
+    background-color: rgba(76, 175, 80, 0.85);
+    color: #fff;
+}
+
 @media (max-width: 576px) {
     .card-text {
         font-size: 1.2rem;

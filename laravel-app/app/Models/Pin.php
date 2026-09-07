@@ -29,6 +29,10 @@ class Pin extends Model
         'notes',        // Additional notes or comments about the pin.
     ];
 
+    protected $casts = [
+        'is_accepted' => 'integer',
+    ];
+
     /**
      * Get the user associated with the pin.
      *
