@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Jobs\GeneratePinReport;
 use App\Models\Pin;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Str;
 
 /**
  * Class DashboardController
@@ -42,72 +44,118 @@ class DashboardController extends Controller
      */
     public function getActiveUsersCount()
     {
-        // Use Redis connection for sessions
-        $redis = Redis::connection('session');
+        $activeUserIds = config('session.driver') === 'database'
+            ? DB::table(config('session.table', 'sessions'))
+                ->whereNotNull('user_id')
+                ->where('last_activity', '>=', now()->subMinutes(config('session.lifetime'))->timestamp)
+                ->distinct()
+                ->pluck('user_id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all()
+            : $this->activeUserIdsFromRedis();
 
-        $count = 0;
-        $cursor = null;
-        $userNames = [];
-        $sessionKeys = [];
+        $users = User::query()
+            ->whereIn('id', $activeUserIds)
+            ->get(['id', 'name'])
+            ->keyBy('id');
 
-        // Use SCAN to iterate over keys with your session prefix
-        do {
-            // SCAN returns an array with [cursor, keys]
-            [$cursor, $keys] = $redis->scan($cursor, ['MATCH' => 'maps_session_*', 'COUNT' => 100]);
-            if ($keys) {
-                $count += count($keys);
-                $sessionKeys = array_merge($sessionKeys, $keys);
-            }
-        } while ($cursor != 0);
-
-        // Get user names from session data
-        foreach ($sessionKeys as $key) {
-            $session = $redis->get($key);
-            if ($session) {
-                $data = @unserialize($session);
-                $foundName = null;
-                if (is_array($data) && isset($data['login_web_' . auth()->getDefaultDriver()])) {
-                    $userArray = $data['login_web_' . auth()->getDefaultDriver()];
-                    if (is_array($userArray) && isset($userArray['name'])) {
-                        $foundName = $userArray['name'];
-                    }
-                } elseif (is_array($data) && isset($data['user'])) {
-                    $user = $data['user'];
-                    if (is_array($user) && isset($user['name'])) {
-                        $foundName = $user['name'];
-                    }
-                } else {
-                    // Try JSON decode
-                    $json = @json_decode($session, true);
-                    if (is_array($json)) {
-                        if (isset($json['user']['name'])) {
-                            $foundName = $json['user']['name'];
-                        } elseif (isset($json['name'])) {
-                            $foundName = $json['name'];
-                        }
-                    }
-                }
-                // Fallback: regex search for "name"
-                if (!$foundName && is_string($session)) {
-                    if (preg_match('/"name";s:\d+:"([^"]+)"/', $session, $matches)) {
-                        $foundName = $matches[1];
-                    } elseif (preg_match('/"name":"([^"]+)"/', $session, $matches)) {
-                        $foundName = $matches[1];
-                    }
-                }
-                if ($foundName) {
-                    $userNames[] = $foundName;
-                }
-            }
-        }
-
-        // Remove duplicates and get top 3 names (by order of appearance, allow duplicates)
-        $top3Names = array_slice($userNames, 0, 3);
+        $top3Names = collect($activeUserIds)
+            ->map(fn ($id) => $users->get($id)?->name)
+            ->filter()
+            ->unique()
+            ->take(3)
+            ->values()
+            ->all();
 
         return response()->json([
-            'count' => $count,
+            'count' => count($activeUserIds),
             'top3' => $top3Names,
         ]);
+    }
+
+    /**
+     * Return the latest known pin location for each currently active user.
+     */
+    public function getActiveUsersLocations()
+    {
+        $activeUserIds = config('session.driver') === 'database'
+            ? DB::table(config('session.table', 'sessions'))
+                ->whereNotNull('user_id')
+                ->where('last_activity', '>=', now()->subMinutes(config('session.lifetime'))->timestamp)
+                ->distinct()
+                ->pluck('user_id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all()
+            : $this->activeUserIdsFromRedis();
+
+        $locations = Pin::query()
+            ->with('user:id,name')
+            ->whereIn('user_id', $activeUserIds)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->latest()
+            ->get(['user_id', 'latitude', 'longitude', 'created_at'])
+            ->unique('user_id')
+            ->values()
+            ->map(fn (Pin $pin) => [
+                'user_id' => $pin->user_id,
+                'name' => $pin->user?->name ?? 'Unknown User',
+                'latitude' => (float) $pin->latitude,
+                'longitude' => (float) $pin->longitude,
+                'updated_at' => $pin->created_at?->toIso8601String(),
+            ]);
+
+        return response()->json([
+            'locations' => $locations,
+        ]);
+    }
+
+    /**
+     * Read authenticated user IDs from the Redis-backed session store.
+     *
+     * Redis SCAN returns keys with the connection prefix already applied, so
+     * that prefix must be removed before reading each key again.
+     *
+     * @return array<int, int>
+     */
+    private function activeUserIdsFromRedis(): array
+    {
+        $redis = Redis::connection('session');
+        $connectionPrefix = (string) config('database.redis.session.prefix', '');
+        $cachePrefix = (string) config('cache.prefix', '');
+        $cursor = null;
+        $userIds = [];
+        $loginPrefix = 'login_'.auth()->getDefaultDriver().'_';
+
+        do {
+            [$cursor, $keys] = $redis->scan($cursor, [
+                'MATCH' => $cachePrefix.'*',
+                'COUNT' => 100,
+            ]);
+
+            foreach ($keys ?: [] as $key) {
+                $redisKey = Str::startsWith($key, $connectionPrefix)
+                    ? Str::after($key, $connectionPrefix)
+                    : $key;
+                $rawSession = $redis->get($redisKey);
+                $payload = @unserialize($rawSession);
+                $payload = is_string($payload) ? @unserialize($payload) : $payload;
+
+                if (!is_array($payload)) {
+                    continue;
+                }
+
+                foreach ($payload as $sessionKey => $value) {
+                    if (Str::startsWith((string) $sessionKey, $loginPrefix) && is_scalar($value)) {
+                        $userIds[(int) $value] = (int) $value;
+                    }
+                }
+            }
+        } while ((int) $cursor !== 0);
+
+        return array_values(array_filter($userIds, fn (int $id) => $id > 0));
     }
 
     public function generateReport(Request $request)

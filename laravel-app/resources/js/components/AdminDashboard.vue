@@ -255,11 +255,38 @@
 
         <!-- Map Card -->
         <div class="card shadow mb-4">
-            <div class="card-header py-3">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Map</h6>
+                <button class="btn btn-sm btn-outline-primary" @click="toggleMapFullscreen('map-container', 'map')">
+                    <i class="fas fa-expand me-1"></i> Fullscreen
+                </button>
             </div>
             <div class="card-body">
-                <div class="mb-4 border rounded shadow" id="map"></div>
+                <div class="map-container mb-4 border rounded shadow" id="map-container">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Active Users' Last Known Locations</h6>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" @click="fetchActiveUserLocations">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" @click="toggleMapFullscreen('active-users-map-container', 'active-users-map')">
+                        <i class="fas fa-expand me-1"></i> Fullscreen
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="map-container mb-4 border rounded shadow" id="active-users-map-container">
+                    <div id="active-users-map"></div>
+                </div>
+                <p v-if="activeUserLocations.length === 0" class="text-muted mb-0">
+                    No active users have a recorded map location.
+                </p>
             </div>
         </div>
     </div>
@@ -291,6 +318,14 @@ const greenIcon = new L.Icon({
     shadowSize: [25, 25]
 });
 
+const activeUserIcon = L.divIcon({
+    className: 'active-user-marker',
+    html: '<i class="fas fa-user"></i>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14],
+});
+
 export default {
     name: 'AdminDashboard',
     data() {
@@ -309,6 +344,10 @@ export default {
             totalPins: 0,
             totalSuburbs: 0,
             loggedInUsers: 0,
+            activeUserLocations: [],
+            activeUsersMap: null,
+            activeUsersMarkerLayer: null,
+            activeUsersRefreshInterval: null,
             areaCounts: {}, // from API
             pinsData: {},
             selectedDays: 7,
@@ -363,6 +402,18 @@ export default {
         this.fetchPinSummary();
         this.fetchAreaDistribution();
         this.fetchParticipation();
+        this.initActiveUsersMap();
+        this.fetchActiveUserLocations();
+        this.activeUsersRefreshInterval = window.setInterval(() => {
+            this.fetchLoggedInUsers();
+            this.fetchActiveUserLocations();
+        }, 30000);
+    },
+    beforeUnmount() {
+        if (this.activeUsersRefreshInterval) {
+            window.clearInterval(this.activeUsersRefreshInterval);
+        }
+        this.activeUsersMap?.remove();
     },
     watch: {
         dateFrom() { this.fetchPins(); },
@@ -442,6 +493,64 @@ export default {
                 this.loggedInUsers = 0;
                 this.topOnlineUsers = [];
             });
+        },
+        initActiveUsersMap() {
+            this.activeUsersMap = markRaw(window.L.map('active-users-map').setView([-36.8485, 174.7633], DASHBOARD_INITIAL_ZOOM));
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18,
+                minZoom: 10
+            }).addTo(this.activeUsersMap);
+            this.activeUsersMarkerLayer = markRaw(L.layerGroup().addTo(this.activeUsersMap));
+        },
+        fetchActiveUserLocations() {
+            axios.get('/admin/active-users-locations').then(response => {
+                this.activeUserLocations = response.data.locations || [];
+                this.updateActiveUserMarkers();
+            }).catch(() => {
+                this.activeUserLocations = [];
+                this.updateActiveUserMarkers();
+            });
+        },
+        updateActiveUserMarkers() {
+            this.activeUsersMarkerLayer.clearLayers();
+
+            const bounds = [];
+            this.activeUserLocations.forEach(user => {
+                const position = [user.latitude, user.longitude];
+                bounds.push(position);
+                L.marker(position, { icon: activeUserIcon })
+                    .bindPopup(`<strong>${user.name}</strong>`)
+                    .addTo(this.activeUsersMarkerLayer);
+            });
+
+            if (bounds.length) {
+                this.activeUsersMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+            }
+        },
+        async toggleMapFullscreen(containerId, mapId) {
+            const container = document.getElementById(containerId);
+
+            if (!container) return;
+
+            try {
+                if (document.fullscreenElement === container) {
+                    await document.exitFullscreen();
+                } else if (!document.fullscreenElement && container.requestFullscreen) {
+                    await container.requestFullscreen();
+                }
+            } catch (error) {
+                toast.error('Unable to open the map in fullscreen.');
+                return;
+            }
+
+            window.setTimeout(() => {
+                if (mapId === 'map') {
+                    this.map?.invalidateSize();
+                } else {
+                    this.activeUsersMap?.invalidateSize();
+                }
+            }, 100);
         },
         updateMapMarkers() {
             this.markerLayer.clearLayers();
@@ -540,6 +649,38 @@ export default {
 #map {
     width: 100%;
     height: 500px;
+}
+
+#active-users-map {
+    width: 100%;
+    height: 500px;
+}
+
+.map-container:fullscreen {
+    background: #fff;
+    border: 0 !important;
+    border-radius: 0 !important;
+    height: 100vh;
+    margin: 0 !important;
+    padding: 1rem;
+    width: 100vw;
+}
+
+.map-container:fullscreen #map,
+.map-container:fullscreen #active-users-map {
+    height: calc(100vh - 2rem);
+}
+
+:deep(.active-user-marker) {
+    align-items: center;
+    background: #1cc88a;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    color: #fff;
+    display: flex;
+    font-size: 16px;
+    justify-content: center;
 }
 
 :deep(.marker-cluster-small),
