@@ -43,6 +43,11 @@ let currentPinMarker = null;
 let lastSubmitTime = 0;
 let pinLayerGroup = null;
 let gamePinLayerGroup = null;
+const markersById = new Map();
+let pinsRequestController = null;
+let pinsRequestSequence = 0;
+let lastPinsRequestKey = null;
+let refreshPins = null;
 const loading = ref(false);
 const campaignName = ref(window.campaign?.name || 'Map Manager');
 
@@ -100,51 +105,100 @@ const treasureChestIcon = new L.Icon({
 
 const toast = useToast();
 
+function markerPopupContent(pin) {
+    return `
+        <strong>${pin.user_name ?? 'Unknown User'}</strong><br/>
+        Status: ${pin.is_accepted === 1 ? 'Accepted ✅' : 'Refused ❌'}<br/>
+        ${pin.notes ?? ''}
+        ${Number(pin.user_id) === Number(currentUserId)
+        ? `<button class="btn btn-sm btn-outline-danger mt-2 delete-btn" data-id="${pin.id}">🗑</button>`
+        : ''}
+    `;
+}
+
+function updateMarker(marker, pin) {
+    const icon = Number(pin.user_id) === Number(currentUserId)
+        ? orangeIcon
+        : (pin.is_accepted === 1 ? greenIcon : redIcon);
+
+    marker.setLatLng([pin.latitude, pin.longitude]);
+    marker.setIcon(icon);
+    marker.setPopupContent(markerPopupContent(pin));
+}
+
 async function fetchPinsWithinBounds() {
     if (!map) return;
 
-    const bounds = map.getBounds();
-    const {data} = await axios.get('/api/pins/bounds', {
-        params: {
-            north: bounds.getNorth(),
-            south: bounds.getSouth(),
-            east: bounds.getEast(),
-            west: bounds.getWest(),
-        }
-    });
+    const bounds = map.getBounds().pad(0.1);
+    const requestKey = [
+        map.getZoom(),
+        bounds.getSouth().toFixed(5),
+        bounds.getWest().toFixed(5),
+        bounds.getNorth().toFixed(5),
+        bounds.getEast().toFixed(5),
+    ].join(':');
 
-    if (pinLayerGroup) pinLayerGroup.clearLayers();
-    pinLayerGroup = window.L.markerClusterGroup({
-        disableClusteringAtZoom: 18,
-    });
+    if (requestKey === lastPinsRequestKey) return;
+    lastPinsRequestKey = requestKey;
 
-    const markers = data.map(pin => {
-        const icon = pin.user_id === currentUserId ? orangeIcon : (pin.is_accepted === 1 ? greenIcon : redIcon);
-        const popupContent = `
-            <strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>
-            Status: ${pin.is_accepted === 1 ? 'Accepted ✅' : 'Refused ❌'}<br/>
-            ${pin.notes ?? ''}
-            ${pin.user_id === currentUserId
-            ? `<button class="btn btn-sm btn-outline-danger mt-2 delete-btn" data-id="${pin.id}">🗑</button>`
-            : ''}
-        `;
-        const marker = L.marker([pin.latitude, pin.longitude], {icon})
-            .bindPopup(popupContent);
+    pinsRequestController?.abort();
+    pinsRequestController = new AbortController();
+    const requestSequence = ++pinsRequestSequence;
 
-        marker.on('popupopen', () => {
-            const deleteButton = document.querySelector(`.delete-btn[data-id="${pin.id}"]`);
-            if (deleteButton) {
-                deleteButton.addEventListener('click', () => {
-                    deletePin(pin.id);
-                });
+    try {
+        const {data} = await axios.get('/api/pins/bounds', {
+            signal: pinsRequestController.signal,
+            params: {
+                north: bounds.getNorth(),
+                south: bounds.getSouth(),
+                east: bounds.getEast(),
+                west: bounds.getWest(),
             }
         });
 
-        return marker;
-    });
+        if (requestSequence !== pinsRequestSequence) return;
 
-    pinLayerGroup.addLayers(markers);
-    pinLayerGroup.addTo(map);
+        const pins = Array.isArray(data) ? data : [];
+        const visiblePinIds = new Set(pins.map(pin => String(pin.id)));
+        const newMarkers = [];
+
+        for (const [id, marker] of markersById) {
+            if (!visiblePinIds.has(id)) {
+                pinLayerGroup.removeLayer(marker);
+                markersById.delete(id);
+            }
+        }
+
+        pins.forEach(pin => {
+            const id = String(pin.id);
+            let marker = markersById.get(id);
+
+            if (marker) {
+                updateMarker(marker, pin);
+                return;
+            }
+
+            marker = L.marker([pin.latitude, pin.longitude], {
+                icon: Number(pin.user_id) === Number(currentUserId)
+                    ? orangeIcon
+                    : (pin.is_accepted === 1 ? greenIcon : redIcon),
+            }).bindPopup(markerPopupContent(pin));
+
+            marker.on('popupopen', () => {
+                const deleteButton = document.querySelector(`.delete-btn[data-id="${pin.id}"]`);
+                deleteButton?.addEventListener('click', () => deletePin(pin.id), {once: true});
+            });
+
+            markersById.set(id, marker);
+            newMarkers.push(marker);
+        });
+
+        if (newMarkers.length) pinLayerGroup.addLayers(newMarkers);
+    } catch (error) {
+        if (axios.isCancel(error) || error.name === 'CanceledError' || error.name === 'AbortError') return;
+        if (requestSequence === pinsRequestSequence) lastPinsRequestKey = null;
+        console.error('Unable to load pins for the current map viewport.', error);
+    }
 }
 
 async function fetchGamePins() {
@@ -227,8 +281,17 @@ onMounted(() => {
         minZoom: 10
     }).addTo(map);
 
-    pinLayerGroup = window.L.layerGroup().addTo(map);
+    pinLayerGroup = window.L.markerClusterGroup({
+        disableClusteringAtZoom: 13,
+        chunkedLoading: true,
+        chunkInterval: 50,
+        chunkDelay: 10,
+        maxClusterRadius: 50,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+    }).addTo(map);
     gamePinLayerGroup = window.L.layerGroup().addTo(map);
+    refreshPins = window.debounce(fetchPinsWithinBounds, 250);
 
     navigator.geolocation.getCurrentPosition(async position => {
         const lat = position.coords.latitude;
@@ -243,10 +306,7 @@ onMounted(() => {
         await fetchGamePins();
     });
 
-    map.on('moveend', () => {
-        fetchPinsWithinBounds();
-        fetchGamePins();
-    });
+    map.on('moveend zoomend', refreshPins);
 
     map.on('click', function (e) {
         const lat = e.latlng.lat;
@@ -284,6 +344,7 @@ async function pinMyLocation(status) {
         lastSubmitTime = now;
         notes.value = '';
         currentPinMarker.setLatLng([lat, lng]);
+        lastPinsRequestKey = null;
         await fetchPinsWithinBounds();
 
         toast.success('Location pinned successfully!', {
@@ -307,6 +368,7 @@ async function pinMyLocation(status) {
 async function deletePin(pinId) {
     if (confirm('Are you sure you want to delete this pin?')) {
         await axios.delete(`/api/pin/${pinId}`);
+        lastPinsRequestKey = null;
         await fetchPinsWithinBounds();
     }
 }
