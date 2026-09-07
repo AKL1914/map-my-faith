@@ -275,7 +275,14 @@ async function fetchGamePins() {
 }
 
 onMounted(() => {
-    map = window.L.map('map');
+    map = window.L.map('map', {
+        zoomControl: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        touchZoom: false,
+        boxZoom: false,
+        keyboard: false,
+    });
     window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
         minZoom: 10
@@ -288,7 +295,7 @@ onMounted(() => {
         chunkDelay: 10,
         maxClusterRadius: 50,
         showCoverageOnHover: false,
-        zoomToBoundsOnClick: true,
+        zoomToBoundsOnClick: false,
     }).addTo(map);
     gamePinLayerGroup = window.L.layerGroup().addTo(map);
     refreshPins = window.debounce(fetchPinsWithinBounds, 250);

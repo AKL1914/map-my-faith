@@ -301,7 +301,7 @@ export default {
             dateFrom: '',
             dateTo: '',
             selectedArea: '',
-            selectedLimit: 200,
+            selectedLimit: '',
             map: null,
             markerLayer: null,
             markerRenderToken: 0,
@@ -321,7 +321,7 @@ export default {
             return this.campaigns.find(c => c.id === this.selectedCampaignId)?.name || 'Select Campaign';
         },
         selectedLimitDisplay() {
-            return this.selectedLimit || 'Select Limit';
+            return this.selectedLimit === '' ? 'All' : this.selectedLimit;
         },
         selectedAreaDisplay() {
             return this.selectedArea ? `Area ${this.selectedArea}` : 'All Areas';
