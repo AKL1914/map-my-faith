@@ -101,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('admin/pins', [PinController::class, 'manage'])->name('admin.pins.index');
         Route::get('admin/pin/{pin}', [PinController::class, 'show'])->name('show');
         Route::get('/admin/active-users-count', [DashboardController::class, 'getActiveUsersCount']);
+        Route::get('/admin/active-users-locations', [DashboardController::class, 'getActiveUsersLocations']);
         Route::get('/admin/events', [EventController::class, 'manage']);
         Route::get('/admin/event/{event}/participants', [EventController::class, 'participants']);
         Route::get('/admin/event/{event}/pins', [EventController::class, 'show']);

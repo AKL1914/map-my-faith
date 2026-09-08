@@ -255,20 +255,50 @@
 
         <!-- Map Card -->
         <div class="card shadow mb-4">
-            <div class="card-header py-3">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Map</h6>
+                <button class="btn btn-sm btn-outline-primary" @click="toggleMapFullscreen('map-container', 'map')">
+                    <i class="fas fa-expand me-1"></i> Fullscreen
+                </button>
             </div>
             <div class="card-body">
-                <div class="mb-4 border rounded shadow" id="map"></div>
+                <div class="map-container mb-4 border rounded shadow" id="map-container">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Active Users' Last Known Locations</h6>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" @click="fetchActiveUserLocations">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" @click="toggleMapFullscreen('active-users-map-container', 'active-users-map')">
+                        <i class="fas fa-expand me-1"></i> Fullscreen
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="map-container mb-4 border rounded shadow" id="active-users-map-container">
+                    <div id="active-users-map"></div>
+                </div>
+                <p v-if="activeUserLocations.length === 0" class="text-muted mb-0">
+                    No active users have a recorded map location.
+                </p>
             </div>
         </div>
     </div>
 </template>
 
 <script>
+import { markRaw } from 'vue';
 import { useToast } from 'vue-toastification';
 
 const toast = useToast();
+const DASHBOARD_INITIAL_ZOOM = 13;
+const DASHBOARD_DISABLE_CLUSTERING_AT_ZOOM = 15;
 
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -288,6 +318,14 @@ const greenIcon = new L.Icon({
     shadowSize: [25, 25]
 });
 
+const activeUserIcon = L.divIcon({
+    className: 'active-user-marker',
+    html: '<i class="fas fa-user"></i>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14],
+});
+
 export default {
     name: 'AdminDashboard',
     data() {
@@ -298,13 +336,18 @@ export default {
             dateFrom: '',
             dateTo: '',
             selectedArea: '',
-            selectedLimit: 200,
+            selectedLimit: '',
             map: null,
-            markers: [],
+            markerLayer: null,
+            markerRenderToken: 0,
             totalUsers: 0,
             totalPins: 0,
             totalSuburbs: 0,
             loggedInUsers: 0,
+            activeUserLocations: [],
+            activeUsersMap: null,
+            activeUsersMarkerLayer: null,
+            activeUsersRefreshInterval: null,
             areaCounts: {}, // from API
             pinsData: {},
             selectedDays: 7,
@@ -317,7 +360,7 @@ export default {
             return this.campaigns.find(c => c.id === this.selectedCampaignId)?.name || 'Select Campaign';
         },
         selectedLimitDisplay() {
-            return this.selectedLimit || 'Select Limit';
+            return this.selectedLimit === '' ? 'All' : this.selectedLimit;
         },
         selectedAreaDisplay() {
             return this.selectedArea ? `Area ${this.selectedArea}` : 'All Areas';
@@ -359,6 +402,18 @@ export default {
         this.fetchPinSummary();
         this.fetchAreaDistribution();
         this.fetchParticipation();
+        this.initActiveUsersMap();
+        this.fetchActiveUserLocations();
+        this.activeUsersRefreshInterval = window.setInterval(() => {
+            this.fetchLoggedInUsers();
+            this.fetchActiveUserLocations();
+        }, 30000);
+    },
+    beforeUnmount() {
+        if (this.activeUsersRefreshInterval) {
+            window.clearInterval(this.activeUsersRefreshInterval);
+        }
+        this.activeUsersMap?.remove();
     },
     watch: {
         dateFrom() { this.fetchPins(); },
@@ -367,12 +422,26 @@ export default {
     },
     methods: {
         initMap() {
-            this.map = window.L.map('map').setView([-36.8485, 174.7633], 12);
+            this.map = markRaw(window.L.map('map').setView([-36.8485, 174.7633], DASHBOARD_INITIAL_ZOOM));
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 18,
                 minZoom: 10
             }).addTo(this.map);
+            this.markerLayer = markRaw(L.markerClusterGroup({
+                chunkedLoading: true,
+                chunkInterval: 50,
+                chunkDelay: 10,
+                maxClusterRadius: 50,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                disableClusteringAtZoom: DASHBOARD_DISABLE_CLUSTERING_AT_ZOOM,
+            }).addTo(this.map));
+            this.map.on('moveend zoomend', () => {
+                if (this.selectedLimit === '' && this.selectedCampaignId) {
+                    this.fetchPins();
+                }
+            });
         },
         fetchCampaigns() {
             axios.get('/api/campaigns').then(response => {
@@ -389,11 +458,24 @@ export default {
                 limit: this.selectedLimit || ''
             };
             const url = this.selectedCampaignId ? `/api/pins/campaign/${this.selectedCampaignId}` : '/api/pins';
+
+            if (this.selectedLimit === '' && this.selectedCampaignId) {
+                const bounds = this.map.getBounds();
+                Object.assign(params, {
+                    viewport: 1,
+                    north: bounds.getNorth(),
+                    south: bounds.getSouth(),
+                    east: bounds.getEast(),
+                    west: bounds.getWest(),
+                });
+            }
+
             axios.get(url, { params }).then(response => {
-                this.pins = response.data.data || [];
+                this.pins = markRaw(response.data.data || []);
                 this.totalPins = response.data.total_pins || this.pins.length;
                 this.totalUsers = response.data.total_users || 0;
-                this.totalSuburbs = new Set(this.pins.map(p => p.suburb?.toLowerCase()).filter(Boolean)).size;
+                this.totalSuburbs = response.data.total_suburbs
+                    ?? new Set(this.pins.map(p => p.suburb?.toLowerCase()).filter(Boolean)).size;
                 this.updateMapMarkers();
                 this.fetchLoggedInUsers();
             }).catch(() => {
@@ -412,23 +494,102 @@ export default {
                 this.topOnlineUsers = [];
             });
         },
+        initActiveUsersMap() {
+            this.activeUsersMap = markRaw(window.L.map('active-users-map').setView([-36.8485, 174.7633], DASHBOARD_INITIAL_ZOOM));
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18,
+                minZoom: 10
+            }).addTo(this.activeUsersMap);
+            this.activeUsersMarkerLayer = markRaw(L.layerGroup().addTo(this.activeUsersMap));
+        },
+        fetchActiveUserLocations() {
+            axios.get('/admin/active-users-locations').then(response => {
+                this.activeUserLocations = response.data.locations || [];
+                this.updateActiveUserMarkers();
+            }).catch(() => {
+                this.activeUserLocations = [];
+                this.updateActiveUserMarkers();
+            });
+        },
+        updateActiveUserMarkers() {
+            this.activeUsersMarkerLayer.clearLayers();
+
+            const bounds = [];
+            this.activeUserLocations.forEach(user => {
+                const position = [user.latitude, user.longitude];
+                bounds.push(position);
+                L.marker(position, { icon: activeUserIcon })
+                    .bindPopup(`<strong>${user.name}</strong>`)
+                    .addTo(this.activeUsersMarkerLayer);
+            });
+
+            if (bounds.length) {
+                this.activeUsersMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+            }
+        },
+        async toggleMapFullscreen(containerId, mapId) {
+            const container = document.getElementById(containerId);
+
+            if (!container) return;
+
+            try {
+                if (document.fullscreenElement === container) {
+                    await document.exitFullscreen();
+                } else if (!document.fullscreenElement && container.requestFullscreen) {
+                    await container.requestFullscreen();
+                }
+            } catch (error) {
+                toast.error('Unable to open the map in fullscreen.');
+                return;
+            }
+
+            window.setTimeout(() => {
+                if (mapId === 'map') {
+                    this.map?.invalidateSize();
+                } else {
+                    this.activeUsersMap?.invalidateSize();
+                }
+            }, 100);
+        },
         updateMapMarkers() {
-            this.markers.forEach(m => this.map.removeLayer(m));
-            this.markers = [];
-            this.pins.forEach(pin => {
-                if (pin.latitude && pin.longitude) {
+            this.markerLayer.clearLayers();
+            const renderToken = ++this.markerRenderToken;
+            const pins = this.pins;
+            let offset = 0;
+            const batchSize = 500;
+
+            const addMarkerBatch = () => {
+                if (renderToken !== this.markerRenderToken) return;
+
+                const batch = [];
+                const end = Math.min(offset + batchSize, pins.length);
+
+                for (; offset < end; offset += 1) {
+                    const pin = pins[offset];
+                    if (!pin.latitude || !pin.longitude) continue;
+
                     const icon = pin.is_accepted === 1 ? greenIcon : redIcon;
                     const popup = `<strong>${pin.user?.name ?? 'Unknown User'}</strong><br/>${pin.notes ?? ''}`;
-                    const marker = L.marker([pin.latitude, pin.longitude], { icon })
-                        .addTo(this.map)
-                        .bindPopup(popup);
-                    this.markers.push(marker);
+                    batch.push(
+                        L.marker([pin.latitude, pin.longitude], {icon})
+                            .bindPopup(popup)
+                    );
                 }
-            });
-            if (this.markers.length) {
-                const group = new L.featureGroup(this.markers);
-                this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
-            }
+
+                if (batch.length) this.markerLayer.addLayers(batch);
+
+                if (offset < pins.length) {
+                    window.setTimeout(addMarkerBatch, 0);
+                    return;
+                }
+
+                if (batch.length && !(this.selectedLimit === '' && this.selectedCampaignId)) {
+                    this.map.fitBounds(this.markerLayer.getBounds(), {padding: [30, 30]});
+                }
+            };
+
+            addMarkerBatch();
         },
         downloadReport() {
             const params = {
@@ -489,6 +650,52 @@ export default {
     width: 100%;
     height: 500px;
 }
+
+#active-users-map {
+    width: 100%;
+    height: 500px;
+}
+
+.map-container:fullscreen {
+    background: #fff;
+    border: 0 !important;
+    border-radius: 0 !important;
+    height: 100vh;
+    margin: 0 !important;
+    padding: 1rem;
+    width: 100vw;
+}
+
+.map-container:fullscreen #map,
+.map-container:fullscreen #active-users-map {
+    height: calc(100vh - 2rem);
+}
+
+:deep(.active-user-marker) {
+    align-items: center;
+    background: #1cc88a;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    color: #fff;
+    display: flex;
+    font-size: 16px;
+    justify-content: center;
+}
+
+:deep(.marker-cluster-small),
+:deep(.marker-cluster-medium),
+:deep(.marker-cluster-large) {
+    background-color: rgba(76, 175, 80, 0.35);
+}
+
+:deep(.marker-cluster-small div),
+:deep(.marker-cluster-medium div),
+:deep(.marker-cluster-large div) {
+    background-color: rgba(76, 175, 80, 0.85);
+    color: #fff;
+}
+
 @media (max-width: 576px) {
     .card-text {
         font-size: 1.2rem;

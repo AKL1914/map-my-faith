@@ -32,6 +32,10 @@ class Pin extends Model
         'contact_email', // Optional email address of the contact at the pinned location.
     ];
 
+    protected $casts = [
+        'is_accepted' => 'integer',
+    ];
+
     /**
      * Get the user associated with the pin.
      *

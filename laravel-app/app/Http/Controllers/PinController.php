@@ -55,16 +55,16 @@ class PinController extends Controller
     {
         // Define proximity threshold (approximately 1 meter in degrees)
         $proximityThreshold = 0.00001; // Roughly 1 meter
-        
+
         // Check if a pin within the proximity threshold already exists for this user and campaign
         $existingPin = Pin::where('user_id', Auth::id())
             ->where('campaign_id', $request->campaign_id)
             ->whereBetween('latitude', [
-                $request->latitude - $proximityThreshold, 
+                $request->latitude - $proximityThreshold,
                 $request->latitude + $proximityThreshold
             ])
             ->whereBetween('longitude', [
-                $request->longitude - $proximityThreshold, 
+                $request->longitude - $proximityThreshold,
                 $request->longitude + $proximityThreshold
             ])
             ->first();
@@ -80,7 +80,7 @@ class PinController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'campaign_id' => $request->campaign_id,
-            'is_accepted' => $request->is_accepted ?? false,
+            'is_accepted' => $request->boolean('is_accepted') ? 1 : 0,
             'notes' => $request->notes,
             'contact_name' => $request->contact_name,
             'contact_phone' => $request->contact_phone,
@@ -141,16 +141,22 @@ class PinController extends Controller
      */
     public function indexByCampaign($campaignId, Request $request)
     {
-        $cacheKey = "pins_campaign_{$campaignId}";
-
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
         $area = $request->query('area');
         $limit = $request->query('limit');
+        $viewport = $request->boolean('viewport');
 
         $pinFields = ['id', 'user_id', 'latitude', 'longitude', 'notes', 'is_accepted', 'suburb', 'created_at', 'campaign_id'];
 
-        $useFilters = $dateFrom || $dateTo || $area;
+        if ($viewport) {
+            $request->validate([
+                'north' => 'required|numeric|between:-90,90',
+                'south' => 'required|numeric|between:-90,90',
+                'east' => 'required|numeric|between:-180,180',
+                'west' => 'required|numeric|between:-180,180',
+            ]);
+        }
 
         $query = Pin::select($pinFields)
             ->with(['user:id,name,area'])
@@ -170,29 +176,34 @@ class PinController extends Controller
             });
         }
 
-        if ($useFilters) {
-            $pins = $query->get();
-        } else {
-            $pins = Cache::rememberForever($cacheKey, function () use ($campaignId, $pinFields) {
-                return Pin::select($pinFields)
-                    ->with(['user:id,name,area'])
-                    ->where('campaign_id', $campaignId)
-                    ->get();
-            });
+        // Count in PostgreSQL, rather than loading every pin into PHP just to calculate totals.
+        $totalPins = (clone $query)->toBase()->count();
+        $totalUsers = (clone $query)->toBase()
+            ->distinct()
+            ->count('user_id');
+        $totalSuburbs = (clone $query)->toBase()
+            ->whereNotNull('suburb')
+            ->distinct()
+            ->count('suburb');
+
+        if ($viewport) {
+            $query
+                ->whereBetween('latitude', [$request->south, $request->north])
+                ->whereBetween('longitude', [$request->west, $request->east]);
         }
 
-        $totalPins = $pins->count();
-        $totalUsers = $pins->pluck('user_id')->unique()->count();
-
-        // Only limit displayed data — totals remain full
-        if (! $useFilters && is_numeric($limit)) {
-            $pins = $pins->take((int) $limit)->values();
+        // Apply the display limit in SQL so large campaigns never exhaust PHP memory.
+        if (is_numeric($limit)) {
+            $query->limit(max(0, (int) $limit));
         }
+
+        $pins = $query->orderByDesc('created_at')->get();
 
         return response()->json([
             'data' => $pins,
             'total_pins' => $totalPins,
             'total_users' => $totalUsers,
+            'total_suburbs' => $totalSuburbs,
         ]);
     }
 
@@ -224,10 +235,10 @@ class PinController extends Controller
     public function indexByBounds(Request $request)
     {
         $request->validate([
-            'north' => 'required|numeric',
-            'south' => 'required|numeric',
-            'east' => 'required|numeric',
-            'west' => 'required|numeric',
+            'north' => 'required|numeric|between:-90,90',
+            'south' => 'required|numeric|between:-90,90',
+            'east' => 'required|numeric|between:-180,180',
+            'west' => 'required|numeric|between:-180,180',
         ]);
 
         // Snap the viewport out to a coarse grid (3dp ≈ 111m) so nearby pans
@@ -250,15 +261,29 @@ class PinController extends Controller
 
         $cacheKey = sprintf('pins_bounds_v%d_%s', $version, md5(json_encode([$north, $south, $east, $west])));
 
+        // Query shape (leftJoin + flat user_name) matches what MapManager.vue
+        // now expects; still cached (grid-snapped, versioned) since client-side
+        // request dedup only helps within one browser session, not across
+        // concurrent volunteers panning the same neighbourhood.
         $pins = Cache::remember($cacheKey, now()->addMinutes(2), function () use ($north, $south, $east, $west) {
-            return Pin::with('user:id,name')
-                ->where('campaign_id', function ($query) {
+            return Pin::query()
+                ->leftJoin('users', 'users.id', '=', 'pins.user_id')
+                ->select([
+                    'pins.id',
+                    'pins.user_id',
+                    'pins.latitude',
+                    'pins.longitude',
+                    'pins.notes',
+                    'pins.is_accepted',
+                    'users.name as user_name',
+                ])
+                ->whereIn('pins.campaign_id', function ($query) {
                     $query->select('id')
                         ->from('campaigns')
                         ->where('is_active', true);
                 })
-                ->whereBetween('latitude', [$south, $north])
-                ->whereBetween('longitude', [$west, $east])
+                ->whereBetween('pins.latitude', [$south, $north])
+                ->whereBetween('pins.longitude', [$west, $east])
                 ->get();
         });
 
