@@ -52,8 +52,10 @@ class PinControllerTest extends TestCase
         ])->getJson('/api/v1/pins');
 
         $response->assertStatus(200);
-        $response->assertJsonCount(2); // Expect 2 pins from setup
-        $response->assertJsonStructure([[
+        // PinController::index returns a paginator, so the pins live under
+        // the "data" key rather than at the response root.
+        $response->assertJsonCount(2, 'data'); // Expect 2 pins from setup
+        $response->assertJsonStructure(['data' => [[
             'id',
             'latitude',
             'longitude',
@@ -61,7 +63,7 @@ class PinControllerTest extends TestCase
             'is_accepted',
             'user_id',
             'campaign_id',
-        ]]);
+        ]]]);
     }
 
     public function test_get_pins_without_sanctum_token_fails()
