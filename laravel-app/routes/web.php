@@ -47,15 +47,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/game-pins', [GamePinController::class, 'index']);
         Route::post('/game-pins/{gamePin}/participate', [GamePinController::class, 'participate']);
         Route::post('/pin', [PinController::class, 'store']);
-        Route::get('/pins', [PinController::class, 'index']);
         Route::patch('/pins/{pin}', [PinController::class, 'update']);
         Route::delete('/pin/{id}', [PinController::class, 'destroy']);
         Route::get('/user/{user}/pins', [PinController::class, 'pinsByUser']);
 
-        Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
         Route::get('/pins/bounds', [PinController::class, 'indexByBounds']);
 
         Route::middleware([IsAdmin::class])->group(function () {
+            Route::get('/pins', [PinController::class, 'index']);
+            Route::get('/pins/user/{userId}', [PinController::class, 'indexByUser']);
+
             // Campaign API routes
             Route::get('/pins/campaign/{campaignId}', [PinController::class, 'indexByCampaign']);
             Route::apiResource('campaigns', CampaignController::class);

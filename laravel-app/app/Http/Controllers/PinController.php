@@ -20,6 +20,19 @@ use Illuminate\Support\Facades\Cache;
 class PinController extends Controller
 {
     /**
+     * Contact fields captured at a pin's location. Admin-facing and report
+     * endpoints only — never returned to member-facing pin listings.
+     */
+    private const CONTACT_FIELDS = ['contact_name', 'contact_phone', 'contact_email'];
+
+    /**
+     * Cache key holding the current bounds-cache "generation". Bumping it
+     * invalidates every previously cached bounds result without having to
+     * enumerate or delete individual keys.
+     */
+    public const BOUNDS_CACHE_VERSION_KEY = 'pins_bounds_version';
+
+    /**
      * Display the pin management view.
      *
      * @return \Illuminate\View\View The view for managing pins.
@@ -69,6 +82,9 @@ class PinController extends Controller
             'campaign_id' => $request->campaign_id,
             'is_accepted' => $request->is_accepted ?? false,
             'notes' => $request->notes,
+            'contact_name' => $request->contact_name,
+            'contact_phone' => $request->contact_phone,
+            'contact_email' => $request->contact_email,
         ]);
 
         FetchSuburbFromCoordinates::dispatch($pin->id);
@@ -194,7 +210,7 @@ class PinController extends Controller
             return Pin::where('user_id', $userId)->get();
         });
 
-        return response()->json($pins);
+        return response()->json($pins->makeHidden(self::CONTACT_FIELDS));
     }
 
     /**
@@ -214,32 +230,39 @@ class PinController extends Controller
             'west' => 'required|numeric',
         ]);
 
-        $cacheKey = 'pins_bounds_'.md5(json_encode([
-            $request->north,
-            $request->south,
-            $request->east,
-            $request->west,
-        ]));
+        // Snap the viewport out to a coarse grid (3dp ≈ 111m) so nearby pans
+        // share a cache entry instead of every pixel-level move missing the
+        // cache. Always expand outward (floor/ceil), never shrink, so the
+        // cached box fully covers what was actually requested.
+        $scale = 1000;
+        $north = ceil($request->north * $scale) / $scale;
+        $south = floor($request->south * $scale) / $scale;
+        $east = ceil($request->east * $scale) / $scale;
+        $west = floor($request->west * $scale) / $scale;
 
-        $allBoundsKeys = Cache::get('pins_bounds_keys', []);
-        if (! in_array($cacheKey, $allBoundsKeys)) {
-            $allBoundsKeys[] = $cacheKey;
-            Cache::forever('pins_bounds_keys', $allBoundsKeys);
-        }
+        // A single version counter replaces the old per-key registry: pin and
+        // campaign writes bump this instead of enumerating and deleting every
+        // bounds key ever cached. Stale entries just expire via TTL.
+        // Default to 0 (not 1) so the very first pin/campaign write — which
+        // takes the counter from unset to 1 via Cache::increment() — is
+        // guaranteed to differ from whatever was read before it existed.
+        $version = Cache::get(self::BOUNDS_CACHE_VERSION_KEY, 0);
 
-        $pins = Cache::rememberForever($cacheKey, function () use ($request) {
+        $cacheKey = sprintf('pins_bounds_v%d_%s', $version, md5(json_encode([$north, $south, $east, $west])));
+
+        $pins = Cache::remember($cacheKey, now()->addMinutes(2), function () use ($north, $south, $east, $west) {
             return Pin::with('user:id,name')
                 ->where('campaign_id', function ($query) {
                     $query->select('id')
                         ->from('campaigns')
                         ->where('is_active', true);
                 })
-                ->whereBetween('latitude', [$request->south, $request->north])
-                ->whereBetween('longitude', [$request->west, $request->east])
+                ->whereBetween('latitude', [$south, $north])
+                ->whereBetween('longitude', [$west, $east])
                 ->get();
         });
 
-        return response()->json($pins);
+        return response()->json($pins->makeHidden(self::CONTACT_FIELDS));
     }
 
     /**
@@ -281,6 +304,10 @@ class PinController extends Controller
 
     public function pinsByUser(User $user, Request $request)
     {
+        if (Auth::id() !== $user->id && ! Auth::user()->is_admin) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = "user_pins_{$user->id}";
 
         $userPins = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
@@ -288,7 +315,7 @@ class PinController extends Controller
         });
 
         return response()->json([
-            'pins' => $userPins,
+            'pins' => $userPins->makeHidden(self::CONTACT_FIELDS),
             'user_name' => $user->name,
             'total_pins' => $userPins->count(),
         ]);
@@ -296,7 +323,7 @@ class PinController extends Controller
 
     public function update(Pin $pin, Request $request)
     {
-        $pin->update($request->all());
+        $pin->update($request->only(['is_accepted']));
 
         return response()->json(['message' => 'Pin updated successfully']);
     }

@@ -28,6 +28,30 @@
                 rows="3"
                 class="form-control notes-textarea"
             ></textarea>
+
+            <div class="contact-fields mt-3">
+                <input
+                    v-model="contactName"
+                    type="text"
+                    placeholder="Contact name (optional)"
+                    maxlength="100"
+                    class="form-control mb-2"
+                />
+                <input
+                    v-model="contactPhone"
+                    type="tel"
+                    placeholder="Contact phone (optional)"
+                    maxlength="20"
+                    class="form-control mb-2"
+                />
+                <input
+                    v-model="contactEmail"
+                    type="email"
+                    placeholder="Contact email (optional)"
+                    maxlength="255"
+                    class="form-control"
+                />
+            </div>
         </div>
     </div>
 </template>
@@ -39,6 +63,9 @@ import 'vue-toastification/dist/index.css';
 
 let map;
 const notes = ref('');
+const contactName = ref('');
+const contactPhone = ref('');
+const contactEmail = ref('');
 let currentPinMarker = null;
 let lastSubmitTime = 0;
 let pinLayerGroup = null;
@@ -243,10 +270,10 @@ onMounted(() => {
         await fetchGamePins();
     });
 
-    map.on('moveend', () => {
+    map.on('moveend', window.debounce(() => {
         fetchPinsWithinBounds();
         fetchGamePins();
-    });
+    }, 300));
 
     map.on('click', function (e) {
         const lat = e.latlng.lat;
@@ -278,11 +305,17 @@ async function pinMyLocation(status) {
             longitude: lng,
             notes: notes.value || '',
             is_accepted: isAccepted,
-            campaign_id: activeCampaign
+            campaign_id: activeCampaign,
+            contact_name: contactName.value || null,
+            contact_phone: contactPhone.value || null,
+            contact_email: contactEmail.value || null,
         });
 
         lastSubmitTime = now;
         notes.value = '';
+        contactName.value = '';
+        contactPhone.value = '';
+        contactEmail.value = '';
         currentPinMarker.setLatLng([lat, lng]);
         await fetchPinsWithinBounds();
 

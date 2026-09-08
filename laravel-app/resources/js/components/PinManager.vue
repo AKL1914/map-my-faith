@@ -68,6 +68,7 @@
                                 <th>Campaign</th>
                                 <th>Coordinates</th>
                                 <th>Notes</th>
+                                <th>Contact</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -79,6 +80,15 @@
                                 <td class="d-block d-md-table-cell"><strong>Campaign:</strong> {{ pin.campaign?.name }}</td>
                                 <td class="d-block d-md-table-cell"><strong>Coordinates:</strong> {{ parseFloat(pin.latitude).toFixed(4) }}, {{ parseFloat(pin.longitude).toFixed(4) }}</td>
                                 <td class="d-block d-md-table-cell"><strong>Notes:</strong> {{ pin.notes || '-' }}</td>
+                                <td class="d-block d-md-table-cell">
+                                    <strong>Contact:</strong>
+                                    <template v-if="pin.contact_name || pin.contact_phone || pin.contact_email">
+                                        {{ pin.contact_name || '-' }}<br v-if="pin.contact_name" />
+                                        <span v-if="pin.contact_phone">{{ pin.contact_phone }}<br /></span>
+                                        <span v-if="pin.contact_email">{{ pin.contact_email }}</span>
+                                    </template>
+                                    <template v-else>-</template>
+                                </td>
                                 <td class="d-block d-md-table-cell">
                                     <strong>Status:</strong>
                                     <span class="badge text-white" :class="pin.is_accepted ? 'bg-success' : 'bg-secondary'">
@@ -111,7 +121,7 @@
                             </tr>
 
                             <tr v-if="pins.data?.length === 0">
-                                <td colspan="7" class="text-center">No pins found.</td>
+                                <td colspan="8" class="text-center">No pins found.</td>
                             </tr>
                             </tbody>
                         </table>

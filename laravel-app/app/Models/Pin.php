@@ -27,6 +27,9 @@ class Pin extends Model
         'campaign_id',  // The ID of the campaign associated with the pin.
         'is_accepted',  // A boolean indicating whether the pin has been accepted.
         'notes',        // Additional notes or comments about the pin.
+        'contact_name',  // Optional name of the contact at the pinned location.
+        'contact_phone', // Optional NZ phone number of the contact at the pinned location.
+        'contact_email', // Optional email address of the contact at the pinned location.
     ];
 
     /**

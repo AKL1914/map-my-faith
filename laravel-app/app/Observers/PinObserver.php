@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Http\Controllers\PinController;
 use App\Models\Pin;
 use Illuminate\Support\Facades\Cache;
 
@@ -87,18 +88,12 @@ class PinObserver
     }
 
     /**
-     * Clear all bounds-related cache.
-     *
-     * Removes cached data for all bounds keys and the bounds keys cache itself.
+     * Bump the bounds-cache generation instead of enumerating and deleting
+     * every bounds key ever cached (the old approach: an unbounded registry
+     * walked and DEL'd in full on every single pin write).
      */
     protected function clearAllBoundsCache(): void
     {
-        $keys = Cache::get('pins_bounds_keys', []);
-
-        foreach ($keys as $key) {
-            Cache::forget($key);
-        }
-
-        Cache::forget('pins_bounds_keys');
+        Cache::increment(PinController::BOUNDS_CACHE_VERSION_KEY);
     }
 }

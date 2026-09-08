@@ -85,6 +85,9 @@ class GeneratePinReport implements ShouldQueue
             'Latitude',
             'Longitude',
             'Notes',
+            'Contact Name',
+            'Contact Phone',
+            'Contact Email',
             'Created At',
         ]);
 
@@ -98,6 +101,9 @@ class GeneratePinReport implements ShouldQueue
                 $pin->latitude,
                 $pin->longitude,
                 $pin->notes,
+                $pin->contact_name,
+                $pin->contact_phone,
+                $pin->contact_email,
                 $pin->created_at,
             ]);
         }

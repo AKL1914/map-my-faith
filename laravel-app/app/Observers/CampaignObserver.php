@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Http\Controllers\PinController;
 use App\Models\Campaign;
 use Illuminate\Support\Facades\Cache;
 
@@ -84,11 +85,8 @@ class CampaignObserver
         Cache::forget('all_campaigns'); // Clears the cache for all campaigns.
         Cache::forget('active_campaign_id'); // Clears the cache for the active campaign ID.
 
-        // Optionally clear pins_bounds_keys if needed.
-        $keys = Cache::get('pins_bounds_keys', []);
-        foreach ($keys as $key) {
-            Cache::forget($key); // Clears each key in the pins_bounds_keys cache.
-        }
-        Cache::forget('pins_bounds_keys'); // Clears the pins_bounds_keys cache itself.
+        // Bump the bounds-cache generation instead of enumerating and
+        // deleting every previously cached bounds key.
+        Cache::increment(PinController::BOUNDS_CACHE_VERSION_KEY);
     }
 }
