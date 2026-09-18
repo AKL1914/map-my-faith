@@ -31,7 +31,7 @@ Schedule::call(function () {
 // project is on a paid plan (no auto-pause).
 Schedule::call(function () {
     DB::select('select 1');
-})->everyTwoDays()
+})->daily()
     ->name('supabase.keep-alive')
     ->withoutOverlapping()
     ->onFailure(function () {
