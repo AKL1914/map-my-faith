@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class PinController
@@ -53,6 +54,9 @@ class PinController extends Controller
      */
     public function store(PinStoreRequest $request)
     {
+        $perfDebug = env('PERF_DEBUG');
+        $t0 = microtime(true);
+
         // Define proximity threshold (approximately 1 meter in degrees)
         $proximityThreshold = 0.00001; // Roughly 1 meter
 
@@ -68,6 +72,8 @@ class PinController extends Controller
                 $request->longitude + $proximityThreshold
             ])
             ->first();
+
+        $tAfterDupeCheck = microtime(true);
 
         if ($existingPin) {
             return response()->json([
@@ -87,7 +93,21 @@ class PinController extends Controller
             'contact_email' => $request->contact_email,
         ]);
 
+        $tAfterCreate = microtime(true);
+
         FetchSuburbFromCoordinates::dispatch($pin->id);
+
+        $tAfterDispatch = microtime(true);
+
+        if ($perfDebug) {
+            Log::info('PERF_DEBUG store()', [
+                'pin_id' => $pin->id,
+                'dupe_check_ms' => round(($tAfterDupeCheck - $t0) * 1000, 1),
+                'create_incl_observer_ms' => round(($tAfterCreate - $tAfterDupeCheck) * 1000, 1),
+                'queue_dispatch_ms' => round(($tAfterDispatch - $tAfterCreate) * 1000, 1),
+                'total_ms' => round(($tAfterDispatch - $t0) * 1000, 1),
+            ]);
+        }
 
         return response()->json($pin, 201);
     }
@@ -234,6 +254,9 @@ class PinController extends Controller
      */
     public function indexByBounds(Request $request)
     {
+        $perfDebug = env('PERF_DEBUG');
+        $t0 = microtime(true);
+
         $request->validate([
             'north' => 'required|numeric|between:-90,90',
             'south' => 'required|numeric|between:-90,90',
@@ -257,9 +280,15 @@ class PinController extends Controller
         // Default to 0 (not 1) so the very first pin/campaign write — which
         // takes the counter from unset to 1 via Cache::increment() — is
         // guaranteed to differ from whatever was read before it existed.
+        $tAfterSnap = microtime(true);
+
         $version = Cache::get(self::BOUNDS_CACHE_VERSION_KEY, 0);
 
+        $tAfterVersionRead = microtime(true);
+
         $cacheKey = sprintf('pins_bounds_v%d_%s', $version, md5(json_encode([$north, $south, $east, $west])));
+
+        $cacheHit = Cache::has($cacheKey);
 
         // Query shape (leftJoin + flat user_name) matches what MapManager.vue
         // now expects; still cached (grid-snapped, versioned) since client-side
@@ -286,6 +315,19 @@ class PinController extends Controller
                 ->whereBetween('pins.longitude', [$west, $east])
                 ->get();
         });
+
+        $tAfterCache = microtime(true);
+
+        if ($perfDebug) {
+            Log::info('PERF_DEBUG indexByBounds()', [
+                'cache_hit' => $cacheHit,
+                'pins_count' => $pins->count(),
+                'validate_and_snap_ms' => round(($tAfterSnap - $t0) * 1000, 1),
+                'version_read_ms' => round(($tAfterVersionRead - $tAfterSnap) * 1000, 1),
+                'cache_remember_ms' => round(($tAfterCache - $tAfterVersionRead) * 1000, 1),
+                'total_ms' => round(($tAfterCache - $t0) * 1000, 1),
+            ]);
+        }
 
         return response()->json($pins->makeHidden(self::CONTACT_FIELDS));
     }

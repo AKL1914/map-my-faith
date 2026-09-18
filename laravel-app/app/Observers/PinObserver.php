@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Http\Controllers\PinController;
 use App\Models\Pin;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class PinObserver
@@ -23,8 +24,22 @@ class PinObserver
      */
     public function created(Pin $pin): void
     {
+        $perfDebug = env('PERF_DEBUG');
+        $t0 = microtime(true);
+
         $this->clearAllBoundsCache();
+        $tAfterIncrement = microtime(true);
+
         Cache::forget('all_pins');
+        $tAfterForget = microtime(true);
+
+        if ($perfDebug) {
+            Log::info('PERF_DEBUG PinObserver::created()', [
+                'pin_id' => $pin->id,
+                'increment_ms' => round(($tAfterIncrement - $t0) * 1000, 1),
+                'forget_ms' => round(($tAfterForget - $tAfterIncrement) * 1000, 1),
+            ]);
+        }
     }
 
     /**
