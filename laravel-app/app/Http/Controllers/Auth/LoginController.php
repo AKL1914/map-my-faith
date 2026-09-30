@@ -7,6 +7,7 @@ use App\Jobs\SendAccessRequestNotificationToAdmins;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 
 /**
@@ -30,14 +31,46 @@ class LoginController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
-        if (Auth::attempt($credentials)) {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        if (Auth::attempt($credentials + ['is_activated' => true])) {
             $request->session()->regenerate();
 
-            return redirect()->intended('dashboard');
+            return redirect()->intended('/maps');
         }
 
-        return back()->withErrors(['email' => 'Invalid credentials']);
+        $user = User::where('email', $credentials['email'])->first();
+        if ($user && ! $user->is_activated && Hash::check($credentials['password'], $user->password)) {
+            return redirect()->route('activate')->with('message', 'Your account is awaiting admin activation.');
+        }
+
+        return back()->withErrors(['email' => 'Invalid credentials.']);
+    }
+
+    /**
+     * Create an account that must be activated by an administrator before login.
+     */
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'is_activated' => false,
+        ]);
+
+        SendAccessRequestNotificationToAdmins::dispatch($user);
+
+        return redirect()->route('activate')->with('message', 'Registration received. An administrator must activate your account before you can sign in.');
     }
 
     /**

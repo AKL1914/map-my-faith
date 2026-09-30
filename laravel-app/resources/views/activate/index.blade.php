@@ -44,7 +44,7 @@
     <i class="fas fa-spinner fa-spin fa-5x text-secondary mb-4"></i>
 
     <h1 class="mb-4">Thank You!</h1>
-    <p class="lead">Thank you for participating. The Administrator will activate your account.</p>
+    <p class="lead">{{ session('message', 'Thank you for participating. The Administrator will activate your account.') }}</p>
     <p class="text-muted">You will be redirected in 5 seconds...</p>
 </div>
 
@@ -59,4 +59,3 @@
 
 </body>
 </html>
-
