@@ -30,11 +30,11 @@ Route::post('/logout', function () {
 Route::get('/login', function () {
     return redirect('/');
 })->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1')->name('login.submit');
 Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
-Route::post('/register', [LoginController::class, 'register'])->name('register.submit');
+Route::post('/register', [LoginController::class, 'register'])->middleware('throttle:3,1')->name('register.submit');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 

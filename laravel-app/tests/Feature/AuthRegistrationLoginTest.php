@@ -99,4 +99,30 @@ class AuthRegistrationLoginTest extends TestCase
 
         $this->assertDatabaseMissing('users', ['email' => 'new@example.com']);
     }
+
+    public function test_login_is_limited_to_five_attempts_per_minute(): void
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->post(route('login.submit'), [
+                'email' => 'invalid@example.com',
+                'password' => 'wrong-password',
+            ])->assertRedirect();
+        }
+
+        $this->post(route('login.submit'), [
+            'email' => 'invalid@example.com',
+            'password' => 'wrong-password',
+        ])->assertTooManyRequests();
+    }
+
+    public function test_registration_is_limited_to_three_attempts_per_minute(): void
+    {
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            $this->post(route('register.submit'), [])
+                ->assertSessionHasErrors(['name', 'email', 'password']);
+        }
+
+        $this->post(route('register.submit'), [])
+            ->assertTooManyRequests();
+    }
 }
