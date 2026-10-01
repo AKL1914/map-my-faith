@@ -116,7 +116,7 @@ class LoginController extends Controller
 
         // If the user is not activated, redirect to the activation page
         if (! $user->is_activated) {
-            return redirect('/activate')->with('message', 'Please activate your account.');
+            return redirect('/activate')->with('message', 'Thank You we will send you an email once your account is activated');
         }
 
         Auth::login($user); // Set the session auth
