@@ -340,6 +340,7 @@ export default {
             map: null,
             markerLayer: null,
             markerRenderToken: 0,
+            participationRequestId: 0,
             totalUsers: 0,
             totalPins: 0,
             totalSuburbs: 0,
@@ -416,9 +417,9 @@ export default {
         this.activeUsersMap?.remove();
     },
     watch: {
-        dateFrom() { this.fetchPins(); },
-        dateTo() { this.fetchPins(); },
-        selectedCampaignId() { this.fetchPins(); }
+        dateFrom() { this.fetchPins(); this.fetchParticipation(); },
+        dateTo() { this.fetchPins(); this.fetchParticipation(); },
+        selectedCampaignId() { this.fetchPins(); this.fetchParticipation(); }
     },
     methods: {
         initMap() {
@@ -633,8 +634,17 @@ export default {
                 });
         },
         async fetchParticipation() {
+            // Filters change quickly; only the latest response may update the table.
+            const requestId = ++this.participationRequestId;
             try {
-                const response = await axios.get('/admin/users/participation/by-area');
+                const response = await axios.get('/admin/users/participation/by-area', {
+                    params: {
+                        date_from: this.dateFrom || undefined,
+                        date_to: this.dateTo || undefined,
+                        campaign_id: this.selectedCampaignId || undefined,
+                    },
+                });
+                if (requestId !== this.participationRequestId) return;
                 this.participation = response.data.participation || [];
             } catch (error) {
                 console.error('Failed to fetch participation data:', error);

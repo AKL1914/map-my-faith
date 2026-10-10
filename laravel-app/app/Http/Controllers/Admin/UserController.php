@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateProfileRequest;
 use App\Jobs\SendUserActivatedEmail;
 use App\Models\Pin;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -176,34 +177,66 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Per-area count of users who have / have not pinned, optionally scoped to the
+     * dashboard's date range and campaign. "No pins" is the area's remaining users,
+     * so the two columns always add up to the area's total.
+     */
     public function userParticipationByArea(Request $request)
     {
-        $cacheKey = 'user_participation_by_area';
+        $filters = $request->validate([
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+            'campaign_id' => 'nullable|integer',
+        ]);
 
-        // Try to get from cache, if not present compute and store for 1 hour
-        $participation = Cache::remember($cacheKey, now()->addHour(), function () {
+        // Cache key must include the filters, otherwise every filter combination shares one result.
+        $cacheKey = 'user_participation_by_area:'.md5(json_encode([
+            $filters['date_from'] ?? null,
+            $filters['date_to'] ?? null,
+            $filters['campaign_id'] ?? null,
+        ]));
+
+        // Short TTL: the dashboard is watched live while campaigns run.
+        $participation = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($filters) {
             $areas = range(1, 6);
 
-            return collect($areas)->map(function ($areaId) {
-                $usersInArea = User::where('area', $areaId)->pluck('id');
+            $totals = User::whereIn('area', $areas)
+                ->selectRaw('area, count(*) as total')
+                ->groupBy('area')
+                ->pluck('total', 'area');
 
-                // Count users with pins
-                $withPins = Pin::whereIn('user_id', $usersInArea)
-                    ->distinct('user_id')
-                    ->count('user_id');
+            $withPinsQuery = Pin::query()
+                ->join('users', 'users.id', '=', 'pins.user_id')
+                ->whereIn('users.area', $areas);
 
-                // Total users in the area
-                $totalUsers = $usersInArea->count();
+            if (! empty($filters['campaign_id'])) {
+                $withPinsQuery->where('pins.campaign_id', $filters['campaign_id']);
+            }
 
-                // Users with no pins = total - with pins
-                $noPins = max(0, $totalUsers - $withPins); // safety check
+            // Range comparison (end day inclusive) rather than casting created_at, so the index stays usable.
+            if (! empty($filters['date_from'])) {
+                $withPinsQuery->where('pins.created_at', '>=', Carbon::parse($filters['date_from'])->startOfDay());
+            }
+
+            if (! empty($filters['date_to'])) {
+                $withPinsQuery->where('pins.created_at', '<', Carbon::parse($filters['date_to'])->addDay()->startOfDay());
+            }
+
+            $withPins = $withPinsQuery
+                ->selectRaw('users.area as area, count(distinct pins.user_id) as with_pins')
+                ->groupBy('users.area')
+                ->pluck('with_pins', 'area');
+
+            return collect($areas)->map(function ($areaId) use ($totals, $withPins) {
+                $with = (int) ($withPins[$areaId] ?? 0);
 
                 return [
                     'area' => $areaId,
-                    'with_pins' => $withPins,
-                    'no_pins' => $noPins,
+                    'with_pins' => $with,
+                    'no_pins' => max(0, (int) ($totals[$areaId] ?? 0) - $with),
                 ];
-            });
+            })->all();
         });
 
         return response()->json([
